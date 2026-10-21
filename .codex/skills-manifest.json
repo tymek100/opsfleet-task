@@ -1,0 +1,67 @@
+{
+  "installed_on": "2026-10-21",
+  "scope": "repository",
+  "discovery_path": ".agents/skills",
+  "upstream": {
+    "repository": "https://github.com/openai/skills",
+    "revision": "49f948faa9258a0c61caceaf225e179651397431",
+    "skills": [
+      "security-best-practices",
+      "security-threat-model"
+    ],
+    "modifications": "None"
+  },
+  "local_skills": [
+    "retail-adk-implementation",
+    "retail-analytics",
+    "retail-agent-evaluation",
+    "interview-delivery"
+  ],
+  "files": {
+    ".agents/skills/interview-delivery/SKILL.md": "09772221ce7e7ee92b59c98ba4b51cad1d5f59ea4a1f7d2dedcdb94ce65a8b8a",
+    ".agents/skills/interview-delivery/agents/openai.yaml": "82e806f1c96b7770a2aaeed3cced808f8f3e1afbc7c25648f664533e9e90c8dd",
+    ".agents/skills/retail-adk-implementation/SKILL.md": "a9f34f6a50aba080d6d39f99d7433dbe4c18c3f472d8a46291ee0d1b5e6c98ec",
+    ".agents/skills/retail-adk-implementation/agents/openai.yaml": "65a75f0ffeabe5ecc22b66665d394e392184982679242d2e1ee65b07675eb2fe",
+    ".agents/skills/retail-agent-evaluation/SKILL.md": "6ef4f98088dbdea5231a12fade5e051bdce14d1b3f70602470190b9663661d39",
+    ".agents/skills/retail-agent-evaluation/agents/openai.yaml": "eaeebecefd70607e8d2fb4ca7c451cfa0fcd417f1f0ac50ad8031204407eb931",
+    ".agents/skills/retail-analytics/SKILL.md": "618ed8ee07f2691dd7a098c07a786f06d9b853f3d67f7639765fc1f4a27a4590",
+    ".agents/skills/retail-analytics/agents/openai.yaml": "35f2fc8e6989b7be977182a5c841b731544bc6ca8f8db21dd060d5f2954f3675",
+    ".agents/skills/security-best-practices/LICENSE.txt": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9",
+    ".agents/skills/security-best-practices/SKILL.md": "7b3dae1ffc5434d890f3c65c8f552af52d0307fab3b35dec13013c9ca3844c4f",
+    ".agents/skills/security-best-practices/agents/openai.yaml": "6e9c6f2edce448eb2b589f81ad6e3f722665021785513bcbfd0bf7b86b529171",
+    ".agents/skills/security-best-practices/references/golang-general-backend-security.md": "a73c47c34497b120672d48411fe51dc90d426a571801a0b3f649e2ce4ec658b4",
+    ".agents/skills/security-best-practices/references/javascript-express-web-server-security.md": "427835cbb5be7ba96172ea6ca9af80ddd4419c833e9ebf870996740c80d8406c",
+    ".agents/skills/security-best-practices/references/javascript-general-web-frontend-security.md": "3a7bc7b3f6e7ff043db9dbaa8933894d7a19d987d0607e4ddae5d70184a63d63",
+    ".agents/skills/security-best-practices/references/javascript-jquery-web-frontend-security.md": "bcbad2fa6c2a02709e47e889e70102c76886bf36bc798624d27db570eccf40da",
+    ".agents/skills/security-best-practices/references/javascript-typescript-nextjs-web-server-security.md": "71c773f7a97ce60c853adfa100b3d88b3b7bc4c6b8acaef1432ffabd923ee182",
+    ".agents/skills/security-best-practices/references/javascript-typescript-react-web-frontend-security.md": "d3030c0f24bddb56b9bbb91bbec1ee49eb7778bce4d3e0297b2641b2fc6b0d9c",
+    ".agents/skills/security-best-practices/references/javascript-typescript-vue-web-frontend-security.md": "77c6a747f9f17e3df03aad0fcb20d99ac7898001b81aef8b80908e45ac14a688",
+    ".agents/skills/security-best-practices/references/python-django-web-server-security.md": "4fb69b5d45f10e588d1a8c35cdc5f59e18910f6b46a93e2d342d90f286f8dfd2",
+    ".agents/skills/security-best-practices/references/python-fastapi-web-server-security.md": "7383c7f4fc271190b05e562ada7e825982a2c76b6c79a9f95a1da7687b65a616",
+    ".agents/skills/security-best-practices/references/python-flask-web-server-security.md": "9606d69190c04c167fdeac57e61297547a57b0542fd89dede36f355970446929",
+    ".agents/skills/security-threat-model/LICENSE.txt": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9",
+    ".agents/skills/security-threat-model/SKILL.md": "1283c0dd62a8104d9edda4583569b5d8510b4ddaa45120687c999250fd96bad2",
+    ".agents/skills/security-threat-model/agents/openai.yaml": "3319b59736312abceca614e341c0e59cae47263e3b58a22b2b5ddf1e5fc8c227",
+    ".agents/skills/security-threat-model/references/prompt-template.md": "81a59aa3fb3ac3a739d6a26ab38e4015965f215581ee54becef21a2b121ec29b",
+    ".agents/skills/security-threat-model/references/security-controls-and-assets.md": "d536cfa9acad2523dc39134bcf33b9566c29dd9a57b407cbc9901637230c6b98",
+    ".agents/skills/python-testing-patterns/LICENSE.txt": "f89abb55d9f073f38f1703e4518f0613c788c6174be7f13b8dfe48a1c076c746",
+    ".agents/skills/python-testing-patterns/SKILL.md": "8f4bad44b1a101ae572b6f8dbb2af51f77d9ed656e9f87aa263ded122444c037",
+    ".agents/skills/python-testing-patterns/references/advanced-patterns.md": "f560ee8b3cffc0fe971e78269bed21dc74f541c2056eae58d34259d9e537176a",
+    ".agents/skills/python-testing-patterns/references/details.md": "baaa88e2997d960c19f981248b9e3e850e36e2cdf4d97b50297f5d9764826349"
+  },
+  "additional_upstream": [
+    {
+      "repository": "https://github.com/wshobson/agents",
+      "revision": "0874a27b17a22e2b7c2e2bcd725768e0803cad06",
+      "path": "plugins/python-development/skills/python-testing-patterns",
+      "skills": [
+        "python-testing-patterns"
+      ],
+      "license": "MIT; root LICENSE copied to skill/LICENSE.txt",
+      "modifications": [
+        "Added repository adaptation section to SKILL.md; upstream examples retained"
+      ]
+    }
+  ],
+  "updated_on": "2026-10-21"
+}
