@@ -19,8 +19,8 @@ Client answers supersede proposed defaults. Keep implementation status and test 
 Send these in the next client update; continue independent implementation while waiting:
 
 1. Request the referenced FAQ and confirm the submission deadline.
-2. Clarify production data freshness: daily, hourly, or near real time. Until answered, propose daily incremental ingestion and disclose the data-as-of timestamp. This is production design, not a request to copy the public dataset locally.
-3. Clarify whether old reports/chat evidence become inaccessible after a manager loses a brand. Proposed default: recheck current entitlements before showing or reusing content, block content outside current scope, and preserve owner-authorized deletion without revealing restricted titles or contents.
+
+Roi confirmed on 22 October 2026: use existing data for ad-hoc, user-triggered analysis, with no cron-based analysis. Brand access-revocation handling is out of scope. These answers supersede the earlier daily-ingestion and historical-content reauthorization proposals.
 
 Other remaining questions are recorded in the Q&A. Do not repeat answered questions or make low-impact implementation choices depend on another client response.
 
@@ -73,7 +73,7 @@ Use maintained, compatible versions. Prefer a stable model that passes the task 
 - [ ] Implement deterministic deletion preview/confirm/cancel with owner-bound exact IDs and versions, expiry, and a single-use token.
 - [ ] Recheck and consume/delete transactionally. Handle replay, changed records, and new matches without expanding the confirmed set.
 - [ ] Hard-delete approved report content and application-managed copies; retain content-free audit events. Document backup semantics in the HLD.
-- [ ] Implement the proposed access-revocation behavior conservatively, marked as an assumption until confirmed. Permit owner deletion using safe identifiers when report content is no longer readable.
+- [ ] Keep access-revocation lifecycle handling out of scope as confirmed by Roi; retain normal brand authorization and report ownership checks.
 
 **Exit evidence:** inspect actual database state after valid confirmation, cancellation, wrong-owner attempts, expiry, replay, and stale preview. “Deleted” text alone is not evidence.
 
@@ -97,7 +97,7 @@ Follow the [testing strategy](testing_strategy.md); start boundary tests in earl
 - [ ] Use BigQuery integration checks for dialect/job behavior; local SQLite tests alone cannot establish BigQuery compatibility.
 - [ ] Evaluate answer relevance, numeric correctness, evidence coverage, limitations, useful actions, and conversational clarity. Do not use an LLM judge as the sole correctness/security oracle.
 - [ ] Record actual case counts, failures, model versions, trial counts, timings, and costs; disclose limits of small samples.
-- [ ] Complete the HLD for all eight requirements: identity, ingestion/freshness, trust boundaries, tools, stores, protocols, scaling, learning, evaluation, retention, and failure paths.
+- [ ] Complete the HLD for all eight requirements: identity, on-demand access to existing data, trust boundaries, tools, stores, protocols, scaling, learning, evaluation, retention, and failure paths.
 - [ ] Describe non-technical persona editing with automatic quality-gated publication and rollback; retain a separate human editor/reviewer workflow for Golden examples.
 - [ ] Define the Trio format and seed a few clearly illustrative examples. Implement lightweight retrieval only after mandatory checks pass.
 
@@ -120,3 +120,7 @@ Follow the [testing strategy](testing_strategy.md); start boundary tests in earl
 Finish mandatory functionality, focused evidence, and all required design sections before optional polish. Keep the advertised SQL subset and limitations explicit. Do not cut privacy, authorization, confirmation, recovery, or observability to make room for additional features.
 
 The final submission should demonstrate correct business answers, rules enforced independently of model behavior, exact confirmed deletion, understandable failures, and reproducible results. These are the acceptance criteria for quality; newer technology alone is not an acceptance criterion.
+
+## Planned Python tooling
+
+Use uv for dependency management, Ruff for linting/formatting, and Pyright in strict mode for type checking. Keep dependency declarations and all tool settings (including pytest and coverage) in `pyproject.toml`, with resolved versions in `uv.lock`. Use a modular `src/retail_agent` layout. See [Python development](python_development.md) for the proposed commands and module boundaries. This is a plan only; tooling and application scaffolding have not been added.

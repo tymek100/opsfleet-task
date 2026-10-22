@@ -124,8 +124,8 @@ The confirmed scale is around 1,000 questions and 100 reports/day, a few concurr
 
 The HLD should make these decisions reviewable:
 
-- **Ingestion:** Source → incremental curated BigQuery data → freshness marker. Volume is known, but freshness SLA is still an assumption. Address deduplication, late updates/returns, and schema changes.
-- **Serving:** OIDC → trusted user/brand context → scoped session → orchestration → constrained analytics gateway → safe results. Every cache key includes scope and definition versions; invalidate on entitlement changes.
+- **Existing data:** Query existing BigQuery data on user demand and disclose available timestamps. Roi confirmed on 22 October 2026 that there is no cron-based analysis; remove the earlier proposed daily ingestion pipeline from application scope.
+- **Serving:** OIDC → trusted user/brand context → scoped session → orchestration → constrained analytics gateway → safe results. Every cache key includes scope and definition versions to prevent cross-scope reuse. Access-revocation lifecycle handling is out of scope per Roi.
 - **Jobs:** Long reports use bounded worker execution, idempotency, status/progress, and retry rules. Saving is a separate authorized action.
 - **Knowledge:** Versioned sanitized trios, editor/reviewer workflow, permissions, semantic/text retrieval, schema compatibility, and retirement of stale examples. Never automatically promote a model answer because a user liked it.
 - **Persona:** Non-technical form → automated quality gate → versioned publish or rejection → rollback. Security/numeric checks are mandatory and deterministic where possible. Persona publication has no manual approval; Golden Knowledge does.

@@ -15,9 +15,9 @@ Map each of the eight requirements to working code/tests or explicit design-only
 
 ## Produce a concrete HLD
 
-Name services, storage, communication protocols, execution identity, and trust boundaries. Cover request flow, ingestion/freshness, query and privacy enforcement, long jobs, error/degraded behavior, deployment configuration, retention, and monitoring. Resolve public-data prototype versus private-data production honestly; a shared service account does not automatically enforce end-user row access.
+Name services, storage, communication protocols, execution identity, and trust boundaries. Cover request flow, on-demand queries against existing data, query and privacy enforcement, long jobs, error/degraded behavior, deployment configuration, retention, and monitoring. Resolve public-data prototype versus private-data production honestly; a shared service account does not automatically enforce end-user row access.
 
-Use the confirmed targets and retention rules from Q&A without duplicating stale numbers across documents. Distinguish fixed infrastructure cost from configurable per-question variable cost, and cite dated official pricing when making estimates. Explain cache scope/version keys and safe behavior after entitlement changes. Persona changes use an automated quality gate with no manual approval; Golden examples use editor/reviewer approval.
+Use the confirmed targets and retention rules from Q&A without duplicating stale numbers across documents. Distinguish fixed infrastructure cost from configurable per-question variable cost, and cite dated official pricing when making estimates. Explain cache scope/version keys. Roi explicitly excluded access-revocation lifecycle handling and cron-based analysis; do not reintroduce them. Golden Knowledge indexing remains a separate design requirement. Persona changes use an automated quality gate with no manual approval; Golden examples use editor/reviewer approval.
 
 For each important tradeoff, state the chosen approach, reason, limitation, and what evidence or scale would justify changing it. Keep diagrams consistent with the explanation. No service should exist in the diagram solely to make it look production-ready.
 

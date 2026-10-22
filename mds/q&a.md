@@ -142,22 +142,35 @@ The client referenced an FAQ with additional examples and invited Roi Hezkiyahu 
 
 **Implementation consequence:** Keep report content out of audit records and expire chats independently of saved reports. The client did not specify retention for detailed diagnostic payloads or physical backup deletion mechanics; those remain design details to resolve.
 
+### 16. Existing data and analysis scheduling
+
+**Question:** How fresh should production data be—daily, hourly, or near real time?
+
+**Answer (Roi, 22 October 2026):** Analyze existing data ad hoc on demand; no cron-based analysis.
+
+**Implementation consequence:** Remove the proposed daily transaction-ingestion pipeline and scheduled analysis from scope. Execute queries when users request analysis. Disclose the queried period and available data timestamp without promising upstream freshness. Golden Knowledge review/indexing and retention are separate concerns.
+
+### 17. Brand access revocation
+
+**Question:** If a manager loses access to a brand, should previous reports and chat history containing that brand become inaccessible?
+
+**Answer (Roi, 22 October 2026):** Keep this out of scope; no need to handle it for the assignment.
+
+**Implementation consequence:** Remove revocation workflows, historical-content reauthorization, and revocation-specific tests from the plan. Keep required brand checks for queries and owner checks for reports. Do not infer new offboarding or account-deletion requirements from Roi's rationale.
+
 ## Remaining questions
 
 These are proposed follow-ups, not questions confirmed as sent. None blocks starting the prototype. Ask in a short batch or when the decision becomes relevant; do not reopen the requirements already answered above.
 
 ### Useful next questions
 
-Priority for the next client message: FAQ/deadline, data freshness, and access changes below. The remaining questions can be addressed with labelled assumptions unless implementation reveals a concrete blocker. Do not delay the prototype for another complete round of requirements gathering.
-
-**Access changes (new, not yet asked):** If a manager loses access to a brand, should their previously saved reports and chat history containing that brand become inaccessible? **Proposed assumption:** recheck current entitlements before using old evidence or returning report content; block content containing revoked brands, while preserving the owner's ability to permanently delete their own reports. Report ownership and permission to view underlying business data are separate checks.
+Priority for the next client message: the FAQ and deadline. Roi has answered the freshness and access-change questions; do not resend them. Other items can use documented assumptions unless a concrete blocker appears.
 
 1. **FAQ and submission:** Could you share the FAQ referenced in the demo guidance, and confirm the submission deadline and preferred submission process? The original draft asked about the deadline/progress format, but no answer was supplied. We already know submission requires a public GitHub repository.
-2. **Data freshness:** For production, how quickly should new transactions be available for analysis—daily, hourly, or near real time? The daily row volume is known, but freshness is not. **Proposed assumption:** daily incremental ingestion with a visible “data as of” timestamp.
-3. **Production identity:** Which SSO/identity provider and source of manager-to-brand assignments should the design integrate with? **Proposed assumption:** generic OIDC plus an administrator-managed entitlement table; local demo identities remain accepted.
-4. **Small geographic groups:** Is there a minimum customer count for state-level aggregates? **Proposed assumption:** suppress groups with fewer than five distinct customers and avoid exposing individual-to-state associations; five is our proposal, not a confirmed requirement.
-5. **Deleted report copies:** Should permanent report deletion also remove copies from chat history, caches, and exports, and what purge delay is acceptable for backups? **Proposed assumption:** remove application-managed content copies and prevent resurrection after restore; document backup expiration separately. We are clarifying the extent of deletion, not requesting a recovery window.
-6. **Diagnostic access:** Who may view sanitized conversation/tool traces, and should those payloads expire after 90 days while content-free audit events remain for one year? **Proposed assumption:** restricted operations access, with detailed payloads retained no longer than chat history.
+2. **Production identity:** Which SSO/identity provider and source of manager-to-brand assignments should the design integrate with? **Proposed assumption:** generic OIDC plus an administrator-managed entitlement table; local demo identities remain accepted.
+3. **Small geographic groups:** Is there a minimum customer count for state-level aggregates? **Proposed assumption:** suppress groups with fewer than five distinct customers and avoid exposing individual-to-state associations; five is our proposal, not a confirmed requirement.
+4. **Deleted report copies:** Should permanent report deletion also remove copies from chat history, caches, and exports, and what purge delay is acceptable for backups? **Proposed assumption:** remove application-managed content copies and prevent resurrection after restore; document backup expiration separately. We are clarifying the extent of deletion, not requesting a recovery window.
+5. **Diagnostic access:** Who may view sanitized conversation/tool traces, and should those payloads expire after 90 days while content-free audit events remain for one year? **Proposed assumption:** restricted operations access, with detailed payloads retained no longer than chat history.
 
 ### Later refinements, if relevant
 

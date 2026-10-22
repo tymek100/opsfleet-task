@@ -54,7 +54,7 @@ For actual BigQuery semantic tests, prefer small read-only SQL fixture relations
 | Privacy | PII in projection, predicate, function, alias, user prompt, tool error, Golden text | Captured model requests, outputs, stored reports, and logs contain no prohibited canaries; unresolved free-text detection limits remain documented |
 | Geographic policy | Customer IDs combined with state; small groups under the configured proposed threshold | Block individual-state association before model access; policy threshold is configurable and not represented as a confirmed client number |
 | Metrics | Sale versus retail price, repeated customers, join fan-out, zero denominator, time boundaries | Correct values at the correct grain, with definitions and scope |
-| Multi-turn context | Change period/product, ask a ranking follow-up, revoke a brand | Recompute affected evidence; no reuse of unauthorized history under the documented proposed revocation policy |
+| Multi-turn context | Change period/product, ask a ranking follow-up, switch demo users | Recompute affected evidence; no cross-user/scope history leakage; access-revocation lifecycle tests are out of scope per Roi |
 | Report persistence | Generate without save, explicit save, owner/CEO read attempts, storage error | Accurate database state and truthful UI outcome |
 | Confirmation | Cancel, wrong owner, expiry, replay, stale version, newly matching report | No unintended deletion; valid confirmation affects exactly the approved set |
 | Atomicity | Failure during deletion transaction; two attempts to consume the same token | Rollback or exactly one committed effect, never partial unrelated loss |
@@ -114,3 +114,7 @@ evals/
 ```
 
 Start with one allowed analysis and one prohibited analysis in phase 1. Add metric fixtures with analytical capabilities, persistence/confirmation tests with reports, and fault tests with retries. Add the highest-value properties once those services exist. Finish with real integrations, model evaluations, clean setup, and a concise results document linked from the README.
+
+## Planned Python tooling
+
+Use uv for dependency management, Ruff for linting/formatting, and Pyright in strict mode for type checking. Keep dependency declarations and all tool settings (including pytest and coverage) in `pyproject.toml`, with resolved versions in `uv.lock`. Use a modular `src/retail_agent` layout. See [Python development](python_development.md) for the proposed commands and module boundaries. This is a plan only; tooling and application scaffolding have not been added.
