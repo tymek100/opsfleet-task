@@ -1,0 +1,19 @@
+flowchart TB
+  executive["Executive browser or CLI"] -->|"HTTPS + OIDC token"| api["Cloud Run: FastAPI application"]
+  idp["Organization OIDC provider"] -->|"Verified identity"| api
+  api -->|"Owner and brand lookup; SQL/TLS"| state["Cloud SQL PostgreSQL: entitlements, reports, chats, confirmations, preferences"]
+  api --> agent["One ADK agent: orchestration and bounded tools"]
+  agent <-->|"HTTPS: minimized authorized evidence"| model["Gemini on Vertex AI"]
+  agent -->|"Typed analysis request"| gateway["Policy and query gateway: compiler, budgets, result contract"]
+  gateway -->|"BigQuery API: dry run then parameterized query"| bq["BigQuery: restricted analytics views over existing transactions"]
+  agent -->|"Scope and version filtered retrieval"| knowledge["PostgreSQL: text search + pgvector"]
+  editor["Analyst editor and reviewer"] -->|"Approved versioned Trio"| bucket["Cloud Storage: Golden Knowledge source"]
+  bucket -->|"Approved publication event"| queue["Cloud Tasks"]
+  queue --> worker["Cloud Run worker: validate, index, long report jobs"]
+  worker --> knowledge
+  api -->|"User-requested long report job"| queue
+  persona["Nontechnical persona editor"] --> gate["Automated quality gate"]
+  gate -->|"Publish version only on pass"| state
+  api --> telemetry["OpenTelemetry to Cloud Logging, Trace and Monitoring"]
+  gateway --> telemetry
+  api --> secrets["Secret Manager and workload identity"]

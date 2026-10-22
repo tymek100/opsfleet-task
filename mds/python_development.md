@@ -1,5 +1,8 @@
 # Python development
 
+> Implementation update: the prototype and reviewer documentation now live in `src/`, `tests/`, and [docs](../docs/README.md). This file preserves planning context; use the submission documents and evaluation report for current behavior and executed checks.
+
+
 This document records the implementation plan only. No tooling configuration, package scaffold, or development environment is installed in this repository. Use Python 3.12 or newer. `pyproject.toml` will be the single source for dependency declarations, packaging, Ruff, strict Pyright, pytest, and coverage settings. Commit `uv.lock` for reproducible dependency versions. Add runtime dependencies with `uv add` as their functionality is implemented.
 
 Once the tooling is implemented, use:
@@ -12,7 +15,7 @@ uv run --locked pyright
 uv run --locked pytest
 ```
 
-Use `uv run ruff format .` to format code. Configure pytest to disable sockets and exclude live markers by default. Live runs should require both explicit marker selection and `--enable-socket`, plus the credential and budget setup described in the testing strategy. Socket blocking does not prevent subprocess networking: offline tests must also avoid real CLI/cloud subprocesses and credential loading.
+Use `uv run ruff format .` to format code. Configure pytest to disable sockets and exclude live markers by default. Live runs should require both explicit marker selection and `--force-enable-socket`, plus the credential and budget setup described in the testing strategy. Socket blocking does not prevent subprocess networking: offline tests must also avoid real CLI/cloud subprocesses and credential loading.
 
 `--locked` tells uv to use the lockfile without updating it and fail when dependency declarations require a lockfile update. Use `uv add` or `uv lock` when intentionally updating dependencies.
 

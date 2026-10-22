@@ -1,5 +1,8 @@
 # Implementation plan
 
+> Implementation update: the prototype and reviewer documentation now live in `src/`, `tests/`, and [docs](../docs/README.md). This file preserves planning context; use the submission documents and evaluation report for current behavior and executed checks.
+
+
 Status: planned, not implemented. The initial BigQuery CLI connection has been verified; Python application credentials, Gemini access, application behavior, and performance still need verification. Research and requirements work already performed must be counted honestly alongside implementation time.
 
 ## Objective and sources of truth

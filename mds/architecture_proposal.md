@@ -1,5 +1,8 @@
 # Architecture and technology proposal
 
+> Implementation update: the prototype and reviewer documentation now live in `src/`, `tests/`, and [docs](../docs/README.md). This file preserves planning context; use the submission documents and evaluation report for current behavior and executed checks.
+
+
 Status: proposal updated with client answers on access, privacy, metrics, deletion, Golden Knowledge, demo priorities, production scale, persona publishing, and retention. This is a planning document, not a claim that the system is implemented or that the final submission is complete.
 
 Execution order and acceptance criteria live in the [implementation plan](implementation_plan.md). Confirmed requirements and remaining questions live in [client Q&A](q&a.md); research rationale is in [the quality strategy](1-percent.md).

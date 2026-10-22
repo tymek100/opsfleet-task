@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Illustrative Golden Trio collection",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "revision",
+      "question",
+      "sql_query",
+      "parameters",
+      "analyst_report",
+      "analysis_plan",
+      "definitions",
+      "scope",
+      "schema_version",
+      "metric_version",
+      "review_status",
+      "provenance"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "revision": {
+        "type": "integer"
+      },
+      "question": {
+        "type": "string"
+      },
+      "sql_query": {
+        "type": "string"
+      },
+      "parameters": {
+        "type": "object"
+      },
+      "analyst_report": {
+        "type": "string"
+      },
+      "analysis_plan": {
+        "type": "object"
+      },
+      "definitions": {
+        "type": "string"
+      },
+      "scope": {
+        "type": "object"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "metric_version": {
+        "type": "string"
+      },
+      "review_status": {
+        "type": "string"
+      },
+      "provenance": {
+        "type": "string"
+      }
+    }
+  }
+}

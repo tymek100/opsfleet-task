@@ -1,0 +1,11 @@
+stateDiagram-v2
+  [*] --> Requested
+  Requested --> Previewed: Owner-scoped literal match
+  Previewed --> Cancelled: Cancel
+  Previewed --> Expired: Five-minute TTL
+  Previewed --> Rejected: Wrong owner, session, token or stale version
+  Previewed --> Deleted: Explicit token and exact transactional recheck
+  Deleted --> [*]
+  Cancelled --> [*]
+  Expired --> [*]
+  Rejected --> Requested: Request fresh preview

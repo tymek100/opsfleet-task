@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant U as Executive
+  participant A as API and ADK
+  participant G as Golden retriever
+  participant M as Gemini
+  participant Q as Query gateway
+  participant B as BigQuery
+  U->>A: Question and authenticated session
+  A->>A: Resolve brands, owner, budget, persona and preferences
+  A->>G: Search within permission and version filters
+  G-->>A: Relevant reviewed methods and provenance
+  A->>M: Question, bounded context, methods and tool schema
+  M-->>A: Typed analytical request
+  A->>Q: Request plus server-owned identity
+  Q->>Q: Validate fields and compile scoped SQL
+  Q->>B: Dry run
+  B-->>Q: Estimated bytes or sanitized error
+  Q->>B: Execute with parameters, stable job ID and byte cap
+  B-->>Q: Result rows and usage
+  Q->>Q: Validate columns, minimize values, attach evidence
+  Q-->>A: Authorized evidence
+  A->>M: Evidence for interpretation and proposed actions
+  M-->>A: Structured answer
+  A-->>U: Narrative, deterministic evidence tables, scope and definitions

@@ -1,5 +1,8 @@
 # Testing strategy
 
+> Implementation update: the prototype and reviewer documentation now live in `src/`, `tests/`, and [docs](../docs/README.md). This file preserves planning context; use the submission documents and evaluation report for current behavior and executed checks.
+
+
 Status: planned. The application has not been implemented, so this document does not claim that application tests exist or pass. Build meaningful tests alongside each implementation phase, not as a large cleanup exercise at the end.
 
 The objective is confidence in correct analysis, enforced boundaries, and reliable state changes. Use [client Q&A](q&a.md) as the specification and [implementation_plan.md](implementation_plan.md) for delivery order. The installed `python-testing-patterns` skill provides pytest techniques; `retail-agent-evaluation` defines the agent-specific checks.
