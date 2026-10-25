@@ -1,0 +1,30 @@
+flowchart TB
+  user["Executive / editor"]:::external
+  idp["Organization OIDC"]:::external
+  api["Cloud Run API<br/>Chat + publishing + dispatcher"]:::app
+  gateway["Cloud Run query gateway<br/>Restricted execution identity"]:::app
+  worker["Cloud Run worker<br/>Indexing + requested reports"]:::app
+  db["One Cloud SQL PostgreSQL<br/>State + jobs/outbox + Golden index"]:::data
+  bq["BigQuery authorized views<br/>Existing transactions"]:::data
+  model["Vertex AI<br/>Gemini + embeddings"]:::external
+  bucket["Cloud Storage<br/>Immutable Golden revisions"]:::data
+  queue["Cloud Tasks<br/>Authenticated dispatch"]:::ops
+  scheduler["Cloud Scheduler<br/>Outbox / retention only"]:::ops
+  user -->|"HTTPS + OIDC"| api
+  idp -->|"Verify token"| api
+  api -->|"Trusted context + contract"| gateway
+  gateway -->|"Scoped query API"| bq
+  api -->|"SQL/TLS: state + outbox"| db
+  api -->|"HTTPS: plan / embeddings"| model
+  api -->|"Approved source upload"| bucket
+  api -->|"Dispatch committed outbox"| queue
+  scheduler -->|"Authenticated maintenance"| api
+  queue -->|"OIDC HTTP task"| worker
+  worker -->|"Read pinned generation"| bucket
+  worker -->|"SQL/TLS: leases / index / draft"| db
+  worker -->|"Same guarded analysis"| gateway
+  worker -->|"HTTPS: narrative / embeddings"| model
+  classDef external fill:#eef2ff,stroke:#64748b,color:#0f172a
+  classDef app fill:#e0f2fe,stroke:#64748b,color:#0f172a
+  classDef data fill:#ecfdf5,stroke:#64748b,color:#0f172a
+  classDef ops fill:#fff7ed,stroke:#64748b,color:#0f172a

@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Production proposal — container view" id="production">
+    <mxGraphModel grid="1" page="1" pageWidth="1380" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="user" value="Executive / editor" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eef2ff;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="40" y="40" width="250" height="85" />
+        </mxCell>
+        <mxCell id="idp" value="Organization OIDC" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eef2ff;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="340" y="40" width="250" height="85" />
+        </mxCell>
+        <mxCell id="api" value="Cloud Run API&#10;Chat + publishing + dispatcher" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e0f2fe;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="260" y="190" width="250" height="85" />
+        </mxCell>
+        <mxCell id="gateway" value="Cloud Run query gateway&#10;Restricted execution identity" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e0f2fe;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="40" y="440" width="250" height="85" />
+        </mxCell>
+        <mxCell id="worker" value="Cloud Run worker&#10;Indexing + requested reports" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e0f2fe;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="780" y="440" width="250" height="85" />
+        </mxCell>
+        <mxCell id="db" value="One Cloud SQL PostgreSQL&#10;State + jobs/outbox + Golden index" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ecfdf5;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="350" y="700" width="250" height="85" />
+        </mxCell>
+        <mxCell id="bq" value="BigQuery authorized views&#10;Existing transactions" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ecfdf5;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="40" y="700" width="250" height="85" />
+        </mxCell>
+        <mxCell id="model" value="Vertex AI&#10;Gemini + embeddings" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eef2ff;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="1060" y="440" width="250" height="85" />
+        </mxCell>
+        <mxCell id="bucket" value="Cloud Storage&#10;Immutable Golden revisions" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ecfdf5;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="1050" y="190" width="250" height="85" />
+        </mxCell>
+        <mxCell id="queue" value="Cloud Tasks&#10;Authenticated dispatch" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#fff7ed;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="780" y="190" width="250" height="85" />
+        </mxCell>
+        <mxCell id="scheduler" value="Cloud Scheduler&#10;Outbox / retention only" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#fff7ed;fontSize=14;strokeColor=#64748b;">
+          <mxGeometry as="geometry" x="650" y="40" width="250" height="85" />
+        </mxCell>
+        <mxCell id="edge0" value="HTTPS + OIDC" edge="1" parent="1" source="user" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge1" value="Verify token" edge="1" parent="1" source="idp" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge2" value="Trusted context + contract" edge="1" parent="1" source="api" target="gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge3" value="Scoped query API" edge="1" parent="1" source="gateway" target="bq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge4" value="SQL/TLS: state + outbox" edge="1" parent="1" source="api" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge5" value="HTTPS: plan / embeddings" edge="1" parent="1" source="api" target="model" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge6" value="Approved source upload" edge="1" parent="1" source="api" target="bucket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge7" value="Dispatch committed outbox" edge="1" parent="1" source="api" target="queue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge8" value="Authenticated maintenance" edge="1" parent="1" source="scheduler" target="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge9" value="OIDC HTTP task" edge="1" parent="1" source="queue" target="worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge10" value="Read pinned generation" edge="1" parent="1" source="worker" target="bucket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge11" value="SQL/TLS: leases / index / draft" edge="1" parent="1" source="worker" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge12" value="Same guarded analysis" edge="1" parent="1" source="worker" target="gateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge13" value="HTTPS: narrative / embeddings" edge="1" parent="1" source="worker" target="model" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

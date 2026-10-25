@@ -16,3 +16,7 @@ htmlcov/
 *.sqlite3
 *.log
 .DS_Store
+.retail-agent/
+.retail-agent
+.retail-agent-*/
+dist/

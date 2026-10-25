@@ -1,0 +1,36 @@
+{
+  "id": 6,
+  "name": "preview_cancel_list",
+  "user": "bob",
+  "conversation": "fresh-cancel",
+  "prompt": "First preview removal of reports whose title contains Keep me, then cancel that preview, and finally list my reports. Do not delete anything.",
+  "expected": "Three ordered operations; final pending zero, no deleted reports or active preview.",
+  "reports_before": [
+    {
+      "id": "recorded-report",
+      "title": "Keep me - seeded fixture"
+    }
+  ],
+  "pending_before": 0,
+  "answer": {
+    "text": "Deletion preview prepared. Nothing deleted; use the exact confirmation token shown by the CLI or /cancel.\n\nPending deletion cancelled for this conversation. No reports were deleted.\n\nrecorded-report | Keep me - seeded fixture",
+    "evidence": [],
+    "trace_id": "recorded-preview_cancel_list",
+    "estimated_cost_usd": 0.134176,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [
+    "recorded-report"
+  ],
+  "pending_after": 0,
+  "seconds": 15.29
+}

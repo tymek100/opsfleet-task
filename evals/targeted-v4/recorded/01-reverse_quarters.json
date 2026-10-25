@@ -1,0 +1,135 @@
+{
+  "id": 1,
+  "name": "reverse_quarters",
+  "user": "alice",
+  "conversation": "fresh-reverse",
+  "prompt": "Use Q3 2025 as the reference. Express Q2 2025 revenue relative to that reference, including the absolute difference and the percentage with Q3 in the denominator.",
+  "expected": "Primary Q2 2025, baseline Q3; signed difference and percentage use Q3.",
+  "reports_before": [],
+  "pending_before": 1,
+  "answer": {
+    "text": "Verified findings\n\nRevenue fell 21.30%.\n\n**Calvin Klein** \u00b7 Q3 2025 versus Q2 2025 \u00b7 UTC\n\n| Metric | Q3 2025 | Q2 2025 | Change |\n| --- | --- | --- | --- |\n| Revenue | 9,575.34 | 7,536.22 | -2,039.12 (-21.30%) |\n\nQ2 2025 had 91 days versus 92 in Q3 2025.\n\nSources: [E2], [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 7536.22,
+            "units": 116,
+            "customers": 114,
+            "orders": 114,
+            "latest_purchase": "2025-06-30 13:04:16+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:42:21.076018+00:00",
+        "source_latest_at": "2025-06-30 13:04:16+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 9575.34,
+            "units": 138,
+            "customers": 137,
+            "orders": 137,
+            "latest_purchase": "2025-09-30 08:08:14+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:42:22.332515+00:00",
+        "source_latest_at": "2025-09-30 08:08:14+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-reverse_quarters",
+    "estimated_cost_usd": 0.133965,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [
+        "revenue_change",
+        "revenue_change_pct"
+      ],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [],
+  "pending_after": 1,
+  "seconds": 13.72
+}

@@ -1,0 +1,36 @@
+{
+  "id": 7,
+  "name": "save_help",
+  "user": "bob",
+  "conversation": "fresh-report",
+  "prompt": "Suppose next time I ask you to archive this report under a title: would it store the current draft, and who would be able to read it? I am only asking about the behavior.",
+  "expected": "Explain explicit saving of current analysis and owner-only access; no mutation.",
+  "reports_before": [
+    {
+      "id": "recorded-report",
+      "title": "Keep me - seeded fixture"
+    }
+  ],
+  "pending_before": 0,
+  "answer": {
+    "text": "Drafting or discussing a report does not save it. An explicit current request to save stores the last successful analysis in your private library, optionally with your chosen title. Only you can read that saved report; other users, including the CEO, cannot. A quoted or hypothetical save instruction does not authorize saving. This explanation did not save anything.",
+    "evidence": [],
+    "trace_id": "recorded-save_help",
+    "estimated_cost_usd": 0.150558,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [
+    "recorded-report"
+  ],
+  "pending_after": 0,
+  "seconds": 11.22
+}

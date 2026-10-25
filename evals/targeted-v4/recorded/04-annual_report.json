@@ -1,0 +1,249 @@
+{
+  "id": 4,
+  "name": "annual_report",
+  "user": "bob",
+  "conversation": "fresh-report",
+  "prompt": "Prepare a Q2 2025 report against Q2 2024: revenue totals, monthly revenue and the top two products for Q2 2025, plus proposed actions for Q3 2025. Leave it unsaved.",
+  "expected": "YoY calculation, current months/top2 and next-quarter actions; no save.",
+  "reports_before": [
+    {
+      "id": "recorded-report",
+      "title": "Keep me - seeded fixture"
+    }
+  ],
+  "pending_before": 1,
+  "answer": {
+    "text": "Verified findings\n\nRevenue rose 54.48%.\n\n**Levi's** \u00b7 Q2 2024 versus Q2 2025 \u00b7 UTC\n\n| Metric | Q2 2024 | Q2 2025 | Change |\n| --- | --- | --- | --- |\n| Revenue | 2,098.56 | 3,241.78 | +1,143.22 (+54.48%) |\n\nQ2 2025 had 91 days versus 91 in Q2 2024.\n\nSources: [E4], [E1].\n\n**Levi's** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-04 | 1,253.46 |\n| 2025\\-05 | 905.92 |\n| 2025\\-06 | 1,082.40 |\n\nSource: [E2].\n### Top 2 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 24254 | Levi's Men's Leather Two\\-Pocket Fashion Moto Jacket | 239.99 |\n| 2 | 24093 | Levi's Men's Leather Racer Quilted Shoulders Jacket | 229.99 |\n\nSource: [E3].\n\nProposed actions \u2014 owners and targets are proposals, not forecasts or proven outcomes.\n- **01 Jul 2025 to 30 Sep 2025 (UTC) \u2014 Operations and Analytics (proposed owner):** Investigate demand using promotion, availability and calendar records; compare the selected measure before choosing an intervention.\n  Baseline: revenue = 3,241.78 [E1]. Set a target after the investigation or test design.\n\nTransaction data shows patterns; it does not establish causes or guarantee outcomes.",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 3241.78,
+            "units": 60,
+            "customers": 60,
+            "orders": 60,
+            "latest_purchase": "2025-06-29 04:39:21+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:43:11.251722+00:00",
+        "source_latest_at": "2025-06-29 04:39:21+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-04",
+            "revenue": 1253.46,
+            "units": 26,
+            "customers": 26,
+            "orders": 26,
+            "latest_purchase": "2025-04-30 08:11:13+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 905.92,
+            "units": 15,
+            "customers": 15,
+            "orders": 15,
+            "latest_purchase": "2025-05-30 16:11:15+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 1082.4,
+            "units": 19,
+            "customers": 19,
+            "orders": 19,
+            "latest_purchase": "2025-06-29 04:39:21+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "f769079b549302d7",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:43:13.402400+00:00",
+        "source_latest_at": "2025-06-29 04:39:21+00",
+        "comparisons": []
+      },
+      {
+        "id": "E3",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 2,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 24254,
+            "product_name": "Levi's Men's Leather Two-Pocket Fashion Moto Jacket",
+            "revenue": 239.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-06 03:53:16+00"
+          },
+          {
+            "product_id": 24093,
+            "product_name": "Levi's Men's Leather Racer Quilted Shoulders Jacket",
+            "revenue": 229.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-05-17 21:51:10+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "31e397249be6c7ff",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:43:14.659322+00:00",
+        "source_latest_at": "2025-06-06 03:53:16+00",
+        "comparisons": []
+      },
+      {
+        "id": "E4",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2024-04-01",
+          "end": "2024-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 2098.56,
+            "units": 43,
+            "customers": 43,
+            "orders": 43,
+            "latest_purchase": "2024-06-30 13:34:12+00"
+          }
+        ],
+        "job_id": "redacted-live-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T16:43:15.824208+00:00",
+        "source_latest_at": "2024-06-30 13:34:12+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-annual_report",
+    "estimated_cost_usd": 0.269628,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": {
+        "start": "2024-04-01",
+        "end": "2024-07-01"
+      },
+      "action_period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "actions": true,
+      "report": true,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 2
+        }
+      ],
+      "comparison_requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [
+        "revenue_change",
+        "revenue_change_pct"
+      ],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [
+    "recorded-report"
+  ],
+  "pending_after": 1,
+  "seconds": 33.81
+}

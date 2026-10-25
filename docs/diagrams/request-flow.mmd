@@ -1,0 +1,40 @@
+sequenceDiagram
+  participant U as Executive
+  participant A as API / planner
+  participant S as PostgreSQL
+  participant M as Gemini
+  participant G as Query gateway
+  participant B as BigQuery
+  U->>A: Question + authenticated session
+  A->>S: Owner, scope, persona, eligible Golden methods
+  S-->>A: Authorized context + pinned versions
+  A->>M: Question + capabilities + bounded context
+  M-->>A: Typed plan
+  A->>A: Validate complete plan, permissions and budget
+  alt Clarification / refusal / help / library
+    A-->>U: Specific response or actual owner-scoped result
+  else Authorized analytical contract
+    loop Each preflighted request
+      A->>G: Contract + signed trusted user context
+      G->>G: Resolve execution identity, compile scoped SQL
+      G->>B: Dry run
+      alt Invalid or over budget
+        B-->>G: Error or excessive bytes
+        G-->>A: Stop, no execution
+        A-->>U: Sanitized failure
+      else Admitted
+        G->>B: Execute, stable ID + byte cap
+        B-->>G: Bounded rows + usage
+        G-->>A: Authorized evidence
+      end
+    end
+    opt All required queries succeeded
+      A->>A: Compute facts and completeness
+      opt Actions or interpretation requested
+        A->>M: Verified metrics, no execution tools
+        M-->>A: Structured narrative / optional commentary
+        A->>A: Validate, bounded repair or omit/fallback
+      end
+      A-->>U: Findings + definitions + evidence, draft not saved
+    end
+  end

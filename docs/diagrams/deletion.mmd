@@ -1,0 +1,20 @@
+stateDiagram-v2
+  [*] --> NoPending
+  NoPending --> Pending: Owner requests exact preview
+  Pending --> Pending: Invalid confirmation / rollback
+  Pending --> Cancelled: Owner cancels this conversation
+  Pending --> Expired: Five-minute deadline passes
+  Pending --> Deleted: Exact token + transactional recheck
+  note right of Pending
+    Wrong owner/session/token does not consume
+    a valid pending confirmation.
+    Fresh preview replaces the prior snapshot.
+    Stale versions require a fresh preview.
+  end note
+  note right of Deleted
+    Delete approved set and managed copies.
+    Invalidate pending tokens for this owner.
+  end note
+  Cancelled --> [*]
+  Expired --> [*]
+  Deleted --> [*]

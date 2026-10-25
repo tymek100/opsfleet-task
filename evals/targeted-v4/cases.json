@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "reverse_quarters",
+    "user": "alice",
+    "session": "reverse",
+    "prompt": "Use Q3 2025 as the reference. Express Q2 2025 revenue relative to that reference, including the absolute difference and the percentage with Q3 in the denominator.",
+    "expected": "Primary Q2 2025, baseline Q3; signed difference and percentage use Q3."
+  },
+  {
+    "id": 2,
+    "name": "gap_months",
+    "user": "alice",
+    "session": "gap",
+    "prompt": "Compare April 2026 revenue against January 2026 revenue. Show the dollar change and growth percentage; do not include February or March.",
+    "expected": "Primary April baseline January; no adjacency restriction or intervening data."
+  },
+  {
+    "id": 3,
+    "name": "zero_baseline",
+    "user": "alice",
+    "session": "zero",
+    "prompt": "Compare January 2026 revenue with January 1900. Show both totals, the absolute change, and the percentage change if it is mathematically defined.",
+    "expected": "No historical sales baseline; total and absolute change preserved, percentage undefined."
+  },
+  {
+    "id": 4,
+    "name": "annual_report",
+    "user": "bob",
+    "session": "report",
+    "prompt": "Prepare a Q2 2025 report against Q2 2024: revenue totals, monthly revenue and the top two products for Q2 2025, plus proposed actions for Q3 2025. Leave it unsaved.",
+    "expected": "YoY calculation, current months/top2 and next-quarter actions; no save."
+  },
+  {
+    "id": 5,
+    "name": "cancel_list",
+    "user": "bob",
+    "session": "cancel",
+    "prompt": "Withdraw the deletion I was about to confirm. After that, list my saved reports so I can check they are still there.",
+    "expected": "Pending changes from one to zero, report retained and listed."
+  },
+  {
+    "id": 6,
+    "name": "preview_cancel_list",
+    "user": "bob",
+    "session": "cancel",
+    "prompt": "First preview removal of reports whose title contains Keep me, then cancel that preview, and finally list my reports. Do not delete anything.",
+    "expected": "Three ordered operations; final pending zero, no deleted reports or active preview."
+  },
+  {
+    "id": 7,
+    "name": "save_help",
+    "user": "bob",
+    "session": "report",
+    "prompt": "Suppose next time I ask you to archive this report under a title: would it store the current draft, and who would be able to read it? I am only asking about the behavior.",
+    "expected": "Explain explicit saving of current analysis and owner-only access; no mutation."
+  },
+  {
+    "id": 8,
+    "name": "delete_help",
+    "user": "bob",
+    "session": "cancel",
+    "prompt": "How do I stop a proposed deletion, and does asking for a deletion preview already erase the report? Explain only; do not run anything.",
+    "expected": "Explain cancellation, preview is non-destructive and exact confirmation; no state change."
+  },
+  {
+    "id": 9,
+    "name": "percentile",
+    "user": "alice",
+    "session": "metric",
+    "prompt": "For August 2025, calculate the 90th percentile of order value. Do not replace it with average order value.",
+    "expected": "Specific unsupported percentile response; no unrelated profitability boilerplate or query."
+  },
+  {
+    "id": 10,
+    "name": "long_months",
+    "user": "alice",
+    "session": "long",
+    "prompt": "I need one revenue row for each month from February 2021 through April 2025 inclusive. Keep all 51 months; do not group by year.",
+    "expected": "Explain 50 monthly row limit, no truncation or substitute aggregation."
+  }
+]

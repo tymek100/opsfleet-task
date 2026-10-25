@@ -77,3 +77,14 @@ Reply supplied by the candidate; mention formatting normalized:
 > 8. **Retention:** Chat history: 90 days. Saved reports: kept until the user deletes them (hard delete, no recovery window). Audit log: 1 year.
 >
 > Thanks, and good luck!
+
+## Roi clarification: on-demand analysis and access changes
+
+Roi Hezkiyahu, 22 October 2026, 07:29 (reply supplied by the candidate):
+
+> @Tymoteusz Ilczyszyn
+>
+> 1. should be on the existing data, this is ad-hoc by demand analysis no cron based.
+> 2. Keep it as out of scope, if a manager lose access to a brand he is probably not a part of the company anymore. No need to take care of it.
+
+Decision: query existing data on user demand; do not build a scheduled analytics or transaction-ingestion pipeline. Access-revocation lifecycle handling is out of scope. Ordinary brand authorization, privacy, and report ownership remain required. Golden Knowledge maintenance and retention policies are separate requirements, not scheduled business analysis.

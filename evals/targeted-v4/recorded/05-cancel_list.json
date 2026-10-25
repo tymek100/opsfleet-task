@@ -1,0 +1,36 @@
+{
+  "id": 5,
+  "name": "cancel_list",
+  "user": "bob",
+  "conversation": "fresh-cancel",
+  "prompt": "Withdraw the deletion I was about to confirm. After that, list my saved reports so I can check they are still there.",
+  "expected": "Pending changes from one to zero, report retained and listed.",
+  "reports_before": [
+    {
+      "id": "recorded-report",
+      "title": "Keep me - seeded fixture"
+    }
+  ],
+  "pending_before": 1,
+  "answer": {
+    "text": "Pending deletion cancelled for this conversation. No reports were deleted.\n\nrecorded-report | Keep me - seeded fixture",
+    "evidence": [],
+    "trace_id": "recorded-cancel_list",
+    "estimated_cost_usd": 0.13272,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [
+    "recorded-report"
+  ],
+  "pending_after": 0,
+  "seconds": 7.06
+}

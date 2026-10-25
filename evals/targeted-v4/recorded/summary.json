@@ -1,0 +1,13 @@
+{
+  "passed": 10,
+  "total_seconds": 162.55,
+  "median_seconds": 14.145,
+  "input_tokens": 30021,
+  "output_tokens": 2590,
+  "thinking_tokens": 10003,
+  "paid_token_estimate": 0.0697395,
+  "provider_responses": 11,
+  "retries": 0,
+  "plan_rejections": 0,
+  "acceptance_checks": 50
+}

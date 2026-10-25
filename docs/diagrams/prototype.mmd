@@ -1,0 +1,25 @@
+flowchart TB
+  user["User / local CLI"] -->|"Natural-language question"| plan["Gemini: typed plan"]
+  subgraph local["Implemented Python process"]
+    validate["Contract + authorization"]
+    execute["Direct application execution"]
+    facts["Verified facts + completeness"]
+    narrative["Optional ADK narration\nOne repair, then fallback"]
+    render["Deterministic tables + response"]
+    library["Owner-scoped report service"]
+    confirm["Exact token confirmation"]
+  end
+  plan --> validate
+  validate -->|"Analysis"| execute
+  execute -->|"Scoped SQL / byte cap"| bq["BigQuery public dataset"]
+  bq -->|"Evidence"| facts
+  facts --> render
+  facts -->|"Requested actions"| narrative
+  narrative -->|"Validated output or figures only"| render
+  validate -->|"Library sequence"| library
+  validate -->|"Help / clarify / refuse"| render
+  user -->|"Slash commands; no model"| library
+  user -->|"/confirm TOKEN; no model"| confirm
+  confirm --> library
+  library <-->|"Read / save / preview / cancel"| sqlite[("Local SQLite")]
+  library --> render

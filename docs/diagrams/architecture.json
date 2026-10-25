@@ -1,0 +1,154 @@
+{
+  "title": "Production proposal \u2014 container view",
+  "nodes": [
+    {
+      "id": "user",
+      "label": "Executive / editor",
+      "kind": "external",
+      "x": 40,
+      "y": 40
+    },
+    {
+      "id": "idp",
+      "label": "Organization OIDC",
+      "kind": "external",
+      "x": 340,
+      "y": 40
+    },
+    {
+      "id": "api",
+      "label": "Cloud Run API\nChat + publishing + dispatcher",
+      "kind": "app",
+      "x": 260,
+      "y": 190
+    },
+    {
+      "id": "gateway",
+      "label": "Cloud Run query gateway\nRestricted execution identity",
+      "kind": "app",
+      "x": 40,
+      "y": 440
+    },
+    {
+      "id": "worker",
+      "label": "Cloud Run worker\nIndexing + requested reports",
+      "kind": "app",
+      "x": 780,
+      "y": 440
+    },
+    {
+      "id": "db",
+      "label": "One Cloud SQL PostgreSQL\nState + jobs/outbox + Golden index",
+      "kind": "data",
+      "x": 350,
+      "y": 700
+    },
+    {
+      "id": "bq",
+      "label": "BigQuery authorized views\nExisting transactions",
+      "kind": "data",
+      "x": 40,
+      "y": 700
+    },
+    {
+      "id": "model",
+      "label": "Vertex AI\nGemini + embeddings",
+      "kind": "external",
+      "x": 1060,
+      "y": 440
+    },
+    {
+      "id": "bucket",
+      "label": "Cloud Storage\nImmutable Golden revisions",
+      "kind": "data",
+      "x": 1050,
+      "y": 190
+    },
+    {
+      "id": "queue",
+      "label": "Cloud Tasks\nAuthenticated dispatch",
+      "kind": "ops",
+      "x": 780,
+      "y": 190
+    },
+    {
+      "id": "scheduler",
+      "label": "Cloud Scheduler\nOutbox / retention only",
+      "kind": "ops",
+      "x": 650,
+      "y": 40
+    }
+  ],
+  "edges": [
+    {
+      "source": "user",
+      "target": "api",
+      "label": "HTTPS + OIDC"
+    },
+    {
+      "source": "idp",
+      "target": "api",
+      "label": "Verify token"
+    },
+    {
+      "source": "api",
+      "target": "gateway",
+      "label": "Trusted context + contract"
+    },
+    {
+      "source": "gateway",
+      "target": "bq",
+      "label": "Scoped query API"
+    },
+    {
+      "source": "api",
+      "target": "db",
+      "label": "SQL/TLS: state + outbox"
+    },
+    {
+      "source": "api",
+      "target": "model",
+      "label": "HTTPS: plan / embeddings"
+    },
+    {
+      "source": "api",
+      "target": "bucket",
+      "label": "Approved source upload"
+    },
+    {
+      "source": "api",
+      "target": "queue",
+      "label": "Dispatch committed outbox"
+    },
+    {
+      "source": "scheduler",
+      "target": "api",
+      "label": "Authenticated maintenance"
+    },
+    {
+      "source": "queue",
+      "target": "worker",
+      "label": "OIDC HTTP task"
+    },
+    {
+      "source": "worker",
+      "target": "bucket",
+      "label": "Read pinned generation"
+    },
+    {
+      "source": "worker",
+      "target": "db",
+      "label": "SQL/TLS: leases / index / draft"
+    },
+    {
+      "source": "worker",
+      "target": "gateway",
+      "label": "Same guarded analysis"
+    },
+    {
+      "source": "worker",
+      "target": "model",
+      "label": "HTTPS: narrative / embeddings"
+    }
+  ]
+}

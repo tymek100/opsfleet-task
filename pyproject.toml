@@ -1,0 +1,67 @@
+[project]
+name = "opsfleet-retail-agent"
+version = "0.1.0"
+description = "Brand-scoped retail analytics with explicit report confirmation"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "google-adk>=2.12,<3", "google-genai>=2.32,<3", "google-cloud-bigquery>=3.46,<4", "pydantic>=2.14,<3",
+  "pydantic-settings>=2.16,<3", "sqlglot>=30.24,<31", "typer>=0.27,<1", "rich>=15,<16",
+  "python-dotenv>=1.2,<2",
+]
+
+[project.scripts]
+retail-agent = "retail_agent.cli:app"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/retail_agent"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11",
+    "pyright>=1.1.400",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.26",
+    "pytest-cov>=6",
+    "pytest-socket>=0.7",
+    "hypothesis>=6.130",
+    "duckdb>=2.0.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+extend-exclude = [".agents", "mds/task"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["src", "tests"]
+extraPaths = ["src"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportImportCycles = "error"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-config --strict-markers --import-mode=importlib --disable-socket --allow-unix-socket -m 'not live'"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: explicitly enabled remote integration; may incur cost"]
+
+[tool.coverage.run]
+branch = true
+source = ["retail_agent"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

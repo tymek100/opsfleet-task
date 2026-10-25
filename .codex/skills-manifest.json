@@ -18,7 +18,7 @@
     "interview-delivery"
   ],
   "files": {
-    ".agents/skills/interview-delivery/SKILL.md": "09772221ce7e7ee92b59c98ba4b51cad1d5f59ea4a1f7d2dedcdb94ce65a8b8a",
+    ".agents/skills/interview-delivery/SKILL.md": "9ed35e1d24aff0f844962538410d6ca1e139db255dc248115860e639e8bd0823",
     ".agents/skills/interview-delivery/agents/openai.yaml": "82e806f1c96b7770a2aaeed3cced808f8f3e1afbc7c25648f664533e9e90c8dd",
     ".agents/skills/retail-adk-implementation/SKILL.md": "a9f34f6a50aba080d6d39f99d7433dbe4c18c3f472d8a46291ee0d1b5e6c98ec",
     ".agents/skills/retail-adk-implementation/agents/openai.yaml": "65a75f0ffeabe5ecc22b66665d394e392184982679242d2e1ee65b07675eb2fe",
@@ -63,5 +63,5 @@
       ]
     }
   ],
-  "updated_on": "2026-10-21"
+  "updated_on": "2026-10-22"
 }

@@ -53,3 +53,5 @@ Never send names, emails, addresses, postal codes, or exact coordinates to the L
 - Tone changes use a non-technical editing interface and an automated quality gate before publishing, with no manual approval. Golden examples use an editor/reviewer workflow.
 - Retain chats for 90 days, saved reports until permanent owner deletion, and audit logs for one year.
 - No specific region or residency requirement. Roi may still provide scenario and evaluation refinements; these do not block implementation.
+
+Roi clarified on 22 October 2026: analysis is ad hoc on existing data, triggered by user demand, with no cron-based analysis. Handling managers losing brand access is out of scope; ordinary brand permissions and private report ownership still apply.

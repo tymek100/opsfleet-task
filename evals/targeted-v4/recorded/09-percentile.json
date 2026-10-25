@@ -1,0 +1,29 @@
+{
+  "id": 9,
+  "name": "percentile",
+  "user": "alice",
+  "conversation": "fresh-metric",
+  "prompt": "For August 2025, calculate the 90th percentile of order value. Do not replace it with average order value.",
+  "expected": "Specific unsupported percentile response; no unrelated profitability boilerplate or query.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "The requested measure (percentile of order value) is unavailable. No substitute analysis was run.",
+    "evidence": [],
+    "trace_id": "recorded-percentile",
+    "estimated_cost_usd": 0.132716,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [],
+  "pending_after": 0,
+  "seconds": 29.54
+}

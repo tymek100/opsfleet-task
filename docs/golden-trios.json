@@ -1,0 +1,122 @@
+[
+  {
+    "id": "rankings",
+    "revision": 1,
+    "question": "Which products had the most customers in Q1 2026?",
+    "sql_query": "WITH scoped AS (\n      SELECT oi.id AS item_id, oi.order_id, oi.user_id, oi.product_id,\n             oi.sale_price, oi.created_at AS purchased_at,\n             p.brand, p.category, p.name AS product_name \n      FROM `bigquery-public-data.thelook_ecommerce.order_items` oi\n      JOIN `bigquery-public-data.thelook_ecommerce.orders` o ON o.order_id = oi.order_id AND o.user_id = oi.user_id\n      JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id = oi.product_id\n      \n      WHERE (@all_brands OR p.brand IN UNNEST(@allowed_brands)) AND oi.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')\n    ) SELECT product_id, product_name, ROUND(SUM(sale_price), 2) AS revenue,\n           COUNT(*) AS units, COUNT(DISTINCT user_id) AS customers,\n           COUNT(DISTINCT order_id) AS orders, CAST(MAX(purchased_at) AS STRING) AS latest_purchase\n        FROM scoped WHERE DATE(purchased_at) >= @start AND DATE(purchased_at) < @end\n        GROUP BY product_id, product_name ORDER BY customers DESC, product_id, product_name LIMIT 10",
+    "parameters": {
+      "all_brands": false,
+      "allowed_brands": [
+        "Calvin Klein"
+      ],
+      "start": "2026-01-01",
+      "end": "2026-04-01",
+      "inactivity_days": 90
+    },
+    "analyst_report": "Illustrative method: rank distinct customers separately from revenue; break ties by product ID. On the synthetic test fixture, product 3 has four customers versus product 1 with one. These are not live company figures.",
+    "analysis_plan": {
+      "kind": "sales",
+      "dimension": "product",
+      "start": "2026-01-01",
+      "end": "2026-04-01",
+      "rank_by": "customers",
+      "limit": 10,
+      "brands": [],
+      "product_ids": [],
+      "customer_id": null,
+      "completed_only": false,
+      "inactivity_days": 90
+    },
+    "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+    "scope": {
+      "brands": [
+        "Calvin Klein"
+      ],
+      "generic_method": true
+    },
+    "schema_version": "thelook-v1",
+    "metric_version": "v1",
+    "review_status": "illustrative_not_approved",
+    "provenance": "Created for this assignment from synthetic fixtures; no client bucket supplied."
+  },
+  {
+    "id": "churn",
+    "revision": 1,
+    "question": "Did inactivity increase between May and June 2026?",
+    "sql_query": "WITH scoped AS (\n      SELECT oi.id AS item_id, oi.order_id, oi.user_id, oi.product_id,\n             oi.sale_price, oi.created_at AS purchased_at,\n             p.brand, p.category, p.name AS product_name \n      FROM `bigquery-public-data.thelook_ecommerce.order_items` oi\n      JOIN `bigquery-public-data.thelook_ecommerce.orders` o ON o.order_id = oi.order_id AND o.user_id = oi.user_id\n      JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id = oi.product_id\n      \n      WHERE (@all_brands OR p.brand IN UNNEST(@allowed_brands)) AND oi.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')\n    ), boundaries AS (\n          SELECT @start AS as_of UNION ALL SELECT @end AS as_of\n        ), histories AS (\n          SELECT as_of, 'all' AS cohort, user_id,\n                 MIN(DATE(purchased_at)) AS first_purchase,\n                 MAX(DATE(purchased_at)) AS last_purchase\n          FROM scoped CROSS JOIN boundaries\n          WHERE DATE(purchased_at) < as_of\n          GROUP BY as_of, cohort, user_id\n        ), summary AS (\n        SELECT CAST(as_of AS STRING) AS period, cohort,\n          COUNT(*) AS eligible_customers,\n          COUNTIF(last_purchase < DATE_SUB(as_of, INTERVAL @inactivity_days DAY)) AS inactive_customers,\n          SAFE_DIVIDE(COUNTIF(last_purchase < DATE_SUB(as_of, INTERVAL @inactivity_days DAY)),\n                      COUNT(*)) AS inactivity_share\n        FROM histories\n        WHERE first_purchase < DATE_SUB(as_of, INTERVAL @inactivity_days DAY)\n        GROUP BY period, cohort\n        ), selected AS (\n          SELECT cohort FROM summary GROUP BY cohort\n          ORDER BY MAX(eligible_customers) DESC, cohort LIMIT 50\n        )\n        SELECT summary.* FROM summary JOIN selected USING (cohort)\n        ORDER BY cohort, period LIMIT 100",
+    "parameters": {
+      "all_brands": false,
+      "allowed_brands": [
+        "Calvin Klein"
+      ],
+      "start": "2026-05-01",
+      "end": "2026-06-01",
+      "inactivity_days": 90
+    },
+    "analyst_report": "Illustrative method: compare eligible/inactive counts at two as-of boundaries before explaining a spike. In the synthetic fixture, the share increases from 0/1 to 5/5. Examine denominator maturation, label causal explanations as hypotheses, and do not count other-brand purchases.",
+    "analysis_plan": {
+      "kind": "churn",
+      "dimension": "total",
+      "start": "2026-05-01",
+      "end": "2026-06-01",
+      "rank_by": "revenue",
+      "limit": 10,
+      "brands": [],
+      "product_ids": [],
+      "customer_id": null,
+      "completed_only": false,
+      "inactivity_days": 90
+    },
+    "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Churn proxy: 90-day inactivity share at start/end (exclusive as-of). Eligible = first authorized purchase before as-of minus N days; inactive = last purchase before that cutoff. Empty denominator is undefined. Not newly churned customers in a month. Brand breakdown capped at 50 largest eligible cohorts, preserving both snapshots.",
+    "scope": {
+      "brands": [
+        "Calvin Klein"
+      ],
+      "generic_method": true
+    },
+    "schema_version": "thelook-v1",
+    "metric_version": "v1",
+    "review_status": "illustrative_not_approved",
+    "provenance": "Created for this assignment from synthetic fixtures; no client bucket supplied."
+  },
+  {
+    "id": "quarter",
+    "revision": 1,
+    "question": "Create Q1 insights and Q2 actions.",
+    "sql_query": "WITH scoped AS (\n      SELECT oi.id AS item_id, oi.order_id, oi.user_id, oi.product_id,\n             oi.sale_price, oi.created_at AS purchased_at,\n             p.brand, p.category, p.name AS product_name \n      FROM `bigquery-public-data.thelook_ecommerce.order_items` oi\n      JOIN `bigquery-public-data.thelook_ecommerce.orders` o ON o.order_id = oi.order_id AND o.user_id = oi.user_id\n      JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id = oi.product_id\n      \n      WHERE (@all_brands OR p.brand IN UNNEST(@allowed_brands)) AND oi.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')\n    ) SELECT FORMAT_DATE('%Y-%m', DATE(purchased_at)) AS month, ROUND(SUM(sale_price), 2) AS revenue,\n           COUNT(*) AS units, COUNT(DISTINCT user_id) AS customers,\n           COUNT(DISTINCT order_id) AS orders, CAST(MAX(purchased_at) AS STRING) AS latest_purchase\n        FROM scoped WHERE DATE(purchased_at) >= @start AND DATE(purchased_at) < @end\n        GROUP BY month ORDER BY month LIMIT 10",
+    "parameters": {
+      "all_brands": false,
+      "allowed_brands": [
+        "Calvin Klein"
+      ],
+      "start": "2026-01-01",
+      "end": "2026-04-01",
+      "inactivity_days": 90
+    },
+    "analyst_report": "Illustrative method: clarify year, compare total and monthly revenue, then product/customer concentration. Pair each action with evidence, a proposed owner and a proposed success measure. Additional fresh queries are needed; this single query is one step, not a complete report.",
+    "analysis_plan": {
+      "kind": "sales",
+      "dimension": "month",
+      "start": "2026-01-01",
+      "end": "2026-04-01",
+      "rank_by": "revenue",
+      "limit": 10,
+      "brands": [],
+      "product_ids": [],
+      "customer_id": null,
+      "completed_only": false,
+      "inactivity_days": 90
+    },
+    "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+    "scope": {
+      "brands": [
+        "Calvin Klein"
+      ],
+      "generic_method": true
+    },
+    "schema_version": "thelook-v1",
+    "metric_version": "v1",
+    "review_status": "illustrative_not_approved",
+    "provenance": "Created for this assignment from synthetic fixtures; no client bucket supplied."
+  }
+]

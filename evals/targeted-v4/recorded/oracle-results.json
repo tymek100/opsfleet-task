@@ -1,0 +1,195 @@
+[
+  {
+    "case": 1,
+    "evidence": "E1",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 7536.22,
+        "units": 116,
+        "orders": 114,
+        "customers": 114
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 1,
+    "evidence": "E2",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 9575.34,
+        "units": 138,
+        "orders": 137,
+        "customers": 137
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 2,
+    "evidence": "E1",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 4790.12,
+        "units": 65,
+        "orders": 65,
+        "customers": 65
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 2,
+    "evidence": "E2",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 3223.4,
+        "units": 55,
+        "orders": 55,
+        "customers": 55
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 3,
+    "evidence": "E1",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 3223.4,
+        "units": 55,
+        "orders": 55,
+        "customers": 55
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 3,
+    "evidence": "E2",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": null,
+        "units": 0,
+        "orders": 0,
+        "customers": 0
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 4,
+    "evidence": "E1",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 3241.78,
+        "units": 60,
+        "orders": 60,
+        "customers": 60
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  },
+  {
+    "case": 4,
+    "evidence": "E2",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "month": "2025-04",
+        "revenue": 1253.46,
+        "units": 26,
+        "orders": 26,
+        "customers": 26
+      },
+      {
+        "month": "2025-05",
+        "revenue": 905.92,
+        "units": 15,
+        "orders": 15,
+        "customers": 15
+      },
+      {
+        "month": "2025-06",
+        "revenue": 1082.4,
+        "units": 19,
+        "orders": 19,
+        "customers": 19
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT FORMAT_TIMESTAMP('%Y-%m', i.created_at, 'UTC') AS month, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) GROUP BY month ORDER BY month LIMIT 3"
+  },
+  {
+    "case": 4,
+    "evidence": "E3",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "product_id": 24254,
+        "product_name": "Levi's Men's Leather Two-Pocket Fashion Moto Jacket",
+        "revenue": 239.99,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      },
+      {
+        "product_id": 24093,
+        "product_name": "Levi's Men's Leather Racer Quilted Shoulders Jacket",
+        "revenue": 229.99,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT i.product_id, p.name AS product_name, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) GROUP BY i.product_id, p.name ORDER BY revenue DESC, product_id, product_name LIMIT 2"
+  },
+  {
+    "case": 4,
+    "evidence": "E4",
+    "pass": true,
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 2098.56,
+        "units": 43,
+        "orders": 43,
+        "customers": 43
+      }
+    ],
+    "job_id": "redacted-live-oracle-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue, COUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers FROM `bigquery-public-data.thelook_ecommerce.order_items` i JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id  WHERE p.brand IN UNNEST(@brands) AND i.status NOT IN ('Returned', 'Cancelled') AND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o WHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled')) AND i.created_at >= TIMESTAMP(@start) AND i.created_at < TIMESTAMP(@end) ORDER BY revenue DESC, label LIMIT 1"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "id": 10,
+  "name": "long_months",
+  "user": "alice",
+  "conversation": "fresh-long",
+  "prompt": "I need one revenue row for each month from February 2021 through April 2025 inclusive. Keep all 51 months; do not group by year.",
+  "expected": "Explain 50 monthly row limit, no truncation or substitute aggregation.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "The requested limit value (51) is outside the supported bounds: minimum 1, maximum 50. No default value was substituted; nothing was queried.",
+    "evidence": [],
+    "trace_id": "recorded-long_months",
+    "estimated_cost_usd": 0.13276,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "6105cd2920f1c9fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports_after": [],
+  "pending_after": 0,
+  "seconds": 8.12
+}

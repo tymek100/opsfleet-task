@@ -1,0 +1,11 @@
+{
+  "gemini_model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "max_output_tokens": 8192,
+  "commentary_enabled": true,
+  "question_budget_usd": 1.0,
+  "turn_timeout_seconds": 120,
+  "max_model_calls": 8,
+  "model_min_interval_seconds": 13.0,
+  "max_queries": 6
+}

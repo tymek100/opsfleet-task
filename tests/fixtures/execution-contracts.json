@@ -1,0 +1,560 @@
+{
+  "Compare Q4 2025 and Q1 2026": {
+    "period": {
+      "start": "2025-10-01",
+      "end": "2026-01-01"
+    },
+    "comparison": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [
+      "revenue_change",
+      "revenue_change_pct"
+    ],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Compare total revenue in Q4 2025 and Q1 2026. Show revenue, units sold, orders, and distinct customers for each quarter. Calculate the absolute revenue difference and percentage change from Q4 to Q1. Explain whether the quarters contain the same number of days and distinguish total growth from daily performance.": {
+    "period": {
+      "start": "2025-10-01",
+      "end": "2026-01-01"
+    },
+    "comparison": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "units",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "orders",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "customers",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "days",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "revenue_per_day",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "units",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "orders",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "customers",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "days",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "revenue_per_day",
+        "minimum_rows": 1
+      }
+    ],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [
+      "revenue_change",
+      "revenue_change_pct",
+      "revenue_per_day_change_pct"
+    ],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Create Q1 2026 report with Q2 actions": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": {
+      "start": "2026-04-01",
+      "end": "2026-07-01"
+    },
+    "actions": true,
+    "report": true,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "month",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "product",
+        "metric": "revenue",
+        "minimum_rows": 5
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Create a Q4 2025 report comparing revenue with Q3 2025, including monthly revenue, insights, and action items for Q1 2026.": {
+    "period": {
+      "start": "2025-10-01",
+      "end": "2026-01-01"
+    },
+    "comparison": {
+      "start": "2025-07-01",
+      "end": "2025-10-01"
+    },
+    "action_period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "actions": true,
+    "report": true,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "month",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "product",
+        "metric": "revenue",
+        "minimum_rows": 5
+      }
+    ],
+    "comparison_requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [
+      "revenue_change",
+      "revenue_change_pct"
+    ],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Did inactivity increase between May 15 and July 1 2026?": {
+    "period": {
+      "start": "2026-05-15",
+      "end": "2026-07-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "churn",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "inactivity_share",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Explain revenue for Q1 2026.": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "List the top 5 products by revenue and separately by number of distinct customers for Q1 2026.": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "product",
+        "metric": "revenue",
+        "minimum_rows": 5
+      },
+      {
+        "dimension": "product",
+        "metric": "customers",
+        "minimum_rows": 5
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Q1 2026 report without actions": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": true,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "month",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "product",
+        "metric": "revenue",
+        "minimum_rows": 5
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Q1 2026 revenue": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Q1 2026 revenue?": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Q1 2026 total and monthly revenue": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "month",
+        "metric": "revenue",
+        "minimum_rows": 1
+      },
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Top 10 customers by total spend for Q1 2026": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "customer",
+        "metric": "revenue",
+        "minimum_rows": 10
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "Was the 90-day inactivity share zero in January 2000? Show eligible and inactive counts.": {
+    "period": {
+      "start": "2000-01-01",
+      "end": "2000-02-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "churn",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "inactivity_share",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "What about customer 1?": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "customer",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": 1,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "What was Q1 2026 revenue?": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "What was revenue for Q1 2026?": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  },
+  "What was total revenue in Q1 2026?": {
+    "period": {
+      "start": "2026-01-01",
+      "end": "2026-04-01"
+    },
+    "comparison": null,
+    "action_period": null,
+    "actions": false,
+    "report": false,
+    "kind": "sales",
+    "requirements": [
+      {
+        "dimension": "total",
+        "metric": "revenue",
+        "minimum_rows": 1
+      }
+    ],
+    "comparison_requirements": [],
+    "period_error": "none",
+    "customer_id": null,
+    "product_ids": [],
+    "comparison_metrics": [],
+    "pending_quarter": null,
+    "clarification": "none"
+  }
+}

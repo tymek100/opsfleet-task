@@ -1,5 +1,8 @@
 # Architecture and technology proposal
 
+> Implementation update: the prototype and reviewer documentation now live in `src/`, `tests/`, and [docs](../docs/README.md). This file preserves planning context; use the submission documents and evaluation report for current behavior and executed checks.
+
+
 Status: proposal updated with client answers on access, privacy, metrics, deletion, Golden Knowledge, demo priorities, production scale, persona publishing, and retention. This is a planning document, not a claim that the system is implemented or that the final submission is complete.
 
 Execution order and acceptance criteria live in the [implementation plan](implementation_plan.md). Confirmed requirements and remaining questions live in [client Q&A](q&a.md); research rationale is in [the quality strategy](1-percent.md).
@@ -45,7 +48,7 @@ Keep one agent with a few tools. Gemini proposes actions; Python code enforces p
 | SQL validation | SQLGlot BigQuery AST validation plus BigQuery dry run | Same controls; database permissions remain the final boundary |
 | Application state | SQLite for sessions, reports, pending deletions, and demo entitlements | Cloud SQL PostgreSQL for transactional ownership and confirmation records |
 | Golden Knowledge | Seed a small illustrative local Trio collection; live retrieval is optional | Cloud Storage for versioned source trios; PostgreSQL with pgvector and text search for filtered retrieval |
-| Background work | No separate worker initially | Cloud Tasks and a Cloud Run worker for bounded, idempotent ingestion and long report jobs |
+| Background work | No separate worker initially | Cloud Tasks and a Cloud Run worker for event-driven Golden Knowledge indexing and user-requested long report jobs |
 | Identity and secrets | Explicit local demo identities; ADC and an uncommitted Gemini API key | Organization OIDC/SSO, service accounts, Secret Manager, least privilege |
 | Observability | Structured JSON events with correlation IDs | OpenTelemetry instrumentation exported to Cloud Logging, Trace, and Monitoring |
 | Persona management | Versioned local configuration if needed | Restricted admin UI storing approved versions in PostgreSQL, with rollback and an audit trail |
@@ -54,7 +57,7 @@ Select the exact Gemini model at implementation time from the [official model ca
 
 Development tooling refinement: use `pyproject.toml` with `uv.lock` for reproducible dependency installation, Ruff for formatting/linting, and pytest for focused verification. Keep a documented pip installation route or exported pinned requirements for reviewers who prefer the assignment's suggested setup. Choose the supported Python/ADK/model combination after checking compatibility and running the three priority scenarios; record versions and results rather than claiming that the newest release is inherently best. See [uv project locking](https://docs.astral.sh/uv/concepts/projects/sync/) and [Ruff](https://docs.astral.sh/ruff/).
 
-Open policy detail: access revocation for existing reports and chat evidence. Proposed default is to revalidate current brand entitlements on content reads and before reusing cached/conversation evidence, block content outside current scope, and still allow owners to delete their own reports. This is recorded as a question in the Q&A, not a confirmed client rule.
+Roi confirmed on 22 October 2026 that analysis uses existing data on demand, with no cron-based analysis. Brand access-revocation lifecycle handling is explicitly out of scope. Normal query authorization and private-report ownership remain required.
 
 ## Local implementation boundaries and version selection
 
@@ -70,9 +73,9 @@ Model credentials, Python ADC, and BigQuery job submission are separate readines
 
 Design for approximately 100 active managers/day, 10 questions per manager/day (about 1,000 questions/day), one saved report per manager/day (about 100/day), and 1 million new data rows/day. Only a few users are concurrent. Target 10–30 seconds for simple answers and 1–2 minutes for long reports. The configurable per-question budget defaults to USD 1; this is a budget, not an expected cost or a total infrastructure allowance. There are no client-specific region or data-residency constraints; choose compatible service and dataset locations.
 
-Use modest Cloud Run concurrency and bounded scaling, pooled PostgreSQL connections, and incremental BigQuery ingestion with date partitioning and brand-oriented clustering where appropriate. Validate these design choices with representative workload tests rather than assuming latency targets are guaranteed. Long report jobs report progress and preserve their job ID for reconnects.
+Use modest Cloud Run concurrency and bounded scaling, pooled PostgreSQL connections, and bounded queries against existing BigQuery data. Upstream transaction ingestion and physical warehouse changes are outside this application’s scope. Validate these design choices with representative workload tests rather than assuming latency targets are guaranteed. Long report jobs report progress and preserve their job ID for reconnects.
 
-Production freshness is still open. Initial assumption: daily incremental ingestion with deduplication, late return/status updates, and a visible freshness marker. This assumption affects ingestion design and answer caveats, not the public-dataset prototype's access. Confirm the SLA before selecting streaming infrastructure.
+Run business analysis only on explicit user demand. Show the queried period and available source timestamps; do not promise an upstream freshness SLA. Golden example approval may trigger indexing, and retention cleanup implements the separate retention requirement; neither schedules business analysis.
 
 Prioritize these demo prompts:
 
@@ -98,14 +101,14 @@ flowchart TD
     ORCH --> GATE[SQL validation, scope enforcement,
         cost limits and execution gateway]
     GATE -->|BigQuery API: dry run then bounded query| BQ[(BigQuery curated analytics views)]
-    RAW[(Raw transactions)] -->|Approved transformations| BQ
+    RAW[(Existing raw transactions)] -->|Authorized view projections| BQ
     BQ --> PRIV[Result privacy and evidence validation]
     PRIV --> ORCH
     ORCH --> DEL[Deletion confirmation state machine]
     DEL --> APP
     API -->|Stream progress and validated response| U
     REVIEW[Analyst review and approval] --> GCS[(Cloud Storage: versioned Golden trios)]
-    GCS --> JOB[Cloud Tasks and Cloud Run ingestion worker]
+    GCS --> JOB[Cloud Tasks and Cloud Run Golden indexing worker]
     JOB --> IDX
     ADMIN[Restricted persona admin UI] --> QA[Automated persona quality gate]
     QA -->|Publish only on pass| APP
@@ -120,14 +123,14 @@ The API validates identity before loading any session or report. Calls to the mo
 ## Request and data flow
 
 1. Resolve authenticated user, conversation, and allowed product scope on the server. Do not accept the user ID or scope from model output.
-2. Load authorized conversation context, user preferences, published persona version, and metric definitions. Under the proposed revocation policy, recheck evidence against current brand entitlements before loading it. Treat conversation text and retrieved documents as untrusted data.
+2. Load authorized conversation context, user preferences, published persona version, and metric definitions. Treat conversation text and retrieved documents as untrusted data.
 3. Classify the request: supported analysis, schema explanation, report creation, deletion, or unsupported request. Report management is explicitly allowed despite the “analysis only” rule. Clarify material ambiguity instead of guessing.
 4. Retrieve a few relevant, approved Golden trios, filtering by permissions before ranking. Include definition, schema version, and source identifiers. Historical SQL is a reference, never a bypass around the execution gateway.
 5. Generate a typed analysis plan and SQL against safe logical relations. Validate identifiers, operations, scope, and cost; execute only through the gateway.
 6. Validate result shape and privacy, then generate an answer from bounded evidence. Check reported numeric claims against recorded results and include period, filters, caveats, and evidence IDs.
 7. On an explicit save request, persist the validated report with owner, conversation, underlying brand scope, definition versions, sanitized evidence, and model/prompt versions. Return a report ID only after successful persistence. Evidence needed to understand the report must survive expiration of its source chat.
 
-If caching is introduced, include effective scope, entitlement version, metric definitions, period, and relevant data/prompt versions in its keys. Invalidate cached content on permission changes. Under the proposed revocation policy, an owner may delete an unreadable report by safe ID; the preview must not reveal a restricted title or body. This policy remains subject to the client's answer.
+If caching is introduced, include effective brand scope, metric definitions, period, and relevant data/prompt versions in its keys to avoid cross-scope reuse. Permission-revocation invalidation and historical report/chat reauthorization are not part of this assignment.
 
 Sessions and reports live in the application database, not BigQuery. Large production report artifacts may go in private Cloud Storage with ownership-checked downloads. Raw transaction rows do not enter ordinary application logs. Chat history expires after 90 days, saved reports persist until explicit owner deletion, and audit logs expire after one year. Use scheduled cleanup for sessions and retention policies for audit storage; report retention is independent of session retention. Keep report content out of audit logs. Deletion must also invalidate cached artifacts and report-content copies in conversation context so they cannot resurrect a deleted report. Backup expiration and deletion propagation mechanics remain implementation details to document; do not claim hard deletion from every physical backup merely because the active database row was removed.
 
@@ -186,7 +189,7 @@ The [testing strategy](testing_strategy.md) specifies executable verification la
 
 Before deployment, use a fixed synthetic dataset with expected metrics, alongside a small live BigQuery smoke suite. Test wrong-user access, nested-query scope escape, PII leakage, prompt injection, report ownership, confirmation replay/expiry, empty results, invalid SQL, and dependency outages. Security invariants must hold even when the model output is malicious.
 
-Verify actual boundaries: capture outbound model payloads using synthetic PII canaries, assert what reaches the query executor, and inspect database state after report mutations. Include permission changes affecting prior evidence, mixed-brand orders, duplicate purchases, temporal boundaries, and false churn-spike premises. Separate deterministic offline tests, live BigQuery compatibility checks, and model-quality evaluations. Run Ruff and relevant pytest checks locally and in a small CI workflow when the repository is prepared for submission.
+Verify actual boundaries: capture outbound model payloads using synthetic PII canaries, assert what reaches the query executor, and inspect database state after report mutations. Include cross-user evidence isolation, mixed-brand orders, duplicate purchases, temporal boundaries, and false churn-spike premises. Separate deterministic offline tests, live BigQuery compatibility checks, and model-quality evaluations. Run Ruff and relevant pytest checks locally and in a small CI workflow when the repository is prepared for submission.
 
 Evaluate task completion, numerical correctness, metric definitions, evidence coverage, appropriate caveats, and action-item relevance. Compare query results rather than exact SQL strings. An LLM judge can help triage but cannot be the sole correctness oracle. Ask representative users to complete comparison, follow-up, report, and deletion tasks; record completion, time, clarification burden, and whether the deletion preview was understood.
 
@@ -211,3 +214,7 @@ Start with one safe end-to-end dynamic question and its negative scope test, the
 Keep separate interfaces for analytics execution, report storage, identity, knowledge retrieval, and model access. Later chart, email, and web-search tools should declare typed inputs, permission requirements, side effects, and budgets. Email would require its own authorization flow; web results would remain untrusted evidence.
 
 The final repository must add tested installation commands, `.env.example`, pinned dependencies, Google authentication and billing-project instructions, demo identity setup, and actual transcript examples. This proposal intentionally does not present unimplemented commands as working setup instructions.
+
+## Planned Python tooling
+
+Use uv for dependency management, Ruff for linting/formatting, and Pyright in strict mode for type checking. Keep dependency declarations and all tool settings (including pytest and coverage) in `pyproject.toml`, with resolved versions in `uv.lock`. Use a modular `src/retail_agent` layout. See [Python development](python_development.md) for the proposed commands and module boundaries. This is a plan only; tooling and application scaffolding have not been added.
