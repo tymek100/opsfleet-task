@@ -1,0 +1,115 @@
+{
+  "id": "customers-1",
+  "question": "Show our top 5 customers by revenue in 2025, using customer IDs.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 31 Dec 2025 (UTC)\n\n### Top 5 customers by total spend\n\n| Rank | Customer ID | Total spend |\n| --- | --- | --- |\n| 1 | 39681 | 259.99 |\n| 2 | 57543 | 259.99 |\n| 3 | 84680 | 228.00 |\n| 4 | 97568 | 228.00 |\n| 5 | 7885 | 199.99 |\n\nHighest spending shown: 259.99.\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "customer",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "user_id": 39681,
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-30 02:53:18+00"
+          },
+          {
+            "user_id": 57543,
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-09-14 21:11:13+00"
+          },
+          {
+            "user_id": 84680,
+            "revenue": 228.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-13 07:16:04+00"
+          },
+          {
+            "user_id": 97568,
+            "revenue": 228.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-01-23 16:40:54+00"
+          },
+          {
+            "user_id": 7885,
+            "revenue": 199.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-02-04 04:44:56+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "3606f544147ed53c",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T07:49:45.523153+00:00",
+        "source_latest_at": "2025-12-13 07:16:04+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.139178,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "customer",
+          "metric": "revenue",
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "422941a33582840f",
+      "prompt": "45d31d0baf8304a2",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 13.431
+}

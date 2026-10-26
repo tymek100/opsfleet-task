@@ -1,0 +1,20 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "baseline_passed": true,
+  "followups_passed": 10,
+  "followups_total": 10,
+  "seconds_total": 206.236,
+  "followup_median_seconds": 14.942499999999999,
+  "provider_responses": 12,
+  "query_executions": 3,
+  "plan_rejections": 0,
+  "provider_retries": 0,
+  "tokens": {
+    "input_tokens": 59337,
+    "output_tokens": 2228,
+    "thinking_tokens": 18270
+  },
+  "source": "b273a81accbfe2f3",
+  "review_note": "Original checks verified data and subset correctness (10/10). Subsequent rendered-output review rejected case 10: a valid empty result triggered an unnecessary narrative-failure warning. The final runner also requires validated answer quality."
+}

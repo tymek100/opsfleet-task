@@ -1,0 +1,24 @@
+{
+  "id": "report-3",
+  "question": "List my saved reports.",
+  "answer": {
+    "view": null,
+    "text": "8903242cc487 | Q2 demo review",
+    "evidence": [],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.16264,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 12.254,
+  "queries": 0
+}

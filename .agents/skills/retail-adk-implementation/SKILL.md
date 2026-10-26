@@ -7,7 +7,7 @@ description: Implement or debug this repository's Python ADK chat runtime, Gemin
 
 ## Ground the change
 
-Read the relevant sections of [client Q&A](../../../mds/q&a.md) and inspect existing code/configuration before choosing an interface. The [architecture proposal](../../../mds/architecture_proposal.md) is a plan, not proof of implemented behavior. Preserve the supplied [reference client](../../../mds/task/bq_client.py); put guarded production/prototype code elsewhere.
+Read the relevant sections of [client Q&A](../../../docs/architecture.md#confirmed-scope-and-client-decisions) and inspect existing code/configuration before choosing an interface. The [architecture proposal](../../../docs/architecture.md) is a plan, not proof of implemented behavior. Preserve the supplied [reference client](../../../docs/task/bq_client.py); put guarded production/prototype code elsewhere.
 
 Use Python, Google ADK, Gemini API, BigQuery, Pydantic, SQLGlot, SQLite, and Typer/Rich as agreed. Check the installed/locked ADK version and its official documentation before using version-sensitive interfaces. Prefer one conversational agent and explicit application services. Do not introduce an agent team, web deployment, or new provider merely because a framework supports it.
 

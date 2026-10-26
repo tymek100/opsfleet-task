@@ -1,0 +1,193 @@
+{
+  "id": "categories-2",
+  "question": "Which of those categories had the highest revenue per order, and how many orders did it have?",
+  "answer": {
+    "view": {
+      "key": "category",
+      "columns": [
+        "category",
+        "E1.revenue",
+        "E1.customers",
+        "E1.orders",
+        "E1.units",
+        "E1.revenue_per_order",
+        "E1.revenue_per_unit",
+        "E1.units_per_order",
+        "E1.rank"
+      ],
+      "rows": [
+        {
+          "category": "Suits & Sport Coats",
+          "E1.revenue": 3740.18,
+          "E1.customers": 26,
+          "E1.orders": 26,
+          "E1.units": 26,
+          "E1.revenue_per_order": 143.853077,
+          "E1.revenue_per_unit": 143.853077,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 3
+        }
+      ],
+      "displayed_columns": [
+        "category",
+        "E1.revenue_per_order",
+        "E1.orders"
+      ],
+      "source_ids": [
+        "E1"
+      ],
+      "concise": true,
+      "derivation": [
+        "I used E1 (8 rows) and applied the select operation.",
+        "I sorted the 8 matching rows by Revenue per order (highest first).",
+        "I selected rows starting at offset 0, keeping up to 1 rows."
+      ],
+      "selection": {
+        "operation": "select",
+        "candidate_count": 8,
+        "sort_by": "E1.revenue_per_order",
+        "descending": true,
+        "offset": 0,
+        "limit": 1
+      }
+    },
+    "text": "Among the evaluated categories, Suits & Sport Coats achieved the highest revenue per order at 143\\.85. Customers placed 26 orders in this category.",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "category",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 8,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "category": "Outerwear & Coats",
+            "revenue": 5872.17,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-12-23 02:50:17+00"
+          },
+          {
+            "category": "Sweaters",
+            "revenue": 4257.67,
+            "units": 63,
+            "customers": 63,
+            "orders": 63,
+            "latest_purchase": "2025-12-30 03:27:52+00"
+          },
+          {
+            "category": "Suits & Sport Coats",
+            "revenue": 3740.18,
+            "units": 26,
+            "customers": 26,
+            "orders": 26,
+            "latest_purchase": "2025-12-30 11:51:32+00"
+          },
+          {
+            "category": "Underwear",
+            "revenue": 3535.44,
+            "units": 119,
+            "customers": 118,
+            "orders": 118,
+            "latest_purchase": "2025-12-26 08:05:58+00"
+          },
+          {
+            "category": "Pants",
+            "revenue": 2193.66,
+            "units": 37,
+            "customers": 37,
+            "orders": 37,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          },
+          {
+            "category": "Dresses",
+            "revenue": 1816.05,
+            "units": 16,
+            "customers": 16,
+            "orders": 16,
+            "latest_purchase": "2025-12-17 16:07:17+00"
+          },
+          {
+            "category": "Shorts",
+            "revenue": 1654.72,
+            "units": 35,
+            "customers": 35,
+            "orders": 35,
+            "latest_purchase": "2025-12-26 14:51:02+00"
+          },
+          {
+            "category": "Swim",
+            "revenue": 1612.92,
+            "units": 19,
+            "customers": 19,
+            "orders": 19,
+            "latest_purchase": "2025-12-28 03:20:28+00"
+          }
+        ],
+        "job_id": "<redacted>",
+        "sql_hash": "48115e8e3a179e2a",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T12:54:41.921698+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.389936,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "category",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "customers",
+            "revenue_per_order"
+          ],
+          "minimum_rows": 8
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 30.243,
+  "queries": 0
+}

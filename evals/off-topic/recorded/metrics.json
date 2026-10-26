@@ -1,0 +1,13 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "source": "ce0288248be636a3",
+  "passed": 6,
+  "total": 6,
+  "refusal_cases": 4,
+  "refusal_queries": 0,
+  "query_executions": 1,
+  "provider_retries": 0,
+  "seconds": 60.817,
+  "review": "English-only fresh execution: weather and age refusals preserve analytical state and report/pending counts. Returning to the monthly analysis reuses the correct evidence."
+}

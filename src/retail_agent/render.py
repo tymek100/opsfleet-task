@@ -10,7 +10,23 @@ from retail_agent.reports import Preview
 
 
 def render_answer(answer: Answer, *, details: bool = False) -> str:
-    parts = [answer.text]
+    text = answer.text
+    if text.split("\n", 1)[0].strip() == "Verified findings":
+        text = text.partition("\n")[2].lstrip("\n")
+    if not details and answer.evidence:
+        # Suppress presentation-only citations; preserve the stored answer and evidence.
+        markers = [f"[{item.id}]" for item in answer.evidence]
+        lines: list[str] = []
+        for line in text.splitlines():
+            if line.strip().startswith(("Source:", "Sources:")) and any(
+                marker in line for marker in markers
+            ):
+                continue
+            for marker in markers:
+                line = line.replace(" " + marker, "").replace(marker, "")
+            lines.append(line.rstrip())
+        text = "\n".join(lines)
+    parts = [text]
     if (
         answer.evidence
         and answer.quality_status != "validated"
@@ -20,7 +36,7 @@ def render_answer(answer: Answer, *, details: bool = False) -> str:
         period = answer.intent.period
         scope = answer.evidence[0].scope if answer.evidence else ""
         parts.append(f"Scope: {scope}; period: {period.start} to {period.end} UTC (end exclusive).")
-    if answer.evidence:
+    if answer.evidence and not (answer.view and answer.view.concise):
         definitions: list[str] = []
         for item in answer.evidence:
             definition = (
@@ -37,7 +53,7 @@ def render_answer(answer: Answer, *, details: bool = False) -> str:
         parts.extend(definitions)
     parts.extend("Warning: " + warning for warning in answer.warnings)
     if not details:
-        if answer.evidence:
+        if answer.evidence and not (answer.view and answer.view.concise):
             parts.append("Use /details for calculation rules and query diagnostics.")
         return "\n\n".join(parts)
     for item in answer.evidence:
@@ -67,7 +83,7 @@ def render_answer(answer: Answer, *, details: bool = False) -> str:
 
 def render_preview(preview: Preview) -> str:
     if not preview.reports:
-        return "No matching reports. Nothing deleted."
+        return "No matching reports in your library. Nothing was deleted. Use /reports to see your saved reports."
     lines = ["PERMANENT DELETION PREVIEW — nothing deleted yet:"]
     lines += [f"{r.id} | {r.title} | conversation {r.conversation}" for r in preview.reports]
     lines += [
@@ -81,13 +97,7 @@ def display_answer(console: Console, answer: Answer, *, details: bool = False) -
     """Executive summary by default; actual Rich tables in the detail view."""
     rendered = render_answer(answer)
     console.print()
-    heading, _, body = rendered.partition("\n")
-    if answer.quality_status == "validated" and heading == "Verified findings":
-        console.print(heading, style="bold cyan", markup=False, highlight=False)
-        console.print()
-        console.print(Markdown(body.lstrip("\n")))
-    else:
-        console.print(Markdown(rendered))
+    console.print(Markdown(rendered))
     if not details:
         return
     for item in answer.evidence:

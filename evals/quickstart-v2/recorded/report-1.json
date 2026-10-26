@@ -1,0 +1,221 @@
+{
+  "id": "report-1",
+  "question": "Prepare a Q2 2025 sales report with total revenue, monthly revenue, top 5 products and recommended actions for Q3 2025. Do not save it yet.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Overall performance\n- revenue = 7,398.60 [E1]\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-04 | 3,011.43 |\n| 2025\\-05 | 2,614.34 |\n| 2025\\-06 | 1,772.83 |\n\nSource: [E2].\n### Top 5 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 8252 | Calvin Klein Women's Toggle Front Down | 299.98 |\n| 2 | 23740 | Calvin Klein Men's Wool Car Coat With Bib | 216.00 |\n| 3 | 20078 | Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit | 199.99 |\n| 4 | 23902 | Calvin Klein Men's Plaza Coat | 199.00 |\n| 5 | 20275 | Calvin Klein Mens Double Breasted Solid Black Wool Suit | 189.99 |\n\nSource: [E3].\n\n### Suggested next steps\n- **01 Jul 2025 to 30 Sep 2025 (UTC):** Monthly revenue ranged from 1,772.83 in 2025\\-06 to 3,011.43 in 2025\\-04. [E2] Compare the highlighted months with the same calendar months in earlier years before attributing the pattern to seasonality.\n\nThese are investigation or test proposals. The data does not establish causes or justify a numeric target.",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 7398.6,
+            "units": 126,
+            "customers": 124,
+            "orders": 124,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          }
+        ],
+        "job_id": "<redacted>",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T12:58:06.789581+00:00",
+        "source_latest_at": "2025-06-30 20:25:33+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-04",
+            "revenue": 3011.43,
+            "units": 48,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-04-30 04:44:18+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 2614.34,
+            "units": 44,
+            "customers": 43,
+            "orders": 43,
+            "latest_purchase": "2025-05-31 09:26:27+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 1772.83,
+            "units": 34,
+            "customers": 34,
+            "orders": 34,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          }
+        ],
+        "job_id": "<redacted>",
+        "sql_hash": "f769079b549302d7",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T12:58:08.871210+00:00",
+        "source_latest_at": "2025-06-30 20:25:33+00",
+        "comparisons": []
+      },
+      {
+        "id": "E3",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 8252,
+            "product_name": "Calvin Klein Women's Toggle Front Down",
+            "revenue": 299.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-03 21:13:06+00"
+          },
+          {
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "revenue": 216.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-05 12:17:06+00"
+          },
+          {
+            "product_id": 20078,
+            "product_name": "Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit",
+            "revenue": 199.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-30 16:01:59+00"
+          },
+          {
+            "product_id": 23902,
+            "product_name": "Calvin Klein Men's Plaza Coat",
+            "revenue": 199.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-08 04:13:31+00"
+          },
+          {
+            "product_id": 20275,
+            "product_name": "Calvin Klein Mens Double Breasted Solid Black Wool Suit",
+            "revenue": 189.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-22 23:00:49+00"
+          }
+        ],
+        "job_id": "<redacted>",
+        "sql_hash": "1025cd47a4310b42",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T12:58:10.511601+00:00",
+        "source_latest_at": "2025-06-30 16:01:59+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.291897,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "actions": true,
+      "report": true,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "measures": [],
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "measures": [],
+          "minimum_rows": 3
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "measures": [],
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 27.785,
+  "queries": 3
+}

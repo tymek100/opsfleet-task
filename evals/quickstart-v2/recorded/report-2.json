@@ -1,0 +1,24 @@
+{
+  "id": "report-2",
+  "question": "Save it as \"Q2 demo review\".",
+  "answer": {
+    "view": null,
+    "text": "Saved report 8903242cc487.",
+    "evidence": [],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.16237,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 12.658,
+  "queries": 0
+}

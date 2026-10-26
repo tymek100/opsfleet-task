@@ -41,16 +41,18 @@ def validate_contract(intent: Intent, identity: Identity) -> None:
                 )
                 if months > 50:
                     raise AppError("Monthly analysis is limited to 50 months; narrow the period.")
+            if intent.kind == "churn" and requirement.measures:
+                raise AppError("Sales measures cannot be added to an inactivity analysis.")
             if intent.kind == "churn" and requirement.metric != "inactivity_share":
                 raise AppError(
                     "Churn plans must request inactivity share and its population evidence."
                 )
             if intent.kind == "sales" and requirement.metric == "inactivity_share":
                 raise AppError("Inactivity share requires a churn analysis.")
-            if (
-                requirement.metric in ("days", "revenue_per_day")
-                and requirement.dimension != Dimension.TOTAL
-            ):
+            if {requirement.metric, *requirement.measures} & {
+                "days",
+                "revenue_per_day",
+            } and requirement.dimension != Dimension.TOTAL:
                 raise AppError("Calendar-day comparisons require total outputs.")
             request = Analysis(
                 kind=intent.kind,
@@ -197,7 +199,11 @@ def completion_issues(intent: Intent, evidence: list[Evidence], facts: list[str]
                 if req.dimension == Dimension.MONTH or intent.kind == "churn"
                 else min(req.minimum_rows, len(selected.rows))
             )
-            expected = {f"{selected.id}.r{i}.{req.metric}" for i in range(count)}
+            expected = {
+                f"{selected.id}.r{i}.{measure}"
+                for i in range(count)
+                for measure in [req.metric, *req.measures]
+            }
             if not expected <= set(facts):
                 issues.append(f"missing_facts:{req.dimension}:{req.metric}:{period.start}")
             if intent.kind == "churn":

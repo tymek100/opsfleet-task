@@ -1,0 +1,4 @@
+
+That measure is not available in the supported analysis. I can calculate        
+revenue, orders, units, distinct customers and the inactivity proxy. Revenue is 
+not profit; I cannot infer missing costs, forecasts or causal effects.          

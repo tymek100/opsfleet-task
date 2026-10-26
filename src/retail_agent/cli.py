@@ -3,11 +3,14 @@
 import asyncio
 import logging
 import sqlite3
+import sys
 import warnings
 from contextlib import suppress
 from uuid import uuid4
 
 import typer
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
 from rich.console import Console
 
 from retail_agent.agent import Analyst
@@ -32,6 +35,7 @@ HELP = """/help                         Show commands
 /cancel                       Cancel pending deletion
 /new                          Clear context and start a new conversation
 /quit                         Exit
+Use Up/Down arrows to recall prompts and commands from this CLI session.
 Natural-language analysis and deletion previews also supported. Demo identity is fixed at startup."""
 
 
@@ -148,9 +152,19 @@ def chat(user: str = typer.Option("alice", help="Simulated identity: alice, bob,
 
 
 async def chat_loop(analyst: Analyst) -> None:
+    # Keep input history local to this CLI process; piped input needs no terminal editor.
+    session = (
+        PromptSession[str](history=InMemoryHistory())
+        if sys.stdin.isatty() and console.is_terminal
+        else None
+    )
     while True:
         try:
-            text = console.input("\nYou> ").strip()
+            text = (
+                await session.prompt_async("\nYou> ")
+                if session is not None
+                else console.input("\nYou> ")
+            ).strip()
             if text in ("/quit", "/exit"):
                 break
             if not text:
@@ -172,7 +186,7 @@ async def chat_loop(analyst: Analyst) -> None:
             if response is not None:
                 console.print(response)
                 continue
-            with console.status("Analyzing authorized data…"):
+            with console.status("Generating answer…"):
                 answer = await analyst.ask(text)
             display_answer(console, answer)
             if analyst.preview is not None:

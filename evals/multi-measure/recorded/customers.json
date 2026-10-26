@@ -1,0 +1,207 @@
+{
+  "question": "For Q2 2025, list our top 8 customers by total spend, with their customer IDs, spend, orders, units purchased and average order value. Also give quarter totals for revenue, orders and distinct customers.",
+  "expected": [
+    [
+      "customer",
+      "revenue",
+      8,
+      [
+        "orders",
+        "units",
+        "revenue_per_order"
+      ]
+    ],
+    [
+      "total",
+      "revenue",
+      1,
+      [
+        "orders",
+        "customers"
+      ]
+    ]
+  ],
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Top 8 customers by total spend\n\n| Rank | Customer ID | Total spend | Orders | Units sold | Revenue per order |\n| --- | --- | --- | --- | --- | --- |\n| 1 | 71257 | 199.99 | 1 | 1 | 199.99 |\n| 2 | 95003 | 199.00 | 1 | 1 | 199.00 |\n| 3 | 3691 | 189.99 | 1 | 1 | 189.99 |\n| 4 | 49592 | 178.00 | 1 | 1 | 178.00 |\n| 5 | 12168 | 158.00 | 1 | 1 | 158.00 |\n| 6 | 77892 | 149.99 | 1 | 1 | 149.99 |\n| 7 | 96467 | 149.99 | 1 | 1 | 149.99 |\n| 8 | 32445 | 149.96 | 1 | 2 | 149.96 |\n\nHighest spending shown: 199.99.\n\nEach customer in this ranking placed one qualifying order.\n\nSource: [E1].\n### Overall performance\n- revenue = 7,398.60 [E2]\n- distinct orders = 124 [E2]\n- distinct customers = 124 [E2]",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "customer",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 8,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "user_id": 71257,
+            "revenue": 199.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-30 16:01:59+00"
+          },
+          {
+            "user_id": 95003,
+            "revenue": 199.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-08 04:13:31+00"
+          },
+          {
+            "user_id": 3691,
+            "revenue": 189.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-22 23:00:49+00"
+          },
+          {
+            "user_id": 49592,
+            "revenue": 178.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-05-03 03:37:26+00"
+          },
+          {
+            "user_id": 12168,
+            "revenue": 158.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-05 20:26:41+00"
+          },
+          {
+            "user_id": 77892,
+            "revenue": 149.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-05-03 21:13:06+00"
+          },
+          {
+            "user_id": 96467,
+            "revenue": 149.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-16 22:32:08+00"
+          },
+          {
+            "user_id": 32445,
+            "revenue": 149.96,
+            "units": 2,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-14 03:51:54+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "4a8a487a60b26c10",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T09:46:30.800334+00:00",
+        "source_latest_at": "2025-06-30 16:01:59+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 7398.6,
+            "units": 126,
+            "customers": 124,
+            "orders": 124,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T09:46:32.384450+00:00",
+        "source_latest_at": "2025-06-30 20:25:33+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted-id>",
+    "estimated_cost_usd": 0.146411,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "customer",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "units",
+            "revenue_per_order"
+          ],
+          "minimum_rows": 8
+        },
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "customers"
+          ],
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "bcac11ee94b352c2",
+      "prompt": "2856028f6153d8a8",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "capture_note": "Live Gemini and BigQuery; final display rerendered locally from captured evidence. Original model output and runtime version are retained."
+}

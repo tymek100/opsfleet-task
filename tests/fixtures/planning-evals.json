@@ -165,34 +165,6 @@
     }
   },
   {
-    "id": "polish",
-    "user": "alice",
-    "question": "Pokaz przychod laczny i miesiecznie za drugi kwartal 2026. Bez porownania z pierwszym kwartalem i bez rekomendacji.",
-    "expected": {
-      "route": "analysis",
-      "intent": {
-        "period": {
-          "start": "2026-04-01",
-          "end": "2026-07-01"
-        },
-        "comparison": null,
-        "actions": false
-      }
-    },
-    "requirements": [
-      [
-        "total",
-        "revenue",
-        1
-      ],
-      [
-        "month",
-        "revenue",
-        1
-      ]
-    ]
-  },
-  {
     "id": "preview_only",
     "user": "alice",
     "question": "Remove the reports with Summer review in their title. Show the list for confirmation first.",

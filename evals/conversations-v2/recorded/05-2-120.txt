@@ -1,0 +1,22 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+                                                   
+ State       Distinct customers [E1]  Revenue [E1] 
+ ───────────────────────────────────────────────── 
+ Guangdong   41                       2,445.31     
+ Beijing     21                       1,097.58     
+ California  21                       1,276.71     
+ England     19                       1,125.98     
+ São Paulo   12                       754.73       
+                                                   
+
+Based on the previously shown results.                                                                                  
+
+Sources: [E1] (distinct customers ranking).                                                                             
+
+Cancelled and returned orders/items are excluded. States with fewer than five customers are hidden.                     
+
+Use /details for calculation rules and query diagnostics.                                                               

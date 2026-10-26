@@ -1,0 +1,25 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+Top 8 customers by orders                                                                                               
+
+                           
+ Rank  Customer ID  Orders 
+ ───────────────────────── 
+ 1     2880         2      
+ 2     50           1      
+ 3     442          1      
+ 4     523          1      
+ 5     651          1      
+ 6     667          1      
+ 7     778          1      
+ 8     1072         1      
+                           
+
+Source: [E1].                                                                                                           
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

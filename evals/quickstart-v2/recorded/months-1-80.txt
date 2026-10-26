@@ -1,0 +1,25 @@
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                 
+
+Monthly performance                                                             
+
+                                               
+ Month    Revenue   Orders  Distinct customers 
+ ───────────────────────────────────────────── 
+ 2025-01  2,163.16  39      39                 
+ 2025-02  2,202.99  38      37                 
+ 2025-03  2,436.10  45      45                 
+ 2025-04  3,011.43  47      47                 
+ 2025-05  2,614.34  43      43                 
+ 2025-06  1,772.83  34      34                 
+ 2025-07  2,654.08  47      47                 
+ 2025-08  3,483.52  52      52                 
+ 2025-09  2,885.74  45      45                 
+ 2025-10  1,878.47  40      40                 
+ 2025-11  3,565.48  55      55                 
+ 2025-12  3,541.59  52      52                 
+                                               
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

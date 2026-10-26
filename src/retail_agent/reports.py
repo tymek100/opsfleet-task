@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from retail_agent.models import Answer, AppError
-from retail_agent.privacy import safe_text
+from retail_agent.privacy import reject_personal_details, safe_text
 
 
 @dataclass(frozen=True)
@@ -72,6 +72,7 @@ class ReportStore:
     def save(self, owner: str, conversation: str, title: str, answer: Answer) -> str:
         if not answer.evidence:
             raise AppError("There is no successful analysis to save.")
+        reject_personal_details(title)
         title = safe_text(title, limit=120)
         key = hashlib.sha256(
             json.dumps([owner, conversation, title, answer.trace_id]).encode()

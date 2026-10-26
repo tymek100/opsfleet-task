@@ -52,7 +52,7 @@ def valid_report() -> Narrative:
                 metric_id="E1.r0.units_per_order",
                 start=date(2026, 4, 1),
                 end=date(2026, 7, 1),
-                target=3.5,
+                target=None,
             )
         ],
     )
@@ -68,8 +68,8 @@ def test_basket_is_units_over_orders_not_customers_over_orders(answer: Answer) -
     assert validate_narrative(report, evidence, ACTION_CONTRACT) == []
     text = render_narrative(report, evidence)
     assert "units per order = 3" in text and "revenue = 600" in text
-    assert "Unverified hypotheses" in text and "Seasonality could contribute" in text
-    assert "Proposed target: 3.5" in text and "not forecasts" in text
+    assert "Suggested next steps" in text and "control group" in text
+    assert "Proposed target" not in text and "Merchandising" not in text
     assert "01 Apr 2026 to 30 Jun 2026" in text
 
 
@@ -163,22 +163,13 @@ def test_target_domain_and_evidence_reference_validation(answer: Answer) -> None
                 metric_id="E1.r0.inactivity_share",
                 start=date(2026, 4, 1),
                 end=date(2026, 7, 1),
-                target=30,
+                target=None,
             )
         ],
     )
     assert set(validate_narrative(report, [e], ACTION_CONTRACT)) == {
-        "fraction_target_out_of_range",
         "unknown_hypothesis_evidence",
     }
-    with pytest.raises(ValidationError):
-        ProposedAction(
-            kind="retention_test",
-            metric_id="E1.r0.inactivity_share",
-            start=date(2026, 4, 1),
-            end=date(2026, 7, 1),
-            target=float("nan"),
-        )
 
 
 def test_revenue_decomposition_reconciles_and_is_not_a_causal_claim(answer: Answer) -> None:
@@ -240,3 +231,49 @@ def test_missing_revenue_on_nonempty_sales_is_not_zero(answer: Answer) -> None:
     catalog = metric_catalog(evidence)
     assert catalog["E1.r0.revenue"].value is None
     assert catalog["E1.r0.revenue_per_order"].value is None
+
+
+@pytest.mark.parametrize("target", [9500, 0, 0.3, -1, float("nan")])
+def test_unsupported_numeric_targets_rejected(target: float) -> None:
+    payload = valid_report().actions[0].model_dump()
+    payload["target"] = target
+    with pytest.raises(ValidationError):
+        ProposedAction.model_validate(payload)
+
+
+def test_monthly_action_requires_relevant_evidence_and_renders_observation(answer: Answer) -> None:
+    evidence = sample(answer)
+    monthly = evidence[0].model_copy(deep=True)
+    monthly.id = "E2"
+    monthly.request = monthly.request.model_copy(update={"dimension": "month"})
+    monthly.rows = [
+        {"month": "2026-01", "revenue": 100, "units": 1, "orders": 1, "customers": 1},
+        {"month": "2026-02", "revenue": 300, "units": 3, "orders": 3, "customers": 3},
+        {"month": "2026-03", "revenue": 200, "units": 2, "orders": 2, "customers": 2},
+    ]
+    evidence.append(monthly)
+    report = Narrative(
+        facts=["E1.r0.revenue"],
+        hypotheses=[Hypothesis(mechanism="promotion", evidence_ids=["E2"])],
+        actions=[
+            ProposedAction(
+                kind="demand_investigation",
+                metric_id="E1.r0.revenue",
+                start=date(2026, 4, 1),
+                end=date(2026, 7, 1),
+            )
+        ],
+    )
+    assert "demand_action_requires_monthly_evidence" in validate_narrative(
+        report, evidence, ACTION_CONTRACT
+    )
+    report.actions[0].metric_id = "E2.r1.revenue"
+    assert validate_narrative(report, evidence, ACTION_CONTRACT) == []
+    text = render_narrative(report, evidence)
+    assert r"100.00 in 2026\-01 to 300.00 in 2026\-02" in text
+    assert "Compare campaign dates" in text
+    assert "Unverified hypotheses" not in text
+    for row in monthly.rows:
+        row["revenue"] = 100
+    text = render_narrative(report, evidence)
+    assert "100.00 in every shown month" in text

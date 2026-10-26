@@ -52,7 +52,7 @@
         <mxCell id="edge4" value="SQL/TLS: state + outbox" edge="1" parent="1" source="api" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="edge5" value="HTTPS: plan / embeddings" edge="1" parent="1" source="api" target="model" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
+        <mxCell id="edge5" value="HTTPS: plan / write / review / embeddings" edge="1" parent="1" source="api" target="model" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
         <mxCell id="edge6" value="Approved source upload" edge="1" parent="1" source="api" target="bucket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=0;fontSize=11;labelBackgroundColor=#ffffff;">

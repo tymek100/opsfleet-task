@@ -1,0 +1,237 @@
+{
+  "id": 1,
+  "name": "separate-rankings",
+  "user": "alice",
+  "session": "sales",
+  "prompt": "For April through June 2025, give me two separate lists of our seven best-selling products: one by sales value and one by distinct buyers.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Top 7 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 20287 | Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket | 279.98 |\n| 2 | 20234 | Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit | 259.99 |\n| 3 | 23837 | Calvin Klein Sportswear Men's Melton Wool Basic Peacoat | 228.00 |\n| 4 | 23978 | Calvin Klein Men's Car Coat with Scarf | 219.98 |\n| 5 | 23786 | Calvin Klein Men's Poly Bonded Jacket | 200.00 |\n| 6 | 20078 | Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit | 199.99 |\n| 7 | 19934 | Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket | 199.98 |\n\nSource: [E1].\n### Top 7 products by distinct customers\n\n| Rank | Product ID | Product | Distinct customers |\n| --- | --- | --- | --- |\n| 1 | 117 | Calvin Klein Women's Printed Cowl Neck Shirt | 2 |\n| 2 | 17271 | Calvin Klein Sportswear Men's Long Sleeve Ponte Track Jacket With Logo | 2 |\n| 3 | 18937 | Calvin Klein Sportswear Men's Space Dye Hooded Sweater | 2 |\n| 4 | 19563 | Calvin Klein Sportswear Men's Color Blocked Full Needle Sweater | 2 |\n| 5 | 19934 | Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket | 2 |\n| 6 | 20287 | Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket | 2 |\n| 7 | 22033 | Calvin Klein Sportswear Men's Pinstripe Dress Dylan Pant | 2 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 7,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 20287,
+            "product_name": "Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket",
+            "revenue": 279.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-15 11:01:44+00"
+          },
+          {
+            "product_id": 20234,
+            "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-22 05:34:33+00"
+          },
+          {
+            "product_id": 23837,
+            "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+            "revenue": 228.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-01 16:05:37+00"
+          },
+          {
+            "product_id": 23978,
+            "product_name": "Calvin Klein Men's Car Coat with Scarf",
+            "revenue": 219.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-26 05:24:39+00"
+          },
+          {
+            "product_id": 23786,
+            "product_name": "Calvin Klein Men's Poly Bonded Jacket",
+            "revenue": 200.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-24 13:12:15+00"
+          },
+          {
+            "product_id": 20078,
+            "product_name": "Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit",
+            "revenue": 199.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-01 08:31:34+00"
+          },
+          {
+            "product_id": 19934,
+            "product_name": "Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket",
+            "revenue": 199.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-28 10:37:20+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "25aa0afb276b0bee",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:37:57.213757+00:00",
+        "source_latest_at": "2025-06-28 10:37:20+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "customers",
+          "limit": 7,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 117,
+            "product_name": "Calvin Klein Women's Printed Cowl Neck Shirt",
+            "revenue": 79.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-30 08:58:19+00"
+          },
+          {
+            "product_id": 17271,
+            "product_name": "Calvin Klein Sportswear Men's Long Sleeve Ponte Track Jacket With Logo",
+            "revenue": 151.24,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-01 03:39:04+00"
+          },
+          {
+            "product_id": 18937,
+            "product_name": "Calvin Klein Sportswear Men's Space Dye Hooded Sweater",
+            "revenue": 89.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-02 19:24:13+00"
+          },
+          {
+            "product_id": 19563,
+            "product_name": "Calvin Klein Sportswear Men's Color Blocked Full Needle Sweater",
+            "revenue": 179.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-18 09:30:23+00"
+          },
+          {
+            "product_id": 19934,
+            "product_name": "Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket",
+            "revenue": 199.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-28 10:37:20+00"
+          },
+          {
+            "product_id": 20287,
+            "product_name": "Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket",
+            "revenue": 279.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-15 11:01:44+00"
+          },
+          {
+            "product_id": 22033,
+            "product_name": "Calvin Klein Sportswear Men's Pinstripe Dress Dylan Pant",
+            "revenue": 76.26,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-02 12:20:34+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "4045e947c71c7669",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:37:58.427767+00:00",
+        "source_latest_at": "2025-06-28 10:37:20+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.133917,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 7
+        },
+        {
+          "dimension": "product",
+          "metric": "customers",
+          "minimum_rows": 7
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "4450325049b3b254",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 29.535,
+  "reports_after": [],
+  "pending_after": 0
+}

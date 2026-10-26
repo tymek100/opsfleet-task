@@ -21,8 +21,19 @@ from retail_agent.budget import Budget
 from retail_agent.capabilities import CapabilityIssue, capability_manifest
 from retail_agent.intent import execution_requests, validate_contract
 from retail_agent.model import BoundedGemini
-from retail_agent.models import AccessDeniedError, AppError, Identity, Intent, Period, Requirement
+from retail_agent.models import (
+    AccessDeniedError,
+    Answer,
+    AppError,
+    Evidence,
+    Identity,
+    Intent,
+    Period,
+    Requirement,
+)
 from retail_agent.observability import Trace
+from retail_agent.quality import RATIOS
+from retail_agent.result_views import KEYS, ViewPlan, evaluate_view, result_sources, view_columns
 
 type MissingInformation = Literal[
     "period",
@@ -88,6 +99,8 @@ class TurnPlan(BaseModel):
     model_config = ConfigDict(extra="forbid", json_schema_extra=explicit_output_fields)
     route: Literal[
         "analysis",
+        "result_view",
+        "explain_result",
         "library",
         "help",
         "cancel",
@@ -106,6 +119,8 @@ class TurnPlan(BaseModel):
     )
     help_topic: Literal["save", "delete", "read", "analysis"] | None = None
     intent: ProposedIntent | None = None
+    view: ViewPlan | None = None
+    post_view: ViewPlan | None = None
     clarification_question: str = Field(default="", max_length=800)
     reason: Literal["none", "privacy", "metric", "off_topic", "capability"] = "none"
     issue: CapabilityIssue | None = None
@@ -124,6 +139,10 @@ class TurnPlan(BaseModel):
 
     @model_validator(mode="after")
     def consistent_route(self) -> "TurnPlan":
+        if self.post_view and (self.route != "analysis" or (self.intent and self.intent.actions)):
+            raise ValueError("Post-query views require an analysis without report actions")
+        if (self.route == "result_view") != (self.view is not None):
+            raise ValueError("Result view route requires a view plan only")
         if (self.route == "library") != bool(self.operations):
             raise ValueError("Library route requires an ordered list of operations")
         if (self.route == "help") != (self.help_topic is not None):
@@ -169,6 +188,16 @@ requested filter, output, metric, status rule or inactivity threshold to produce
 Choose analysis when the request determines an executable plan. Code will execute that plan
 without a second model choosing tools, dates or filters. No confirmation of an unambiguous query
 is needed. Include every requested output in requirements and preserve comparison-specific outputs.
+Each requirement describes ONE output population/table. metric selects the ranking criterion
+(or primary measure for totals/months); measures lists ALL other requested columns for those SAME
+rows. minimum_rows is the requested ranking size. Never omit requested columns just because metric
+is the ranking criterion. Derived columns revenue_per_order, revenue_per_unit and units_per_order
+are supported in measures and calculated by code. Product IDs/names and grouping keys are automatic.
+Separate requirements mean separate rankings/populations, not extra columns: for "top products
+by revenue with orders and customers" use one product requirement with metric=revenue and
+measures=[orders,customers]. For separate revenue and customer rankings use two requirements.
+For each requested output, check its grouping, selection metric, row count and displayed measures
+against the question before returning. Apply the same rule to monthly and comparison outputs.
 Use UTC [start,end) dates: an exclusive next-day/month endpoint does not include that day/month.
 Use supplied UTC date only for explicit relative expressions. A named quarter without a year in
 question/relevant context requires clarification. Fiscal periods require a known fiscal calendar.
@@ -180,7 +209,56 @@ the user-selected baseline (denominator), regardless of chronological order or g
 Use revenue_change and revenue_change_pct for revenue comparisons, revenue_per_day_change_pct
 only when requested. Set explanation_requested for explicit requests for interpretation or why.
 
+For follow-ups about previously SHOWN results, use result_view when the supplied result_sources
+contain the needed data. This route executes bounded relational operations, without querying again.
+- sources are E1/E2/etc for the original tables, or result for the last filtered/combined view.
+- intersection finds entities appearing in every selected source; difference keeps entities in the
+  first source absent from all others; union combines entities; select uses one source.
+- columns must be exact available column names. Include entity ID/name for lists. Select ONLY
+  requested metrics, not every available column. Source-qualified rank columns retain original ranks.
+- filters, sort_by, descending, offset, limit refine the selected rows, in that order;
+  Use output=auto for normal conversational answers; it renders a single result as a short
+  factual sentence and larger results as a table. Use output=table only when the user explicitly
+  requests a table. output=count counts the final matching entities. Offset is a zero-based starting position;
+  negative offsets count from the end. For positional follow-ups, select from result when it exists
+  and preserve its displayed order unless a new order is explicitly requested. Use offset/limit
+  rather than guessing an entity name. Source-qualified rank columns refer to the ORIGINAL source
+  ordering, not the current displayed position; include them only if that source rank is requested.
+  An out-of-range position yields no rows, not a new ranking or an invented entity.
+- "those", "these", "that subset" refer to result when present. Preserve that subset for added
+  columns or ordering; do not silently expand it to the original full rankings.
+  When asked to ADD columns, retain the selected source displayed_columns and append the requested fields.
+  Replace columns only when requested; an empty result is an empty subset, never all entities.
+- Available result columns include precomputed derived metrics, beyond the base query output_schema.
+  Average order value is revenue_per_order: revenue divided by distinct qualifying orders.
+  Use derived_metric_definitions and the source columns; do not recompute ratios in the model.
+- Distinct customers cannot be summed across products. Do not infer missing rank values as zero.
+- Use analysis for changed periods, broader populations, fresh data or metrics unavailable in sources.
+  For a new period about a shown product subset, inherit its actual product IDs as filters.
+- Never use analysis merely to repeat tables when the request asks a relationship between them.
+
+A single question may describe a sequence: first retrieve a population, then add measures,
+filter, sort or keep a subset of THAT population. Use analysis with post_view for this, even
+when instructions are pasted on several lines. Keep the original selection/ranking and its
+limit in intent.requirements; include all requested display/derived measures. post_view applies
+the existing bounded view operations AFTER those queries, and determines the final displayed
+result. It never changes the original query population. Fresh sources are E1, E2, ... in
+execution_requests order (baseline requirements, then comparison requirements; compatible
+requests are combined). post_view cannot reference the old 'result'. Use fresh_result_column_templates for exact column
+names; replace E1 with the actual query source ID when needed. Customer identifiers are user_id,
+not customer_id. Display columns use source-qualified metric names. For example, select a
+revenue-ranked population first, then rerank that subset by revenue_per_order. Average order
+value is supported as revenue_per_order; it is not an unsupported metric just because SQL
+ranking uses a different metric. post_view is null unless a final transformation is requested.
+Do not combine post_view with report actions; clarify the desired separate outputs if needed.
+
 Routes:
+- explain_result: questions about where the previous analytical answer came from, how it was
+  calculated, why a row was selected, or which data/query supported it. This explains observable
+  evidence and executed operations, not hidden model reasoning. Use this for methodological
+  follow-ups, even with informal wording or typos. No intent, view or help_topic.
+  Use help only for instructions on operating the application, not explaining a specific result.
+- result_view: view plan only; no intent, commentary or library operations.
 - analysis: complete contract, supported by the supplied schemas. Inactivity share automatically
   includes both snapshots, eligible/inactive counts and percentage-point change; these are not
   extra missing requirements. Total metrics likewise share one query, not one query per measure.
@@ -216,6 +294,23 @@ class PlanSchemaError(AppError):
     """Sanitized structured response failure eligible for one planning repair."""
 
 
+def provider_schema(schema: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    """Keep types/enums; validate bounds locally to limit decoder complexity."""
+
+    def simplify(value: JsonValue) -> JsonValue:
+        if isinstance(value, dict):
+            return {
+                key: simplify(item)
+                for key, item in value.items()
+                if key not in {"minItems", "maxItems", "minimum", "maximum"}
+            }
+        if isinstance(value, list):
+            return [simplify(item) for item in value]
+        return value
+
+    return cast(dict[str, JsonValue], simplify(schema))
+
+
 async def structured_call[T: BaseModel](
     model: BoundedGemini,
     budget: Budget,
@@ -231,7 +326,7 @@ async def structured_call[T: BaseModel](
         config=types.GenerateContentConfig(
             system_instruction=instruction,
             response_mime_type="application/json",
-            response_json_schema=schema.model_json_schema(),
+            response_json_schema=provider_schema(schema.model_json_schema()),
             max_output_tokens=budget.settings.max_output_tokens,
             thinking_config=types.ThinkingConfig(
                 thinking_level=types.ThinkingLevel(budget.settings.thinking_level.upper())
@@ -270,15 +365,47 @@ async def propose_plan(
     model: BoundedGemini,
     budget: Budget,
     trace: Trace,
+    prior_answer: Answer | None = None,
 ) -> TurnPlan:
+    # Keep conversational meaning without repeating complete evidence snapshots on every turn.
+    conversation: list[dict[str, str]] = []
+    for turn in history[-4:]:
+        previous_text = turn["answer"]
+        try:
+            stored = json.loads(previous_text)
+            if isinstance(stored, dict):
+                text_value = cast(dict[str, object], stored).get("text")
+                if isinstance(text_value, str):
+                    previous_text = text_value
+        except (ValueError, TypeError):
+            pass
+        conversation.append({"question": turn["question"], "answer": previous_text})
     payload: dict[str, object] = {
         "current_question": question,
-        "prior_conversation": history[-4:],
+        "prior_conversation": conversation,
         "prior_contract": previous.model_dump(mode="json") if previous else None,
         "utc_today": today.isoformat(),
         "trusted_identity": identity.model_dump(mode="json"),
     }
+    sources = result_sources(prior_answer, identity)
+    payload["source_contracts"] = (
+        {e.id: e.request.model_dump(mode="json") for e in prior_answer.evidence}
+        if prior_answer
+        else {}
+    )
+    payload["derived_metric_definitions"] = {
+        name: {
+            "numerator": numerator,
+            "denominator": denominator,
+            "undefined_when": "denominator is zero or missing",
+        }
+        for name, (numerator, denominator) in RATIOS.items()
+    }
+    payload["result_sources"] = {k: v.model_dump(mode="json") for k, v in sources.items()}
     payload["capabilities"] = capability_manifest()
+    payload["fresh_result_column_templates"] = {
+        dimension: view_columns(key, "E1") for dimension, key in KEYS.items()
+    }
     payload["max_queries"] = budget.settings.max_queries
     for attempt in range(2):
         errors = ""
@@ -296,8 +423,31 @@ async def propose_plan(
             errors = str(exc)
         else:
             try:
+                if plan.view:
+                    evaluate_view(plan.view, sources)
                 if plan.intent:
                     validate_contract(plan.intent, identity)
+                    if plan.post_view:
+                        planned = Answer(
+                            text="",
+                            trace_id="preflight",
+                            evidence=[
+                                Evidence(
+                                    id=f"E{i}",
+                                    request=request,
+                                    scope=identity.scope,
+                                    definitions="",
+                                    rows=[],
+                                    job_id="",
+                                    sql_hash="",
+                                    bytes_processed=0,
+                                    queried_at="",
+                                )
+                                for i, request in enumerate(execution_requests(plan.intent), 1)
+                            ],
+                            intent=plan.intent,
+                        )
+                        evaluate_view(plan.post_view, result_sources(planned, identity))
                     if len(execution_requests(plan.intent)) > budget.settings.max_queries:
                         raise AppError(
                             "The requested outputs exceed the per-turn query limit; ask to narrow them."

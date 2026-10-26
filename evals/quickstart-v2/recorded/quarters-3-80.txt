@@ -1,0 +1,5 @@
+
+Using previously retrieved BigQuery data, we calculated the total revenue growth
+of +37.35% by taking the revenue difference of 3,356.46 divided by 8,985.54. The
+daily comparison differs at +40.41% because the later window spans 90 days      
+compared to 92 days in the earlier period.                                      

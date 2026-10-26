@@ -1,0 +1,148 @@
+{
+  "id": "15-2",
+  "case": 15,
+  "turn": 1,
+  "question": "Use actual revenue for Q1 2025 instead.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 31 Mar 2025 (UTC)\n\n### Overall performance\n- revenue = 6,802.25 [E1]",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-01-01",
+          "end": "2025-04-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 6802.25,
+            "units": 122,
+            "customers": 121,
+            "orders": 122,
+            "latest_purchase": "2025-03-31 07:57:14+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T08:37:00.998418+00:00",
+        "source_latest_at": "2025-03-31 07:57:14+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140918,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [
+      {
+        "id": "743c358e0103",
+        "title": "Winter review v2"
+      }
+    ],
+    "pending": 0
+  },
+  "after": {
+    "reports": [
+      {
+        "id": "743c358e0103",
+        "title": "Winter review v2"
+      }
+    ],
+    "pending": 0
+  },
+  "seconds": 34.339,
+  "capture_runner_check": {
+    "passed": true
+  },
+  "passed": true,
+  "acceptance_method": "check.py"
+}

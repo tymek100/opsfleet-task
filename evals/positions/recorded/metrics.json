@@ -1,0 +1,16 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "source": "276000a2ece1e18a",
+  "passed": 5,
+  "total": 5,
+  "seconds": 89.504,
+  "provider_retries": 0,
+  "query_events": 0,
+  "tokens": {
+    "input_tokens": 25023,
+    "output_tokens": 793,
+    "thinking_tokens": 9502
+  },
+  "scope": "Each question independently replays the same two analytical turns against live Gemini; data queries are blocked by the evaluation executor."
+}

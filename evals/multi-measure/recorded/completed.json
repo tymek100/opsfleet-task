@@ -1,0 +1,222 @@
+{
+  "question": "Using only completed orders and items in Q4 2025, show monthly revenue, orders, distinct customers and revenue per order, plus the top 7 products by revenue with revenue, orders and units per order.",
+  "expected": [
+    [
+      "month",
+      "revenue",
+      3,
+      [
+        "orders",
+        "customers",
+        "revenue_per_order"
+      ]
+    ],
+    [
+      "product",
+      "revenue",
+      7,
+      [
+        "orders",
+        "units_per_order"
+      ]
+    ]
+  ],
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Oct 2025 to 31 Dec 2025 (UTC)\n\n### Monthly performance\n\n| Month | Revenue | Orders | Distinct customers | Revenue per order |\n| --- | --- | --- | --- | --- |\n| 2025\\-10 | 326.25 | 9 | 9 | 36.25 |\n| 2025\\-11 | 1,035.99 | 11 | 11 | 94.18 |\n| 2025\\-12 | 896.36 | 13 | 13 | 68.95 |\n\nSource: [E1].\n### Top 7 products by revenue\n\n| Rank | Product ID | Product | Revenue | Orders | Units per order |\n| --- | --- | --- | --- | --- | --- |\n| 1 | 20234 | Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit | 259.99 | 1 | 1.00 |\n| 2 | 20469 | Calvin Klein Sportswear Men's Washable Birdseye Classic Jacket | 178.00 | 1 | 1.00 |\n| 3 | 23826 | Calvin Klein Men's Slim Fit Coat | 175.00 | 1 | 1.00 |\n| 4 | 19831 | Calvin Klein Sportswear Men's Solid Classic Fit Sport Coat | 169.50 | 1 | 1.00 |\n| 5 | 13374 | Calvin Klein Women's Tidal Wave One Piece Swimsuit | 144.99 | 1 | 1.00 |\n| 6 | 8448 | Calvin Klein Womens Long Packable Anorak | 129.00 | 1 | 1.00 |\n| 7 | 783 | Calvin Klein Women's MSY Flyaway Sweater | 99.50 | 1 | 1.00 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": true,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Override: Complete status only.",
+        "rows": [
+          {
+            "month": "2025-10",
+            "revenue": 326.25,
+            "units": 9,
+            "customers": 9,
+            "orders": 9,
+            "latest_purchase": "2025-10-23 14:53:47+00"
+          },
+          {
+            "month": "2025-11",
+            "revenue": 1035.99,
+            "units": 11,
+            "customers": 11,
+            "orders": 11,
+            "latest_purchase": "2025-11-30 04:40:06+00"
+          },
+          {
+            "month": "2025-12",
+            "revenue": 896.36,
+            "units": 14,
+            "customers": 13,
+            "orders": 13,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "8c4f3c2e5421aa03",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T09:47:53.303605+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 7,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": true,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Override: Complete status only.",
+        "rows": [
+          {
+            "product_id": 20234,
+            "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-30 02:53:18+00"
+          },
+          {
+            "product_id": 20469,
+            "product_name": "Calvin Klein Sportswear Men's Washable Birdseye Classic Jacket",
+            "revenue": 178.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-28 03:04:55+00"
+          },
+          {
+            "product_id": 23826,
+            "product_name": "Calvin Klein Men's Slim Fit Coat",
+            "revenue": 175.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-03 16:14:08+00"
+          },
+          {
+            "product_id": 19831,
+            "product_name": "Calvin Klein Sportswear Men's Solid Classic Fit Sport Coat",
+            "revenue": 169.5,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-03 21:04:20+00"
+          },
+          {
+            "product_id": 13374,
+            "product_name": "Calvin Klein Women's Tidal Wave One Piece Swimsuit",
+            "revenue": 144.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-28 03:20:28+00"
+          },
+          {
+            "product_id": 8448,
+            "product_name": "Calvin Klein Womens Long Packable Anorak",
+            "revenue": 129.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-26 22:29:50+00"
+          },
+          {
+            "product_id": 783,
+            "product_name": "Calvin Klein Women's MSY Flyaway Sweater",
+            "revenue": 99.5,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-25 04:18:50+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "d0b437985fe2fab6",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T09:47:54.745243+00:00",
+        "source_latest_at": "2025-12-28 03:20:28+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted-id>",
+    "estimated_cost_usd": 0.146401,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "customers",
+            "revenue_per_order"
+          ],
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "units_per_order"
+          ],
+          "minimum_rows": 7
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": true,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "bcac11ee94b352c2",
+      "prompt": "2856028f6153d8a8",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "capture_note": "Live Gemini and BigQuery; final display rerendered locally from captured evidence. Original model output and runtime version are retained."
+}

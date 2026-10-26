@@ -73,7 +73,7 @@ def report_final(**extras: object) -> types.Content:
                     "metric_id": "E1.r0.units_per_order",
                     "start": "2026-04-01",
                     "end": "2026-07-01",
-                    "target": 1.25,
+                    "target": None,
                 }
             ],
         },
@@ -139,7 +139,7 @@ async def test_report_adk_has_no_analytical_tools_and_cannot_autosave(
         "Create Q1 2026 report with Q2 actions"
     )
     assert result.quality_status == "validated" and len(result.evidence) == 3
-    assert "Proposed actions" in result.text and not store.list("alice")
+    assert "Suggested next steps" in result.text and not store.list("alice")
     assert len(script.payloads) == 1
     assert "run_analysis" not in script.payloads[0] and "preview_deletion" not in script.payloads[0]
     assert "CANARY_NAME" not in script.payloads[0] and "@example.test" not in script.payloads[0]

@@ -13,15 +13,26 @@ type ComparisonMetric = Literal[
 
 
 class AppError(Exception):
-    """A safe, actionable error whose message may be shown to the user."""
+    """A safe message plus a content-free diagnostic category."""
+
+    code = "application_error"
+
+    def __init__(self, message: str, *, code: str | None = None) -> None:
+        super().__init__(message)
+        if code is not None:
+            self.code = code
 
 
 class AccessDeniedError(AppError):
     """An authorization denial must not be retried as a query correction."""
 
+    code = "access_denied"
+
 
 class RateLimitError(AppError):
     """Provider throttling exposed without raw SDK details."""
+
+    code = "rate_limit"
 
     def __init__(self) -> None:
         super().__init__(
@@ -122,12 +133,30 @@ class Period(BaseModel):
         return self
 
 
+SalesMeasure = Literal[
+    "revenue",
+    "customers",
+    "orders",
+    "units",
+    "revenue_per_order",
+    "revenue_per_unit",
+    "units_per_order",
+    "days",
+    "revenue_per_day",
+]
+
+
 class Requirement(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     dimension: Dimension
     metric: Literal[
         "revenue", "customers", "orders", "units", "inactivity_share", "days", "revenue_per_day"
     ] = "revenue"
+    measures: list[SalesMeasure] = Field(
+        default_factory=lambda: list[SalesMeasure](),
+        max_length=9,
+        description="Additional columns to display for this same selected population, not separate rankings.",
+    )
     minimum_rows: int = Field(default=1, ge=1, le=50)
 
 
@@ -172,7 +201,30 @@ class Intent(BaseModel):
         return value
 
 
+class ViewSelection(BaseModel):
+    operation: str
+    candidate_count: int
+    sort_by: str | None = None
+    descending: bool = True
+    offset: int = 0
+    limit: int | None = None
+
+
+class ResultView(BaseModel):
+    """A materialized subset of evidence; hidden columns support subsequent follow-ups."""
+
+    key: str
+    columns: list[str]
+    rows: list[dict[str, Scalar]]
+    displayed_columns: list[str] = Field(default_factory=list)
+    source_ids: list[str] = Field(default_factory=list)
+    concise: bool = False
+    derivation: list[str] = Field(default_factory=list)
+    selection: ViewSelection | None = None
+
+
 class Answer(BaseModel):
+    view: ResultView | None = None
     text: str
     evidence: list[Evidence] = Field(default_factory=lambda: list[Evidence]())
     trace_id: str

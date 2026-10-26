@@ -1,0 +1,339 @@
+[
+  {
+    "case": 1,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "product_id": 20287,
+        "product_name": "Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket",
+        "revenue": 279.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 20234,
+        "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+        "revenue": 259.99,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      },
+      {
+        "product_id": 23837,
+        "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+        "revenue": 228.0,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      },
+      {
+        "product_id": 23978,
+        "product_name": "Calvin Klein Men's Car Coat with Scarf",
+        "revenue": 219.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 23786,
+        "product_name": "Calvin Klein Men's Poly Bonded Jacket",
+        "revenue": 200.0,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      },
+      {
+        "product_id": 20078,
+        "product_name": "Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit",
+        "revenue": 199.99,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      },
+      {
+        "product_id": 19934,
+        "product_name": "Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket",
+        "revenue": 199.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT i.product_id, p.name AS product_name, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n GROUP BY i.product_id,p.name ORDER BY revenue DESC, product_id, product_name LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 1,
+    "evidence": "E2",
+    "oracle_rows": [
+      {
+        "product_id": 117,
+        "product_name": "Calvin Klein Women's Printed Cowl Neck Shirt",
+        "revenue": 79.0,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 17271,
+        "product_name": "Calvin Klein Sportswear Men's Long Sleeve Ponte Track Jacket With Logo",
+        "revenue": 151.24,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 18937,
+        "product_name": "Calvin Klein Sportswear Men's Space Dye Hooded Sweater",
+        "revenue": 89.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 19563,
+        "product_name": "Calvin Klein Sportswear Men's Color Blocked Full Needle Sweater",
+        "revenue": 179.0,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 19934,
+        "product_name": "Calvin Klein Mens 2 Button Charcoal Gray Herringbone Wool Slim Fit Sport Coat Jacket",
+        "revenue": 199.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 20287,
+        "product_name": "Calvin Klein Mens 2 Button Solid Brown Faux Suede Slim Fit Sport Coat Jacket",
+        "revenue": 279.98,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 22033,
+        "product_name": "Calvin Klein Sportswear Men's Pinstripe Dress Dylan Pant",
+        "revenue": 76.26,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT i.product_id, p.name AS product_name, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n GROUP BY i.product_id,p.name ORDER BY customers DESC, product_id, product_name LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 2,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 7536.22,
+        "units": 116,
+        "orders": 114,
+        "customers": 114
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n ORDER BY revenue DESC, label LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 2,
+    "evidence": "E2",
+    "oracle_rows": [
+      {
+        "month": "2025-04",
+        "revenue": 1869.35,
+        "units": 28,
+        "orders": 27,
+        "customers": 27
+      },
+      {
+        "month": "2025-05",
+        "revenue": 2736.91,
+        "units": 46,
+        "orders": 45,
+        "customers": 45
+      },
+      {
+        "month": "2025-06",
+        "revenue": 2929.96,
+        "units": 42,
+        "orders": 42,
+        "customers": 42
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT FORMAT_TIMESTAMP('%Y-%m', i.created_at, 'UTC') AS month, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n GROUP BY month ORDER BY month LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 3,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "period": "2025-05-01",
+        "cohort": "all",
+        "eligible_customers": 472,
+        "inactive_customers": 472,
+        "inactivity_share": 1.0
+      },
+      {
+        "period": "2025-06-01",
+        "cohort": "all",
+        "eligible_customers": 498,
+        "inactive_customers": 498,
+        "inactivity_share": 1.0
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "WITH purchases AS (\nSELECT i.user_id, DATE(i.created_at) AS day\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\n), snapshots AS (SELECT @start AS boundary UNION ALL SELECT @end),\nseasoned AS (\nSELECT DISTINCT s.boundary, p.user_id FROM snapshots s JOIN purchases p\nON p.day < DATE_SUB(s.boundary, INTERVAL @inactivity_days DAY)\n), classified AS (\nSELECT boundary, user_id, NOT EXISTS (\nSELECT 1 FROM purchases p WHERE p.user_id=s.user_id\nAND p.day >= DATE_SUB(s.boundary, INTERVAL @inactivity_days DAY)\nAND p.day < s.boundary) AS inactive FROM seasoned s\n)\nSELECT CAST(boundary AS STRING) AS period, 'all' AS cohort,\nCOUNT(*) AS eligible_customers, COUNTIF(inactive) AS inactive_customers,\nCOUNTIF(inactive)/COUNT(*) AS inactivity_share\nFROM classified GROUP BY boundary ORDER BY boundary",
+    "pass": true
+  },
+  {
+    "case": 4,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 9575.34,
+        "units": 138,
+        "orders": 137,
+        "customers": 137
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n ORDER BY revenue DESC, label LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 4,
+    "evidence": "E2",
+    "oracle_rows": [
+      {
+        "month": "2025-07",
+        "revenue": 3761.79,
+        "units": 54,
+        "orders": 53,
+        "customers": 53
+      },
+      {
+        "month": "2025-08",
+        "revenue": 2326.84,
+        "units": 35,
+        "orders": 35,
+        "customers": 35
+      },
+      {
+        "month": "2025-09",
+        "revenue": 3486.71,
+        "units": 49,
+        "orders": 49,
+        "customers": 49
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT FORMAT_TIMESTAMP('%Y-%m', i.created_at, 'UTC') AS month, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n GROUP BY month ORDER BY month LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 4,
+    "evidence": "E3",
+    "oracle_rows": [
+      {
+        "product_id": 23902,
+        "product_name": "Calvin Klein Men's Plaza Coat",
+        "revenue": 398.0,
+        "units": 2,
+        "orders": 2,
+        "customers": 2
+      },
+      {
+        "product_id": 24404,
+        "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+        "revenue": 269.97,
+        "units": 3,
+        "orders": 3,
+        "customers": 3
+      },
+      {
+        "product_id": 20041,
+        "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+        "revenue": 259.99,
+        "units": 1,
+        "orders": 1,
+        "customers": 1
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT i.product_id, p.name AS product_name, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n GROUP BY i.product_id,p.name ORDER BY revenue DESC, product_id, product_name LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 5,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 2609.65,
+        "units": 52,
+        "orders": 52,
+        "customers": 51
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n ORDER BY revenue DESC, label LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 5,
+    "evidence": "E2",
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": 3241.78,
+        "units": 60,
+        "orders": 60,
+        "customers": 60
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n ORDER BY revenue DESC, label LIMIT @row_limit",
+    "pass": true
+  },
+  {
+    "case": 6,
+    "evidence": "E1",
+    "oracle_rows": [
+      {
+        "label": "all",
+        "revenue": null,
+        "units": 0,
+        "orders": 0,
+        "customers": 0
+      }
+    ],
+    "job_id": "redacted-job-id",
+    "bytes": 0,
+    "sql": "SELECT 'all' AS label, ROUND(SUM(i.sale_price),2) revenue,\nCOUNT(i.id) units, COUNT(DISTINCT i.order_id) orders, COUNT(DISTINCT i.user_id) customers\nFROM `bigquery-public-data.thelook_ecommerce.order_items` i\nJOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id\nWHERE p.brand=@brand AND i.status NOT IN ('Returned', 'Cancelled')\nAND EXISTS (SELECT 1 FROM `bigquery-public-data.thelook_ecommerce.orders` o\nWHERE o.order_id=i.order_id AND o.user_id=i.user_id AND o.status NOT IN ('Returned', 'Cancelled'))\nAND i.created_at>=TIMESTAMP(@start) AND i.created_at<TIMESTAMP(@end)\n ORDER BY revenue DESC, label LIMIT @row_limit",
+    "pass": true
+  }
+]

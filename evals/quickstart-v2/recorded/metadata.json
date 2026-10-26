@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-26",
+  "services": [
+    "Gemini",
+    "BigQuery"
+  ],
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "scenarios": 7,
+  "turns": 21,
+  "passed": 21,
+  "attempt": "First full live run; no retries or application changes required during this run. Initial completeness assertions added while the run was active were separately executed against all seven captured initial answers.",
+  "timing_seconds": {
+    "min": 8.775,
+    "max": 40.352,
+    "sum": 434.676
+  },
+  "provider_usage": {
+    "input_tokens": 134315,
+    "output_tokens": 6342,
+    "thinking_tokens": 33539
+  },
+  "model_calls": 32,
+  "review": "Rendered at 80 and 120 columns. Selected populations and ratio ordering checked against original evidence. Report store checked before and after save. This run did not independently re-query raw tables for every initial aggregate; it is not a billing measurement or reliability guarantee.",
+  "question_budget_usd": 1.0
+}

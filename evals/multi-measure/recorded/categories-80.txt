@@ -1,0 +1,45 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                 
+
+Performance by category                                                         
+
+                                                                                
+ Category            Revenue   Units sold  Distinct customers  Revenue per unit 
+ ────────────────────────────────────────────────────────────────────────────── 
+ Outerwear & Coats   5,872.17  45          45                  130.49           
+ Sweaters            4,257.67  63          63                  67.58            
+ Suits & Sport       3,740.18  26          26                  143.85           
+ Coats                                                                          
+ Underwear           3,535.44  119         118                 29.71            
+ Pants               2,193.66  37          37                  59.29            
+ Dresses             1,816.05  16          16                  113.50           
+                                                                                
+
+Source: [E1].                                                                   
+
+Monthly performance                                                             
+
+                               
+ Month    Revenue   Units sold 
+ ───────────────────────────── 
+ 2025-01  2,163.16  39         
+ 2025-02  2,202.99  38         
+ 2025-03  2,436.10  45         
+ 2025-04  3,011.43  48         
+ 2025-05  2,614.34  44         
+ 2025-06  1,772.83  34         
+ 2025-07  2,654.08  47         
+ 2025-08  3,483.52  52         
+ 2025-09  2,885.74  45         
+ 2025-10  1,878.47  40         
+ 2025-11  3,565.48  55         
+ 2025-12  3,541.59  53         
+                               
+
+Source: [E2].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

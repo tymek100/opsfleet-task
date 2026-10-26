@@ -1,0 +1,50 @@
+
+Verified findings
+
+Calvin Klein · 01 Jul 2025 to 30 Sep 2025 (UTC)                                 
+
+Top 5 products by units sold                                                    
+
+                                                                                
+ Rank  Product ID  Product                                  Units sold  Revenue 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     28965       Calvin Klein Men's 4-In-1 Reversible     3           101.25  
+                   Plaque Belt                                                  
+ 2     3209        Calvin Klein Women's Lux Stretch Rayon   2           256.00  
+                   Career Dress                                                 
+ 3     8354        Calvin Klein Women's 3/4 Single          2           263.88  
+                   Breasted Coat                                                
+ 4     14289       Calvin Klein Women's Basic Reversible    2           72.00   
+                   Belt                                                         
+ 5     17742       Calvin Klein Sportswear Men's Long       2           119.00  
+                   Sleeve 2X2 Rib Crew Neck Knit                                
+                                                                                
+
+Source: [E1].                                                                   
+
+Top 5 products by distinct customers                                            
+
+                                                                                
+ Rank  Product ID  Product                  Distinct customers  Revenue  Orders 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     28965       Calvin Klein Men's       3                   101.25   3      
+                   4-In-1 Reversible                                            
+                   Plaque Belt                                                  
+ 2     3209        Calvin Klein Women's     2                   256.00   2      
+                   Lux Stretch Rayon                                            
+                   Career Dress                                                 
+ 3     8354        Calvin Klein Women's     2                   263.88   2      
+                   3/4 Single Breasted                                          
+                   Coat                                                         
+ 4     14289       Calvin Klein Women's     2                   72.00    2      
+                   Basic Reversible Belt                                        
+ 5     17742       Calvin Klein Sportswear  2                   119.00   2      
+                   Men's Long Sleeve 2X2                                        
+                   Rib Crew Neck Knit                                           
+                                                                                
+
+Source: [E2].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

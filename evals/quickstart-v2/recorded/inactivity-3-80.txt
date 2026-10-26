@@ -1,0 +1,7 @@
+
+This inactivity percentage measures customers whose last purchase fell before   
+the inactivity cutoff out of eligible customers whose first purchase predated   
+that same cutoff. For Calvin Klein on 2025-10-01, 1,264 inactive customers      
+divided by 1,264 eligible customers gave an inactivity share of 100.0000%. On   
+2026-01-01, 1,398 inactive customers divided by 1,399 eligible customers        
+produced an inactivity share of 99.9285%, shifting by -0.0715 percentage points.

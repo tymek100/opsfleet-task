@@ -1,0 +1,143 @@
+{
+  "id": 2,
+  "name": "followup-months",
+  "user": "alice",
+  "session": "sales",
+  "prompt": "For that same period, show the combined sales total and each month's revenue. Do not include rankings this time.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Overall performance\n- revenue = 7,536.22 [E1]\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-04 | 1,869.35 |\n| 2025\\-05 | 2,736.91 |\n| 2025\\-06 | 2,929.96 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 7536.22,
+            "units": 116,
+            "customers": 114,
+            "orders": 114,
+            "latest_purchase": "2025-06-30 13:04:16+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:34:16.708646+00:00",
+        "source_latest_at": "2025-06-30 13:04:16+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-04",
+            "revenue": 1869.35,
+            "units": 28,
+            "customers": 27,
+            "orders": 27,
+            "latest_purchase": "2025-04-30 19:55:32+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 2736.91,
+            "units": 46,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-05-31 12:31:46+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 2929.96,
+            "units": 42,
+            "customers": 42,
+            "orders": 42,
+            "latest_purchase": "2025-06-30 13:04:16+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "f769079b549302d7",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:34:18.030209+00:00",
+        "source_latest_at": "2025-06-30 13:04:16+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.151403,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 3
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "2805b32271d3fa5f",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 17.068,
+  "reports_after": [],
+  "pending_after": 0
+}

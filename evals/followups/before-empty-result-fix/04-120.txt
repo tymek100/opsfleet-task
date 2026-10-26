@@ -1,0 +1,21 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                                                         
+
+                                                                       
+ Product ID  Product                                                   
+ ───────────────────────────────────────────────────────────────────── 
+ 23740       Calvin Klein Men's Wool Car Coat With Bib                 
+ 20078       Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit 
+ 23902       Calvin Klein Men's Plaza Coat                             
+ 20275       Calvin Klein Mens Double Breasted Solid Black Wool Suit   
+                                                                       
+
+Based on the previously shown results.                                                                                  
+
+Sources: [E1] (revenue ranking); [E2] (distinct customers ranking).                                                     
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

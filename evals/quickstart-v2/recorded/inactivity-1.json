@@ -1,0 +1,97 @@
+{
+  "id": "inactivity-1",
+  "question": "Did our customer inactivity rate increase during Q4 2025? Use a 90-day inactivity threshold and show eligible and inactive customer counts at both quarter boundaries.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 Customer inactivity \u00b7 UTC\n\n| As of (UTC) | Eligible customers | Inactive customers | Inactivity share |\n| --- | --- | --- | --- |\n| 2025\\-10\\-01 | 1219 | 1219 | 100.0000% |\n| 2026\\-01\\-01 | 1361 | 1360 | 99.9265% |\n\nInactivity decreased; change: -0.0735 percentage points.\nThese snapshots do not show an increase in inactivity.\nEligible customers: 1,219 \u2192 1,361; inactive customers: 1,219 \u2192 1,360.\n\nThis is an inactivity share, not a count of newly lost customers.\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "churn",
+          "dimension": "total",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Churn proxy: 90-day inactivity share at start/end (exclusive as-of). Eligible = first authorized purchase before as-of minus N days; inactive = last purchase before that cutoff. Empty denominator is undefined. Not newly churned customers in a month. Brand breakdown capped at 50 largest eligible cohorts, preserving both snapshots.",
+        "rows": [
+          {
+            "period": "2025-10-01",
+            "cohort": "all",
+            "eligible_customers": 1219,
+            "inactive_customers": 1219,
+            "inactivity_share": 1.0
+          },
+          {
+            "period": "2026-01-01",
+            "cohort": "all",
+            "eligible_customers": 1361,
+            "inactive_customers": 1360,
+            "inactivity_share": 0.9992652461425422
+          }
+        ],
+        "job_id": "<redacted>",
+        "sql_hash": "3323d56c8320b6c2",
+        "bytes_processed": 11501835,
+        "queried_at": "2026-10-26T12:57:05.589755+00:00",
+        "source_latest_at": null,
+        "comparisons": [
+          {
+            "cohort": "all",
+            "percentage_point_change": -0.0735,
+            "direction": "decreased"
+          }
+        ]
+      }
+    ],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.151824,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "churn",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "inactivity_share",
+          "measures": [],
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 13.024,
+  "queries": 1
+}

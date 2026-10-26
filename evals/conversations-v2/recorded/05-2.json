@@ -1,0 +1,237 @@
+{
+  "id": "05-2",
+  "case": 5,
+  "turn": 1,
+  "question": "Add revenue for each of those states, keeping the same states and order.",
+  "user": "alice",
+  "answer": {
+    "view": {
+      "key": "state",
+      "columns": [
+        "state",
+        "E1.revenue",
+        "E1.customers",
+        "E1.orders",
+        "E1.units",
+        "E1.revenue_per_order",
+        "E1.revenue_per_unit",
+        "E1.units_per_order",
+        "E1.rank"
+      ],
+      "rows": [
+        {
+          "state": "Guangdong",
+          "E1.revenue": 2445.31,
+          "E1.customers": 41,
+          "E1.orders": 42,
+          "E1.units": 42,
+          "E1.revenue_per_order": 58.221667,
+          "E1.revenue_per_unit": 58.221667,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 1
+        },
+        {
+          "state": "Beijing",
+          "E1.revenue": 1097.58,
+          "E1.customers": 21,
+          "E1.orders": 21,
+          "E1.units": 21,
+          "E1.revenue_per_order": 52.265714,
+          "E1.revenue_per_unit": 52.265714,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 2
+        },
+        {
+          "state": "California",
+          "E1.revenue": 1276.71,
+          "E1.customers": 21,
+          "E1.orders": 21,
+          "E1.units": 21,
+          "E1.revenue_per_order": 60.795714,
+          "E1.revenue_per_unit": 60.795714,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 3
+        },
+        {
+          "state": "England",
+          "E1.revenue": 1125.98,
+          "E1.customers": 19,
+          "E1.orders": 19,
+          "E1.units": 19,
+          "E1.revenue_per_order": 59.262105,
+          "E1.revenue_per_unit": 59.262105,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 4
+        },
+        {
+          "state": "S\u00e3o Paulo",
+          "E1.revenue": 754.73,
+          "E1.customers": 12,
+          "E1.orders": 12,
+          "E1.units": 12,
+          "E1.revenue_per_order": 62.894167,
+          "E1.revenue_per_unit": 62.894167,
+          "E1.units_per_order": 1.0,
+          "E1.rank": 5
+        }
+      ],
+      "displayed_columns": [
+        "state",
+        "E1.customers",
+        "E1.revenue"
+      ]
+    },
+    "text": "Verified findings\n\nCalvin Klein \u00b7 01 Jan 2025 to 31 Dec 2025 (UTC)\n\n| State | Distinct customers [E1] | Revenue [E1] |\n| --- | --- | --- |\n| Guangdong | 41 | 2,445.31 |\n| Beijing | 21 | 1,097.58 |\n| California | 21 | 1,276.71 |\n| England | 19 | 1,125.98 |\n| S\u00e3o Paulo | 12 | 754.73 |\n\nBased on the previously shown results.\n\nSources: [E1] (distinct customers ranking).",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "state",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "customers",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. State cohorts under five customers suppressed; no customer/product ID filters.",
+        "rows": [
+          {
+            "state": "Guangdong",
+            "revenue": 2445.31,
+            "units": 42,
+            "customers": 41,
+            "orders": 42,
+            "latest_purchase": "2025-12-27 03:48:03+00"
+          },
+          {
+            "state": "Beijing",
+            "revenue": 1097.58,
+            "units": 21,
+            "customers": 21,
+            "orders": 21,
+            "latest_purchase": "2025-12-25 01:15:32+00"
+          },
+          {
+            "state": "California",
+            "revenue": 1276.71,
+            "units": 21,
+            "customers": 21,
+            "orders": 21,
+            "latest_purchase": "2025-11-19 04:49:46+00"
+          },
+          {
+            "state": "England",
+            "revenue": 1125.98,
+            "units": 19,
+            "customers": 19,
+            "orders": 19,
+            "latest_purchase": "2025-12-30 03:27:52+00"
+          },
+          {
+            "state": "S\u00e3o Paulo",
+            "revenue": 754.73,
+            "units": 12,
+            "customers": 12,
+            "orders": 12,
+            "latest_purchase": "2025-12-06 21:35:25+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "114b24e1c3205732",
+        "bytes_processed": 14900904,
+        "queried_at": "2026-10-26T08:31:40.898039+00:00",
+        "source_latest_at": "2025-12-30 03:27:52+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.145226,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "state",
+          "metric": "customers",
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "result_view",
+    "operations": [],
+    "help_topic": null,
+    "intent": null,
+    "view": {
+      "sources": [
+        "E1"
+      ],
+      "operation": "select",
+      "columns": [
+        "state",
+        "E1.customers",
+        "E1.revenue"
+      ],
+      "filters": [],
+      "sort_by": null,
+      "descending": true,
+      "limit": null,
+      "output": "table"
+    },
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "seconds": 22.024,
+  "capture_runner_check": {
+    "passed": false,
+    "error": "'brand'",
+    "error_type": "KeyError"
+  },
+  "passed": true,
+  "acceptance_method": "check.py"
+}

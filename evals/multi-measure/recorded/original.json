@@ -1,0 +1,413 @@
+{
+  "question": "Show our top 20 products by revenue in 2025. Include product ID, product name, revenue, number of orders, units sold, distinct customers, and revenue per order. Also show a monthly breakdown of revenue, orders, and distinct customers for the full year.",
+  "expected": [
+    [
+      "product",
+      "revenue",
+      20,
+      [
+        "orders",
+        "units",
+        "customers",
+        "revenue_per_order"
+      ]
+    ],
+    [
+      "month",
+      "revenue",
+      12,
+      [
+        "orders",
+        "customers"
+      ]
+    ]
+  ],
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 31 Dec 2025 (UTC)\n\n### Top 20 products by revenue\n\n| Rank | Product ID | Product | Revenue | Orders | Units sold | Distinct customers | Revenue per order |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| 1 | 20469 | Calvin Klein Sportswear Men's Washable Birdseye Classic Jacket | 534.00 | 3 | 3 | 3 | 178.00 |\n| 2 | 8252 | Calvin Klein Women's Toggle Front Down | 449.97 | 3 | 3 | 3 | 149.99 |\n| 3 | 24313 | Calvin Klein Men's Calvin Coat | 398.00 | 2 | 2 | 2 | 199.00 |\n| 4 | 3209 | Calvin Klein Women's Lux Stretch Rayon Career Dress | 384.00 | 3 | 3 | 3 | 128.00 |\n| 5 | 24404 | Calvin Klein Sportswear Men's Light Weight Moto Jacket | 359.96 | 4 | 4 | 4 | 89.99 |\n| 6 | 20090 | Calvin Klein Sportswear Men's Washable Pindot Jacket | 356.00 | 2 | 2 | 2 | 178.00 |\n| 7 | 23826 | Calvin Klein Men's Slim Fit Coat | 350.00 | 2 | 2 | 2 | 175.00 |\n| 8 | 19943 | Calvin Klein Sportswear Men's Pindot Jacket | 345.90 | 3 | 3 | 3 | 115.30 |\n| 9 | 20355 | Calvin Klein Sportswear Men's Two Button Air Jacket | 345.90 | 3 | 3 | 3 | 115.30 |\n| 10 | 23740 | Calvin Klein Men's Wool Car Coat With Bib | 324.00 | 3 | 3 | 3 | 108.00 |\n| 11 | 23062 | Calvin Klein Sportswear Men's Fine Line Plaid Short | 312.78 | 6 | 6 | 6 | 52.13 |\n| 12 | 17815 | Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie | 294.00 | 3 | 3 | 3 | 98.00 |\n| 13 | 24031 | Calvin Klein Sportswear Men's Long Sleeve Full Zip French Terry Knit | 294.00 | 3 | 3 | 3 | 98.00 |\n| 14 | 20117 | Calvin Klein Mens 2 Button Gray Plaid Slim Fit Wool Sport Coat Jacket | 279.98 | 2 | 2 | 2 | 139.99 |\n| 15 | 8354 | Calvin Klein Women's 3/4 Single Breasted Coat | 263.88 | 2 | 2 | 2 | 131.94 |\n| 16 | 20234 | Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit | 259.99 | 1 | 1 | 1 | 259.99 |\n| 17 | 20235 | Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit | 259.99 | 1 | 1 | 1 | 259.99 |\n| 18 | 3110 | Calvin Klein Women's Printed Maxi Dress | 259.00 | 2 | 2 | 2 | 129.50 |\n| 19 | 3777 | Calvin Klein Women's MSY Printed Seamed Dress | 259.00 | 2 | 2 | 2 | 129.50 |\n| 20 | 8448 | Calvin Klein Womens Long Packable Anorak | 258.00 | 2 | 2 | 2 | 129.00 |\n\nSource: [E1].\n### Monthly performance\n\n| Month | Revenue | Orders | Distinct customers |\n| --- | --- | --- | --- |\n| 2025\\-01 | 2,163.16 | 39 | 39 |\n| 2025\\-02 | 2,202.99 | 38 | 37 |\n| 2025\\-03 | 2,436.10 | 45 | 45 |\n| 2025\\-04 | 3,011.43 | 47 | 47 |\n| 2025\\-05 | 2,614.34 | 43 | 43 |\n| 2025\\-06 | 1,772.83 | 34 | 34 |\n| 2025\\-07 | 2,654.08 | 47 | 47 |\n| 2025\\-08 | 3,483.52 | 52 | 52 |\n| 2025\\-09 | 2,885.74 | 45 | 45 |\n| 2025\\-10 | 1,878.47 | 40 | 40 |\n| 2025\\-11 | 3,565.48 | 55 | 55 |\n| 2025\\-12 | 3,541.59 | 52 | 52 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 20,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 20469,
+            "product_name": "Calvin Klein Sportswear Men's Washable Birdseye Classic Jacket",
+            "revenue": 534.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-12-28 03:04:55+00"
+          },
+          {
+            "product_id": 8252,
+            "product_name": "Calvin Klein Women's Toggle Front Down",
+            "revenue": 449.97,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-12-16 04:24:48+00"
+          },
+          {
+            "product_id": 24313,
+            "product_name": "Calvin Klein Men's Calvin Coat",
+            "revenue": 398.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 08:12:36+00"
+          },
+          {
+            "product_id": 3209,
+            "product_name": "Calvin Klein Women's Lux Stretch Rayon Career Dress",
+            "revenue": 384.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-08-22 21:19:08+00"
+          },
+          {
+            "product_id": 24404,
+            "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+            "revenue": 359.96,
+            "units": 4,
+            "customers": 4,
+            "orders": 4,
+            "latest_purchase": "2025-11-14 09:41:43+00"
+          },
+          {
+            "product_id": 20090,
+            "product_name": "Calvin Klein Sportswear Men's Washable Pindot Jacket",
+            "revenue": 356.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-19 13:53:24+00"
+          },
+          {
+            "product_id": 23826,
+            "product_name": "Calvin Klein Men's Slim Fit Coat",
+            "revenue": 350.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-11-03 16:14:08+00"
+          },
+          {
+            "product_id": 19943,
+            "product_name": "Calvin Klein Sportswear Men's Pindot Jacket",
+            "revenue": 345.9,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-11-12 09:47:02+00"
+          },
+          {
+            "product_id": 20355,
+            "product_name": "Calvin Klein Sportswear Men's Two Button Air Jacket",
+            "revenue": 345.9,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-07-13 21:01:33+00"
+          },
+          {
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "revenue": 324.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-11-21 02:07:52+00"
+          },
+          {
+            "product_id": 23062,
+            "product_name": "Calvin Klein Sportswear Men's Fine Line Plaid Short",
+            "revenue": 312.78,
+            "units": 6,
+            "customers": 6,
+            "orders": 6,
+            "latest_purchase": "2025-12-07 20:54:24+00"
+          },
+          {
+            "product_id": 17815,
+            "product_name": "Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie",
+            "revenue": 294.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-11-25 21:01:30+00"
+          },
+          {
+            "product_id": 24031,
+            "product_name": "Calvin Klein Sportswear Men's Long Sleeve Full Zip French Terry Knit",
+            "revenue": 294.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-12-23 02:50:17+00"
+          },
+          {
+            "product_id": 20117,
+            "product_name": "Calvin Klein Mens 2 Button Gray Plaid Slim Fit Wool Sport Coat Jacket",
+            "revenue": 279.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-13 07:51:19+00"
+          },
+          {
+            "product_id": 8354,
+            "product_name": "Calvin Klein Women's 3/4 Single Breasted Coat",
+            "revenue": 263.88,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 02:42:24+00"
+          },
+          {
+            "product_id": 20234,
+            "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-30 02:53:18+00"
+          },
+          {
+            "product_id": 20235,
+            "product_name": "Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-09-14 21:11:13+00"
+          },
+          {
+            "product_id": 3110,
+            "product_name": "Calvin Klein Women's Printed Maxi Dress",
+            "revenue": 259.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-07-12 04:16:41+00"
+          },
+          {
+            "product_id": 3777,
+            "product_name": "Calvin Klein Women's MSY Printed Seamed Dress",
+            "revenue": 259.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-11-07 08:29:16+00"
+          },
+          {
+            "product_id": 8448,
+            "product_name": "Calvin Klein Womens Long Packable Anorak",
+            "revenue": 258.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-11-26 22:29:50+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "0c8dd6c9ed036954",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T09:47:07.552371+00:00",
+        "source_latest_at": "2025-12-28 03:04:55+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 12,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-01",
+            "revenue": 2163.16,
+            "units": 39,
+            "customers": 39,
+            "orders": 39,
+            "latest_purchase": "2025-01-31 17:25:42+00"
+          },
+          {
+            "month": "2025-02",
+            "revenue": 2202.99,
+            "units": 38,
+            "customers": 37,
+            "orders": 38,
+            "latest_purchase": "2025-02-28 17:52:28+00"
+          },
+          {
+            "month": "2025-03",
+            "revenue": 2436.1,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-03-31 07:57:14+00"
+          },
+          {
+            "month": "2025-04",
+            "revenue": 3011.43,
+            "units": 48,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-04-30 04:44:18+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 2614.34,
+            "units": 44,
+            "customers": 43,
+            "orders": 43,
+            "latest_purchase": "2025-05-31 09:26:27+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 1772.83,
+            "units": 34,
+            "customers": 34,
+            "orders": 34,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          },
+          {
+            "month": "2025-07",
+            "revenue": 2654.08,
+            "units": 47,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-07-31 16:37:29+00"
+          },
+          {
+            "month": "2025-08",
+            "revenue": 3483.52,
+            "units": 52,
+            "customers": 52,
+            "orders": 52,
+            "latest_purchase": "2025-08-31 14:15:05+00"
+          },
+          {
+            "month": "2025-09",
+            "revenue": 2885.74,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-09-30 02:45:44+00"
+          },
+          {
+            "month": "2025-10",
+            "revenue": 1878.47,
+            "units": 40,
+            "customers": 40,
+            "orders": 40,
+            "latest_purchase": "2025-10-31 12:31:39+00"
+          },
+          {
+            "month": "2025-11",
+            "revenue": 3565.48,
+            "units": 55,
+            "customers": 55,
+            "orders": 55,
+            "latest_purchase": "2025-11-30 11:41:57+00"
+          },
+          {
+            "month": "2025-12",
+            "revenue": 3541.59,
+            "units": 53,
+            "customers": 52,
+            "orders": 52,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "af7139494c44f09e",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T09:47:08.773772+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted-id>",
+    "estimated_cost_usd": 0.146509,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "units",
+            "customers",
+            "revenue_per_order"
+          ],
+          "minimum_rows": 20
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "customers"
+          ],
+          "minimum_rows": 12
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ad44ed9b33439e24",
+      "prompt": "2856028f6153d8a8",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "capture_note": "Live Gemini and BigQuery; final display rerendered locally from captured evidence. Original model output and runtime version are retained."
+}

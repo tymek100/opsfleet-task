@@ -115,3 +115,72 @@ def test_provider_error_content_not_exposed(
     with pytest.raises(AppError) as info:
         executor.execute(query, Budget(settings), trace)
     assert "canary" not in str(info.value) and "canary" not in str(trace.events)
+
+
+def test_syntax_recovery_keeps_scope_and_params(
+    monkeypatch: pytest.MonkeyPatch, settings: Settings
+) -> None:
+    executor, client, dry, job = gateway(monkeypatch)
+    syntax = errors.BadRequest(
+        "not forwarded", errors=[{"reason": "invalidQuery", "message": "Syntax error: quoting"}]
+    )
+    client.query.side_effect = [syntax, dry, job]
+    job.result.return_value = []
+    query = compile_query(
+        Analysis.model_validate({"start": "2026-01-01", "end": "2026-04-01", "product_ids": [123]}),
+        DEMO_USERS["alice"],
+    )
+    trace = Trace()
+    budget = Budget(settings)
+    result = executor.execute(query, budget, trace)
+    assert client.query.call_count == 3 and budget.queries == 2
+    from retail_agent.queries import repair_sql_syntax
+
+    repaired = repair_sql_syntax(query)
+    assert repaired.parameters == query.parameters
+    assert (
+        repaired.definitions == query.definitions
+        and repaired.output_columns == query.output_columns
+    )
+    assert client.query.call_args.args[0] == repaired.sql
+    assert result.sql_hash == repaired.fingerprint != query.fingerprint
+    assert any(e["event"] == "query_syntax_repair" for e in trace.events)
+    assert (
+        client.query.call_args.kwargs["job_config"].maximum_bytes_billed == settings.max_query_bytes
+    )
+
+
+def test_syntax_recovery_is_once_and_shares_budget(
+    monkeypatch: pytest.MonkeyPatch, settings: Settings
+) -> None:
+    executor, client, _, _ = gateway(monkeypatch)
+    client.query.side_effect = errors.BadRequest(
+        "private provider body",
+        errors=[{"reason": "invalidQuery", "message": "Syntax error: nope"}],
+    )
+    query = compile_query(
+        Analysis.model_validate({"start": "2026-01-01", "end": "2026-04-01"}), DEMO_USERS["alice"]
+    )
+    with pytest.raises(AppError, match="BigQuery rejected"):
+        executor.execute(query, Budget(settings), Trace())
+    assert client.query.call_count == 2
+    client.reset_mock()
+    settings.max_queries = 1
+    with pytest.raises(AppError, match="Query limit"):
+        executor.execute(query, Budget(settings), Trace())
+    assert client.query.call_count == 1
+
+
+def test_schema_error_is_not_a_syntax_repair(
+    monkeypatch: pytest.MonkeyPatch, settings: Settings
+) -> None:
+    executor, client, _, _ = gateway(monkeypatch)
+    client.query.side_effect = errors.BadRequest(
+        "private name", errors=[{"reason": "invalidQuery", "message": "Unrecognized name: gone"}]
+    )
+    query = compile_query(
+        Analysis.model_validate({"start": "2026-01-01", "end": "2026-04-01"}), DEMO_USERS["alice"]
+    )
+    with pytest.raises(AppError) as error:
+        executor.execute(query, Budget(settings), Trace())
+    assert error.value.code == "invalid_query" and client.query.call_count == 1

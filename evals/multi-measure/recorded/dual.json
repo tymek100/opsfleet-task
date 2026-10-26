@@ -1,0 +1,221 @@
+{
+  "question": "For Q3 2025, show two separate top-5 product rankings: one by units sold, with units and revenue; another by distinct customers, with customers, revenue and orders.",
+  "expected": [
+    [
+      "product",
+      "units",
+      5,
+      [
+        "revenue"
+      ]
+    ],
+    [
+      "product",
+      "customers",
+      5,
+      [
+        "revenue",
+        "orders"
+      ]
+    ]
+  ],
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jul 2025 to 30 Sep 2025 (UTC)\n\n### Top 5 products by units sold\n\n| Rank | Product ID | Product | Units sold | Revenue |\n| --- | --- | --- | --- | --- |\n| 1 | 28965 | Calvin Klein Men's 4\\-In\\-1 Reversible Plaque Belt | 3 | 101.25 |\n| 2 | 3209 | Calvin Klein Women's Lux Stretch Rayon Career Dress | 2 | 256.00 |\n| 3 | 8354 | Calvin Klein Women's 3/4 Single Breasted Coat | 2 | 263.88 |\n| 4 | 14289 | Calvin Klein Women's Basic Reversible Belt | 2 | 72.00 |\n| 5 | 17742 | Calvin Klein Sportswear Men's Long Sleeve 2X2 Rib Crew Neck Knit | 2 | 119.00 |\n\nSource: [E1].\n### Top 5 products by distinct customers\n\n| Rank | Product ID | Product | Distinct customers | Revenue | Orders |\n| --- | --- | --- | --- | --- | --- |\n| 1 | 28965 | Calvin Klein Men's 4\\-In\\-1 Reversible Plaque Belt | 3 | 101.25 | 3 |\n| 2 | 3209 | Calvin Klein Women's Lux Stretch Rayon Career Dress | 2 | 256.00 | 2 |\n| 3 | 8354 | Calvin Klein Women's 3/4 Single Breasted Coat | 2 | 263.88 | 2 |\n| 4 | 14289 | Calvin Klein Women's Basic Reversible Belt | 2 | 72.00 | 2 |\n| 5 | 17742 | Calvin Klein Sportswear Men's Long Sleeve 2X2 Rib Crew Neck Knit | 2 | 119.00 | 2 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "units",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 28965,
+            "product_name": "Calvin Klein Men's 4-In-1 Reversible Plaque Belt",
+            "revenue": 101.25,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-09-21 06:57:31+00"
+          },
+          {
+            "product_id": 3209,
+            "product_name": "Calvin Klein Women's Lux Stretch Rayon Career Dress",
+            "revenue": 256.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-08-22 21:19:08+00"
+          },
+          {
+            "product_id": 8354,
+            "product_name": "Calvin Klein Women's 3/4 Single Breasted Coat",
+            "revenue": 263.88,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 02:42:24+00"
+          },
+          {
+            "product_id": 14289,
+            "product_name": "Calvin Klein Women's Basic Reversible Belt",
+            "revenue": 72.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 13:50:13+00"
+          },
+          {
+            "product_id": 17742,
+            "product_name": "Calvin Klein Sportswear Men's Long Sleeve 2X2 Rib Crew Neck Knit",
+            "revenue": 119.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-28 17:47:28+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "bf35b116bf02e713",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T09:47:07.693432+00:00",
+        "source_latest_at": "2025-09-28 17:47:28+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "customers",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 28965,
+            "product_name": "Calvin Klein Men's 4-In-1 Reversible Plaque Belt",
+            "revenue": 101.25,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-09-21 06:57:31+00"
+          },
+          {
+            "product_id": 3209,
+            "product_name": "Calvin Klein Women's Lux Stretch Rayon Career Dress",
+            "revenue": 256.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-08-22 21:19:08+00"
+          },
+          {
+            "product_id": 8354,
+            "product_name": "Calvin Klein Women's 3/4 Single Breasted Coat",
+            "revenue": 263.88,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 02:42:24+00"
+          },
+          {
+            "product_id": 14289,
+            "product_name": "Calvin Klein Women's Basic Reversible Belt",
+            "revenue": 72.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-11 13:50:13+00"
+          },
+          {
+            "product_id": 17742,
+            "product_name": "Calvin Klein Sportswear Men's Long Sleeve 2X2 Rib Crew Neck Knit",
+            "revenue": 119.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-28 17:47:28+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "999f5241fd0daffe",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T09:47:09.060985+00:00",
+        "source_latest_at": "2025-09-28 17:47:28+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted-id>",
+    "estimated_cost_usd": 0.146333,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "units",
+          "measures": [
+            "revenue"
+          ],
+          "minimum_rows": 5
+        },
+        {
+          "dimension": "product",
+          "metric": "customers",
+          "measures": [
+            "revenue",
+            "orders"
+          ],
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "bcac11ee94b352c2",
+      "prompt": "2856028f6153d8a8",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "capture_note": "Live Gemini and BigQuery; final display rerendered locally from captured evidence. Original model output and runtime version are retained."
+}

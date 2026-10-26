@@ -38,7 +38,10 @@ class ProposedAction(Contract):
     metric_id: str
     start: date
     end: date
-    target: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    target: None = Field(
+        default=None,
+        description="Always null: this contract has no justified numeric target source.",
+    )
 
     @field_serializer("start", "end")
     def serialize_date(self, value: date) -> str:
@@ -47,7 +50,7 @@ class ProposedAction(Contract):
 
 
 class Narrative(Contract):
-    facts: list[str] = Field(min_length=1, max_length=120)
+    facts: list[str] = Field(max_length=6000)
     hypotheses: list[Hypothesis] = Field(default_factory=lambda: list[Hypothesis](), max_length=3)
     actions: list[ProposedAction] = Field(
         default_factory=lambda: list[ProposedAction](), max_length=4
@@ -271,27 +274,43 @@ ACTION_METRICS = {
 ACTION_TEXT = {
     "cross_sell_test": (
         "Test optional complementary-product bundles against a control group; compare units per order and check profitability before rollout.",
-        "Merchandising",
     ),
     "demand_investigation": (
         "Investigate demand using promotion, availability and calendar records; compare the selected measure before choosing an intervention.",
-        "Operations and Analytics",
     ),
     "assortment_review": (
         "Review assortment using the cited sales measure; obtain cost and stock data before increasing inventory. Sales do not establish margin.",
-        "Category Management",
     ),
     "retention_test": (
         "Test an authorized retention intervention against a control group; monitor the same inactivity definition and eligible population.",
-        "Customer Retention",
     ),
 }
 HYPOTHESIS_TEXT = {
-    "seasonality": "Seasonality could contribute; compare the same periods across multiple years before drawing a conclusion.",
-    "promotion": "Promotional activity could contribute; obtain campaign timing and a comparison group to investigate.",
-    "availability": "Product availability could contribute; obtain stockout and replenishment records to investigate.",
-    "product_mix": "Different product mixes could contribute; check product-level sales and prices before drawing a conclusion.",
+    "seasonality": "Compare the highlighted months with the same calendar months in earlier years before attributing the pattern to seasonality.",
+    "promotion": "Compare campaign dates and discounts for the highlighted results with a suitable comparison group before attributing the pattern to promotions.",
+    "availability": "Check stock levels and stockout dates for the highlighted results before attributing the pattern to availability.",
+    "product_mix": "Compare product-level sales and prices across the cited periods before attributing the pattern to a change in product mix.",
 }
+
+
+def action_observation(metric: Metric, evidence: list[Evidence]) -> str:
+    """Describe a selected baseline or monthly range from verified values, without causal claims."""
+    item = next(e for e in evidence if e.id in metric.evidence_ids)
+    if item.request.dimension == Dimension.MONTH:
+        monthly = [(row, number(row.get(metric.name))) for row in item.rows]
+        defined = [(row, value) for row, value in monthly if value is not None]
+        if len(defined) >= 2:
+            low = min(defined, key=lambda pair: pair[1])
+            high = max(defined, key=lambda pair: pair[1])
+            label = METRICS.get(metric.name, metric.name.replace("_", " "))
+            if low[1] == high[1]:
+                return f"Monthly {label} was {metric_value(metric.name, low[1])} in every shown month. [{item.id}]"
+            return (
+                f"Monthly {label} ranged from {metric_value(metric.name, low[1])} in "
+                f"{escape_cell(low[0].get('month'))} to {metric_value(metric.name, high[1])} in "
+                f"{escape_cell(high[0].get('month'))}. [{item.id}]"
+            )
+    return metric.statement()
 
 
 def validate_narrative(
@@ -300,6 +319,8 @@ def validate_narrative(
     catalog = metric_catalog(evidence, intent)
     ids = {e.id for e in evidence}
     issues: list[str] = []
+    if not narrative.facts and any(item.rows for item in evidence):
+        issues.append("missing_fact_metrics")
     if any(key not in catalog for key in narrative.facts):
         issues.append("unknown_fact_metric")
     if any(not set(h.evidence_ids) <= ids for h in narrative.hypotheses):
@@ -333,13 +354,16 @@ def validate_narrative(
             issues.append("invalid_action_measure")
         if window is None or (action.start, action.end) != window:
             issues.append("action_period_mismatch_or_ambiguous")
+        monthly = [
+            e for e in evidence if e.request.dimension == Dimension.MONTH and not empty_sales(e)
+        ]
         if (
-            metric
-            and metric.name == "inactivity_share"
-            and action.target is not None
-            and action.target > 1
+            action.kind == "demand_investigation"
+            and monthly
+            and metric
+            and not any(e.id in metric.evidence_ids for e in monthly)
         ):
-            issues.append("fraction_target_out_of_range")
+            issues.append("demand_action_requires_monthly_evidence")
     return sorted(set(issues))
 
 
@@ -369,7 +393,7 @@ def required_facts(intent: Intent, evidence: list[Evidence]) -> list[str]:
                 if req.dimension == Dimension.MONTH or intent.kind == "churn"
                 else min(req.minimum_rows, len(item.rows))
             )
-            names = [req.metric]
+            names = list(dict.fromkeys([req.metric, *req.measures]))
             if intent.kind == "churn":
                 names += ["eligible_customers", "inactive_customers"]
             facts += [f"{item.id}.r{i}.{name}" for i in range(count) for name in names]
@@ -481,7 +505,7 @@ def render_narrative(
     contexts: set[tuple[str, object, object]] = set()
     for item in sales:
         keys = [key for key in narrative.facts if key.startswith(item.id + ".r")]
-        if not keys:
+        if not keys and not empty_sales(item):
             continue
         context = (item.scope, item.request.start, item.request.end)
         if context not in contexts:
@@ -541,39 +565,29 @@ def render_narrative(
             parts.append("\n" + metric.context)
             previous_context = metric.context
         parts.append("- " + metric.statement().removeprefix(metric.context + ": "))
-    if narrative.hypotheses:
-        parts.append(
-            "\nUnverified hypotheses — these explanations have not been established by the cited observations."
-        )
+    if narrative.hypotheses and not narrative.actions:
+        parts.append("\n### What to check")
         parts += [
-            "- "
-            + HYPOTHESIS_TEXT[h.mechanism]
-            + " Observations to investigate: "
-            + " ".join(f"[{i}]" for i in h.evidence_ids)
+            "- " + HYPOTHESIS_TEXT[h.mechanism] + " " + " ".join(f"[{i}]" for i in h.evidence_ids)
             for h in narrative.hypotheses
         ]
     if narrative.actions:
-        parts.append(
-            "\nProposed actions — owners and targets are proposals, not forecasts or proven outcomes."
-        )
+        parts.append("\n### Suggested next steps")
         for action in narrative.actions:
-            text, owner = ACTION_TEXT[action.kind]
+            (text,) = ACTION_TEXT[action.kind]
             metric = catalog[action.metric_id]
-            label = METRICS.get(metric.name, metric.name.replace("_", " "))
+            linked = [
+                h for h in narrative.hypotheses if set(h.evidence_ids) & set(metric.evidence_ids)
+            ]
+            if action.kind == "demand_investigation" and linked:
+                text = " ".join(HYPOTHESIS_TEXT[h.mechanism] for h in linked)
             period = f"{action.start:%d %b %Y} to {action.end - timedelta(days=1):%d %b %Y} (UTC)"
-            parts.append(f"- **{period} — {owner} (proposed owner):** {text}")
-            parts.append(
-                f"  Baseline: {label} = {metric_value(metric.name, metric.value)} "
-                + " ".join(f"[{i}]" for i in metric.evidence_ids)
-                + (
-                    f". Proposed target: {metric_value(metric.name, action.target)}; feasibility is unverified."
-                    if action.target is not None
-                    else ". Set a target after the investigation or test design."
-                )
-            )
+            parts += [
+                f"- **{period}:** {action_observation(metric, evidence)} {text}",
+            ]
     if narrative.hypotheses or narrative.actions:
         parts.append(
-            "\nTransaction data shows patterns; it does not establish causes or guarantee outcomes."
+            "\nThese are investigation or test proposals. The data does not establish causes or justify a numeric target."
         )
     return "\n".join(parts)
 

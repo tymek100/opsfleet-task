@@ -1,0 +1,8 @@
+{
+  "passed": 6,
+  "cases": 6,
+  "provenance": "Four successful cases from the six-case live run plus successful fresh replays of original and orders. Both had exhausted 504 retries in that run. This is not a claim of six uninterrupted first-attempt successes.",
+  "earlier_development": "Adding nested display measures initially caused HTTP 400; simplifying provider bounds resolved it. Local Pydantic bounds remain enforced.",
+  "rendering": "80/120-column files rerender captured facts with final presentation; captured answers preserve their original runtime versions.",
+  "checks": "Expected dimensions/rank criteria, row counts, every requested measure, recomputed ratio display, completed-only filter, no report save. Raw aggregate values were obtained from real BigQuery; no separate live SQL oracle was run."
+}

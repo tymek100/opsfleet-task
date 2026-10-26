@@ -1,0 +1,16 @@
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+                                                       
+ Rank  Customer ID  Revenue  Orders  Revenue per order 
+ ───────────────────────────────────────────────────── 
+ 1     39681        259.99   1       259.99            
+ 2     57543        259.99   1       259.99            
+ 3     84680        228.00   1       228.00            
+ 4     97568        228.00   1       228.00            
+ 5     7885         199.99   1       199.99            
+                                                       
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

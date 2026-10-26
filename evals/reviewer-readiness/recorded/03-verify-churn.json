@@ -1,0 +1,100 @@
+{
+  "id": 3,
+  "name": "verify-churn",
+  "user": "bob",
+  "session": "churn",
+  "prompt": "Check whether our 90-day customer inactivity share rose during May 2025. Compare the snapshots at the start of May and the start of June, show the eligible and inactive counts, and distinguish observations from possible explanations.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\n**Levi's** \u00b7 Customer inactivity \u00b7 UTC\n\n| As of (UTC) | Eligible customers | Inactive customers | Inactivity share |\n| --- | --- | --- | --- |\n| 2025\\-05\\-01 | 472 | 472 | 100.0000% |\n| 2025\\-06\\-01 | 498 | 498 | 100.0000% |\n\nInactivity was unchanged; change: +0.0000 percentage points.\nThese snapshots do not show an increase in inactivity.\nEligible customers: 472 \u2192 498; inactive customers: 472 \u2192 498.\n\nThis is an inactivity share, not a count of newly lost customers.\nSource: [E1].\n\n**AI commentary**\n\nFor Levi's, 472 of the 472 eligible customers were inactive as of 2025\\-05\\-01, representing an inactivity share of 100\\.0000%. By 2025\\-06\\-01, inactive customers rose to 498 out of 498 eligible customers, reflecting an inactivity share change of \\+0\\.0000 percentage points.\n\nSources: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "churn",
+          "dimension": "total",
+          "start": "2025-05-01",
+          "end": "2025-06-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Churn proxy: 90-day inactivity share at start/end (exclusive as-of). Eligible = first authorized purchase before as-of minus N days; inactive = last purchase before that cutoff. Empty denominator is undefined. Not newly churned customers in a month. Brand breakdown capped at 50 largest eligible cohorts, preserving both snapshots.",
+        "rows": [
+          {
+            "period": "2025-05-01",
+            "cohort": "all",
+            "eligible_customers": 472,
+            "inactive_customers": 472,
+            "inactivity_share": 1.0
+          },
+          {
+            "period": "2025-06-01",
+            "cohort": "all",
+            "eligible_customers": 498,
+            "inactive_customers": 498,
+            "inactivity_share": 1.0
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "3323d56c8320b6c2",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:38:21.878680+00:00",
+        "source_latest_at": null,
+        "comparisons": [
+          {
+            "cohort": "all",
+            "percentage_point_change": 0.0,
+            "direction": "unchanged"
+          }
+        ]
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.35609,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-05-01",
+        "end": "2025-06-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "churn",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "inactivity_share",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": true
+    },
+    "versions": {
+      "source": "4450325049b3b254",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 32.928,
+  "reports_after": [],
+  "pending_after": 0
+}

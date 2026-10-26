@@ -1,0 +1,23 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+Performance by category                                                                                                 
+
+                               
+ Category             Revenue  
+ ───────────────────────────── 
+ Outerwear & Coats    5,872.17 
+ Sweaters             4,257.67 
+ Suits & Sport Coats  3,740.18 
+ Underwear            3,535.44 
+ Pants                2,193.66 
+ Dresses              1,816.05 
+                               
+
+Source: [E1].                                                                                                           
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

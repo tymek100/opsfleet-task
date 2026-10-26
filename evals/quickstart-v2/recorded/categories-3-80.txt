@@ -1,0 +1,5 @@
+
+I calculated the average order value by taking the total revenue of 3,740.18    
+divided by 26 orders, which equals 143.85. Across the 8 categories retrieved    
+from BigQuery in the earlier query, Suits & Sport Coats produced the highest    
+revenue per order.                                                              

@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "passed": 12,
+  "total": 12,
+  "seconds": 197.233,
+  "median_seconds": 15.421,
+  "source": "ce0288248be636a3",
+  "provider_retries": 0,
+  "query_executions": 7,
+  "quality_fallbacks": 0,
+  "tokens": {
+    "input_tokens": 54605,
+    "output_tokens": 2842,
+    "thinking_tokens": 15757
+  }
+}

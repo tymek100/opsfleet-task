@@ -5,7 +5,7 @@ description: Define or review retail metrics, BigQuery SQL, analytical evidence,
 
 # Retail analytical correctness
 
-Read [client Q&A](../../../mds/q&a.md) for confirmed rules; use [the assignment](../../../mds/task/assignment.md) for required capabilities. The [research plan](../../../mds/1-percent.md) contains proposed defaults and analytical pitfalls, not additional client decisions.
+Read [client Q&A](../../../docs/architecture.md#confirmed-scope-and-client-decisions) for confirmed rules; use [the assignment](../../../docs/technical_reasoning.md#assignment-coverage) for required capabilities. The [research plan](../../../docs/technical_reasoning.md#model-planning-workflow) contains proposed defaults and analytical pitfalls, not additional client decisions.
 
 ## Resolve the analytical contract
 

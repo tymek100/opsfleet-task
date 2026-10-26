@@ -1,0 +1,76 @@
+[
+  {
+    "id": "products-1",
+    "question": "Show our top 5 products by revenue and, separately, by distinct customers in Q2 2025.",
+    "passed": true,
+    "seconds": 13.175
+  },
+  {
+    "id": "products-2",
+    "question": "Which products appear in both rankings?",
+    "passed": true,
+    "seconds": 11.464
+  },
+  {
+    "id": "products-3",
+    "question": "For those products, show revenue and distinct customers side by side.",
+    "passed": true,
+    "seconds": 28.145
+  },
+  {
+    "id": "customers-1",
+    "question": "Show our top 5 customers by revenue in 2025, using customer IDs.",
+    "passed": true,
+    "seconds": 10.128
+  },
+  {
+    "id": "customers-2",
+    "question": "Add their order counts and average order value.",
+    "passed": false,
+    "error": "Gemini timed out (504). No complete model response was received. Please try again later. Trace: 8a370126735c44b5a810971dfd49f00f",
+    "seconds": 91.529
+  },
+  {
+    "id": "customers-3",
+    "question": "Keep the three customers with the highest average order value among these five.",
+    "passed": false,
+    "error": "",
+    "seconds": 11.671
+  },
+  {
+    "id": "months-1",
+    "question": "Show our monthly revenue in 2025.",
+    "passed": true,
+    "seconds": 14.348
+  },
+  {
+    "id": "months-2",
+    "question": "Which three of those months generated the most revenue?",
+    "passed": true,
+    "seconds": 9.721
+  },
+  {
+    "id": "months-3",
+    "question": "Show those three months in chronological order instead.",
+    "passed": true,
+    "seconds": 13.025
+  },
+  {
+    "id": "report-1",
+    "question": "Prepare a Q2 2025 sales report with total revenue, monthly revenue, top 5 products and recommended actions for Q3 2025. Do not save it yet.",
+    "passed": true,
+    "seconds": 26.385
+  },
+  {
+    "id": "report-2",
+    "question": "Save it as \"Q2 demo review\".",
+    "passed": true,
+    "seconds": 5.719
+  },
+  {
+    "id": "report-3",
+    "question": "List my saved reports.",
+    "passed": true,
+    "seconds": 18.532
+  }
+]

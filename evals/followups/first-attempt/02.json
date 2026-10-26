@@ -1,0 +1,8 @@
+{
+  "id": 2,
+  "question": "For those products, show revenue and distinct customers side by side.",
+  "passed": false,
+  "error": "Gemini timed out (504). No complete model response was received. Please try again later. Trace: d7304b1302694cba9a43e5396f53ba35",
+  "error_type": "AppError",
+  "seconds": 88.373
+}

@@ -1,0 +1,23 @@
+{
+  "cases": 9,
+  "total_seconds": 205.27,
+  "median_seconds": 17.068,
+  "provider_responses": 13,
+  "plan_repairs": 2,
+  "input_tokens": 38739,
+  "output_tokens": 2851,
+  "thinking_tokens": 13393,
+  "source": "2805b32271d3fa5f",
+  "scenario_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10
+  ],
+  "capture_note": "Retained English-only subset of a historical run, not a fresh execution. Provider usage refers to the original run; the removed local rejection made no provider calls."
+}

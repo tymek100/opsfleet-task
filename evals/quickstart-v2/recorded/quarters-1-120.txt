@@ -1,0 +1,16 @@
+
+Revenue rose 37.35%.                                                                                                    
+
+Calvin Klein · Evaluated: Q1 2026 · Baseline: Q4 2025 · UTC                                                             
+
+                                                                     
+ Metric   Baseline: Q4 2025  Evaluated: Q1 2026  Change              
+ ─────────────────────────────────────────────────────────────────── 
+ Revenue  8,985.54           12,342.00           +3,356.46 (+37.35%) 
+                                                                     
+
+Q1 2026 had 90 days versus 92 in Q4 2025.                                                                               
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

@@ -1,0 +1,44 @@
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                 
+
+Overall performance                                                             
+
+ • revenue = 7,398.60                                                           
+
+Monthly performance                                                             
+
+                   
+ Month    Revenue  
+ ───────────────── 
+ 2025-04  3,011.43 
+ 2025-05  2,614.34 
+ 2025-06  1,772.83 
+                   
+
+Top 5 products by revenue                                                       
+
+                                                                                
+ Rank  Product ID  Product                                              Revenue 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     8252        Calvin Klein Women's Toggle Front Down               299.98  
+ 2     23740       Calvin Klein Men's Wool Car Coat With Bib            216.00  
+ 3     20078       Calvin Klein Mens Slim Fit Dark Gray Windowpane      199.99  
+                   Wool Suit                                                    
+ 4     23902       Calvin Klein Men's Plaza Coat                        199.00  
+ 5     20275       Calvin Klein Mens Double Breasted Solid Black Wool   189.99  
+                   Suit                                                         
+                                                                                
+
+Suggested next steps                                                            
+
+ • 01 Jul 2025 to 30 Sep 2025 (UTC): Monthly revenue ranged from 1,772.83 in    
+   2025-06 to 3,011.43 in 2025-04. Compare the highlighted months with the same 
+   calendar months in earlier years before attributing the pattern to           
+   seasonality.                                                                 
+
+These are investigation or test proposals. The data does not establish causes or
+justify a numeric target.                                                       
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

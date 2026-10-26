@@ -1,0 +1,18 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "passed": 1,
+  "total": 3,
+  "seconds": 111.733,
+  "median_seconds": 13.431,
+  "source": "422941a33582840f",
+  "provider_retries": 1,
+  "query_executions": 1,
+  "quality_fallbacks": 0,
+  "tokens": {
+    "input_tokens": 5927,
+    "output_tokens": 479,
+    "thinking_tokens": 1783
+  },
+  "note": "The add-columns customer turn failed with provider 504 after bounded retry. The following dependent turn lacked its expected prior context and failed the presentation check. Preserved rather than counted as a successful walkthrough."
+}

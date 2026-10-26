@@ -1,0 +1,62 @@
+Fifteen English conversation pairs
+Run each pair in order. Pair 13 uses the report saved in pair 12.
+
+01. exclude-ranked-rows (demo user: alice)
+Question: Which were our six best-selling products by units sold in Q4 2025?
+Follow-up: Leave out the first two products from that ranking and show the remaining products with their units sold.
+
+02. count-customer-subset (demo user: alice)
+Question: Rank our top eight customers by number of distinct orders in 2025, using their customer IDs.
+Follow-up: How many of those eight customers placed at least two orders? Give the count only.
+
+03. monthly-threshold (demo user: alice)
+Question: Show our revenue for each month in the first half of 2025.
+Follow-up: Keep only the months where revenue was below 2500, with the revenue alongside each month.
+
+04. category-order-value (demo user: alice)
+Question: Show our six highest-revenue product categories in 2025.
+Follow-up: For these categories, add revenue per order and sort the displayed categories by that value, highest first.
+
+05. state-add-metric (demo user: alice)
+Question: Which five states had the most distinct customers for our brand in 2025?
+Follow-up: Add revenue for each of those states, keeping the same states and order.
+
+06. brand-alphabetical (demo user: ceo)
+Question: Across all brands, show the top four brands by revenue in Q3 2025.
+Follow-up: Display just those brand names and revenues, ordered alphabetically by brand name.
+
+07. reverse-comparison (demo user: alice)
+Question: Compare our total revenue in Q4 2025 against Q3 2025, including the absolute and percentage change.
+Follow-up: Reverse the comparison: evaluate Q3 against Q4 as the baseline, with the absolute and percentage change.
+
+08. status-override (demo user: alice)
+Question: Show our top five products by revenue in Q1 2025 using only completed orders and completed items.
+Follow-up: Rerun that ranking for the same quarter with all qualifying statuses, still excluding cancelled and returned orders and items.
+
+09. preserve-product-filter (demo user: alice)
+Question: Show revenue for product IDs 8252 and 23740 in Q2 2025.
+Follow-up: Use the same product IDs for Q4 2025 instead.
+
+10. change-inactivity-threshold (demo user: bob)
+Question: Compare customer inactivity on January 1 and April 1, 2025, using a 90-day inactivity threshold.
+Follow-up: Keep both snapshot dates but use 60 days of inactivity instead.
+
+11. empty-result-count (demo user: alice)
+Question: Show our top three products by revenue in January 1900.
+Follow-up: How many products were returned in that result?
+
+12. draft-then-save (demo user: alice)
+Question: Draft a Q4 2025 sales report with total revenue, monthly revenue, top three products and proposed actions for Q1 2026. Do not save it.
+Follow-up: Save that draft as "Winter review v2".
+
+13. cancel-preview-and-list (demo user: alice)
+Question: Prepare a deletion preview for my saved report titled "Winter review v2".
+Follow-up: Cancel that deletion and then list my saved reports.
+
+14. scope-recovery (demo user: alice)
+Question: Show Levi's total revenue for Q2 2025.
+Follow-up: Then show Calvin Klein total revenue for that same quarter instead.
+
+15. forecast-to-actual (demo user: alice)
+Question: Predict our revenue for Q1 2027.
+Follow-up: Use actual revenue for Q1 2025 instead.

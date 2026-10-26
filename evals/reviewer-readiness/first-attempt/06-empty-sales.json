@@ -1,0 +1,97 @@
+{
+  "id": 6,
+  "name": "empty-sales",
+  "user": "alice",
+  "session": "empty",
+  "prompt": "How much revenue and how many orders did our brand have in February 1901?",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Feb 1901 to 28 Feb 1901 (UTC)\n\nNo qualifying sales were found for this brand scope and period.\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "1901-02-01",
+          "end": "1901-03-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [
+            "Calvin Klein"
+          ],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": null,
+            "units": 0,
+            "customers": 0,
+            "orders": 0,
+            "latest_purchase": null
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "c7fdb5c5e500268f",
+        "bytes_processed": 13011292,
+        "queried_at": "2026-10-25T17:35:52.474996+00:00",
+        "source_latest_at": null,
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.133218,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "1901-02-01",
+        "end": "1901-03-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "total",
+          "metric": "orders",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [
+        "Calvin Klein"
+      ],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "2805b32271d3fa5f",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 13.409,
+  "reports_after": [],
+  "pending_after": 0
+}

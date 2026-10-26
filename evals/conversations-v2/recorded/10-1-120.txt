@@ -1,0 +1,21 @@
+
+Verified findings
+
+Levi's · Customer inactivity · UTC                                                                                      
+
+                                                                       
+ As of (UTC)  Eligible customers  Inactive customers  Inactivity share 
+ ───────────────────────────────────────────────────────────────────── 
+ 2025-01-01   425                 425                 100.0000%        
+ 2025-04-01   468                 468                 100.0000%        
+                                                                       
+
+Inactivity was unchanged; change: +0.0000 percentage points. These snapshots do not show an increase in inactivity.     
+Eligible customers: 425 → 468; inactive customers: 425 → 468.                                                           
+
+This is an inactivity share, not a count of newly lost customers. Source: [E1].                                         
+
+Cancelled and returned orders/items are excluded. Inactivity means no qualifying purchase in 90 days, among customers   
+whose first qualifying purchase was more than that long ago.                                                            
+
+Use /details for calculation rules and query diagnostics.                                                               

@@ -1,0 +1,131 @@
+{
+  "id": "11-2",
+  "case": 11,
+  "turn": 1,
+  "question": "How many products were returned in that result?",
+  "user": "alice",
+  "answer": {
+    "view": {
+      "key": "product_id",
+      "columns": [
+        "product_id",
+        "product_name",
+        "E1.revenue",
+        "E1.customers",
+        "E1.orders",
+        "E1.units",
+        "E1.revenue_per_order",
+        "E1.revenue_per_unit",
+        "E1.units_per_order",
+        "E1.rank"
+      ],
+      "rows": [],
+      "displayed_columns": [
+        "product_id"
+      ]
+    },
+    "text": "Verified findings\n\nCalvin Klein \u00b7 01 Jan 1900 to 31 Jan 1900 (UTC)\n\n**0 products match within the shown results.**\n\nBased on the previously shown results.\n\nSources: [E1] (revenue ranking).",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "1900-01-01",
+          "end": "1900-02-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [],
+        "job_id": "recorded",
+        "sql_hash": "6b4d8ee47921d5ea",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T08:34:26.187159+00:00",
+        "source_latest_at": null,
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.142686,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "1900-01-01",
+        "end": "1900-02-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 3
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "result_view",
+    "operations": [],
+    "help_topic": null,
+    "intent": null,
+    "view": {
+      "sources": [
+        "E1"
+      ],
+      "operation": "select",
+      "columns": [
+        "product_id"
+      ],
+      "filters": [],
+      "sort_by": null,
+      "descending": false,
+      "limit": null,
+      "output": "count"
+    },
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 12.843
+}

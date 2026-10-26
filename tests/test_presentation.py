@@ -49,9 +49,11 @@ def test_customer_ranking_has_one_context_a_table_and_no_auxiliary_total(answer:
     assert "| 2 | 29166 | 199.00 | 1 |" in text
     assert "| 3 | 89352 | 199.00 | 1 |" in text
     assert text.count("Calvin Klein") == 1
+    assert "Source:" not in text
     assert "31 Mar 2026" in text and "end exclusive" not in text
     assert "10,200.38" not in text and "SQL" not in text and "user_id" not in text
-    assert text.count("/details") == 1 and "Source: [E2]" in text
+    assert text.count("/details") == 1 and "[E2]" not in text
+
     assert "Each customer in this ranking placed one qualifying order" in text
     assert "Cancelled and returned" in text and "$" not in text
     details = render_answer(answer, details=True)
@@ -149,7 +151,7 @@ def test_quarter_comparison_leads_with_explanation_and_one_table(answer: Answer)
     result = comparison_answer(answer)
     text = render_answer(result)
     assert "Revenue fell 1.68%, while average daily revenue rose 0.51%." in text
-    assert "| Metric | Q4 2025 | Q1 2026 | Change |" in text
+    assert "| Metric | Baseline: Q4 2025 | Evaluated: Q1 2026 | Change |" in text
     assert "| Revenue | 10,374.19 | 10,200.38 | -173.81 (-1.68%) |" in text
     assert "| Average daily revenue | 112.76 | 113.34 | +0.57 (+0.51%) |" in text
     assert "| Calendar days | 92 | 90 | -2 |" in text
@@ -158,8 +160,9 @@ def test_quarter_comparison_leads_with_explanation_and_one_table(answer: Answer)
     assert "Despite lower total revenue, average daily revenue increased." in text
     assert "| Distinct customers | 157 | 162 | +5 (+3.18%) |" in text
     assert text.count("Calvin Klein") == 1
+    assert "Sources:" not in text
     assert "Selected brands" not in text and "Overall performance" not in text
-    assert "Sources: [E1], [E2]" in text
+    assert "[E1]" not in text and "[E2]" not in text
     assert "volume contribution" not in text and "arithmetic" not in text
     assert "Cancelled and returned" in text and text.count("/details") == 1
     details = render_answer(result, details=True)
@@ -191,7 +194,7 @@ def test_incompatible_scopes_are_not_combined_into_comparison_table(answer: Answ
     text = render_narrative(
         Narrative(facts=["E1.r0.revenue", "E2.r0.revenue"]), result.evidence, result.intent
     )
-    assert "| Metric | Q4 2025 | Q1 2026 | Change |" not in text
+    assert "| Metric | Baseline: Q4 2025 | Evaluated: Q1 2026 | Change |" not in text
     assert "Revenue fell" not in text
 
 

@@ -1,0 +1,51 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                                                         
+
+Overall performance                                                                                                     
+
+ • revenue = 7,398.60 [E1]                                                                                              
+
+Monthly performance                                                                                                     
+
+                   
+ Month    Revenue  
+ ───────────────── 
+ 2025-04  3,011.43 
+ 2025-05  2,614.34 
+ 2025-06  1,772.83 
+                   
+
+Source: [E2].                                                                                                           
+
+Top 5 products by revenue                                                                                               
+
+                                                                                      
+ Rank  Product ID  Product                                                    Revenue 
+ ──────────────────────────────────────────────────────────────────────────────────── 
+ 1     8252        Calvin Klein Women's Toggle Front Down                     299.98  
+ 2     23740       Calvin Klein Men's Wool Car Coat With Bib                  216.00  
+ 3     20078       Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit  199.99  
+ 4     23902       Calvin Klein Men's Plaza Coat                              199.00  
+ 5     20275       Calvin Klein Mens Double Breasted Solid Black Wool Suit    189.99  
+                                                                                      
+
+Source: [E3].                                                                                                           
+
+Unverified hypotheses — these explanations have not been established by the cited observations.                         
+
+ • Seasonality could contribute; compare the same periods across multiple years before drawing a conclusion.            
+   Observations to investigate: [E2]                                                                                    
+
+Proposed actions — owners and targets are proposals, not forecasts or proven outcomes.                                  
+
+ • 01 Jul 2025 to 30 Sep 2025 (UTC) — Operations and Analytics (proposed owner): Investigate demand using promotion,    
+   availability and calendar records; compare the selected measure before choosing an intervention. Baseline: revenue = 
+   7,398.60 [E1]. Set a target after the investigation or test design.                                                  
+
+Transaction data shows patterns; it does not establish causes or guarantee outcomes.                                    
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

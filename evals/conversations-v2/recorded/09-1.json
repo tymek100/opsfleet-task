@@ -1,0 +1,157 @@
+{
+  "id": "09-1",
+  "case": 9,
+  "turn": 0,
+  "question": "Show revenue for product IDs 8252 and 23740 in Q2 2025.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\nSelected product IDs: 8252, 23740\n### Product comparison\n\n| Product ID | Product | Revenue |\n| --- | --- | --- |\n| 8252 | Calvin Klein Women's Toggle Front Down | 299.98 |\n| 23740 | Calvin Klein Men's Wool Car Coat With Bib | 216.00 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 2,
+          "brands": [],
+          "product_ids": [
+            8252,
+            23740
+          ],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 8252,
+            "product_name": "Calvin Klein Women's Toggle Front Down",
+            "revenue": 299.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-03 21:13:06+00"
+          },
+          {
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "revenue": 216.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-05 12:17:06+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "425a824c18264a3e",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T08:33:38.149731+00:00",
+        "source_latest_at": "2025-05-05 12:17:06+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.14065,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 2
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [
+        8252,
+        23740
+      ],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 2
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [
+        8252,
+        23740
+      ],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "seconds": 16.27,
+  "capture_runner_check": {
+    "passed": true
+  },
+  "passed": true,
+  "acceptance_method": "check.py"
+}

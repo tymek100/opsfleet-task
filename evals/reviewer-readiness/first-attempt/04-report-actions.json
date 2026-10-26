@@ -1,0 +1,204 @@
+{
+  "id": 4,
+  "name": "report-actions",
+  "user": "alice",
+  "session": "report",
+  "prompt": "Prepare a Q3 2025 business report with revenue, the monthly breakdown, our top three products by revenue, and proposed actions for Q4 2025. Do not save it yet.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jul 2025 to 30 Sep 2025 (UTC)\n\n### Overall performance\n- revenue = 9,575.34 [E1]\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-07 | 3,761.79 |\n| 2025\\-08 | 2,326.84 |\n| 2025\\-09 | 3,486.71 |\n\nSource: [E2].\n### Top 3 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 23902 | Calvin Klein Men's Plaza Coat | 398.00 |\n| 2 | 24404 | Calvin Klein Sportswear Men's Light Weight Moto Jacket | 269.97 |\n| 3 | 20041 | Calvin Klein Mens 2 Button Solid Black Wool Suit | 259.99 |\n\nSource: [E3].\n\nUnverified hypotheses \u2014 these explanations have not been established by the cited observations.\n- Seasonality could contribute; compare the same periods across multiple years before drawing a conclusion. Observations to investigate: [E2]\n\nProposed actions \u2014 owners and targets are proposals, not forecasts or proven outcomes.\n- **01 Oct 2025 to 31 Dec 2025 (UTC) \u2014 Operations and Analytics (proposed owner):** Investigate demand using promotion, availability and calendar records; compare the selected measure before choosing an intervention.\n  Baseline: revenue = 9,575.34 [E1]. Proposed target: 10,500.00; feasibility is unverified.\n\nTransaction data shows patterns; it does not establish causes or guarantee outcomes.",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 9575.34,
+            "units": 138,
+            "customers": 137,
+            "orders": 137,
+            "latest_purchase": "2025-09-30 08:08:14+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:35:13.178083+00:00",
+        "source_latest_at": "2025-09-30 08:08:14+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-07",
+            "revenue": 3761.79,
+            "units": 54,
+            "customers": 53,
+            "orders": 53,
+            "latest_purchase": "2025-07-31 03:09:32+00"
+          },
+          {
+            "month": "2025-08",
+            "revenue": 2326.84,
+            "units": 35,
+            "customers": 35,
+            "orders": 35,
+            "latest_purchase": "2025-08-30 20:25:10+00"
+          },
+          {
+            "month": "2025-09",
+            "revenue": 3486.71,
+            "units": 49,
+            "customers": 49,
+            "orders": 49,
+            "latest_purchase": "2025-09-30 08:08:14+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "f769079b549302d7",
+        "bytes_processed": 13011292,
+        "queried_at": "2026-10-25T17:35:14.566262+00:00",
+        "source_latest_at": "2025-09-30 08:08:14+00",
+        "comparisons": []
+      },
+      {
+        "id": "E3",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 23902,
+            "product_name": "Calvin Klein Men's Plaza Coat",
+            "revenue": 398.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-09-21 09:00:45+00"
+          },
+          {
+            "product_id": 24404,
+            "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+            "revenue": 269.97,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-09-20 06:29:01+00"
+          },
+          {
+            "product_id": 20041,
+            "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-07-04 09:38:11+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "6b4d8ee47921d5ea",
+        "bytes_processed": 14486789,
+        "queried_at": "2026-10-25T17:35:16.028193+00:00",
+        "source_latest_at": "2025-09-21 09:00:45+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.266571,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "comparison": null,
+      "action_period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "actions": true,
+      "report": true,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 3
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "2805b32271d3fa5f",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 40.811,
+  "reports_after": [],
+  "pending_after": 0
+}

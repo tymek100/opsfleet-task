@@ -1,0 +1,174 @@
+{
+  "id": "03-1",
+  "case": 3,
+  "turn": 0,
+  "question": "Show our revenue for each month in the first half of 2025.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 30 Jun 2025 (UTC)\n\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-01 | 2,163.16 |\n| 2025\\-02 | 2,202.99 |\n| 2025\\-03 | 2,436.10 |\n| 2025\\-04 | 3,011.43 |\n| 2025\\-05 | 2,614.34 |\n| 2025\\-06 | 1,772.83 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-01-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 6,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-01",
+            "revenue": 2163.16,
+            "units": 39,
+            "customers": 39,
+            "orders": 39,
+            "latest_purchase": "2025-01-31 17:25:42+00"
+          },
+          {
+            "month": "2025-02",
+            "revenue": 2202.99,
+            "units": 38,
+            "customers": 37,
+            "orders": 38,
+            "latest_purchase": "2025-02-28 17:52:28+00"
+          },
+          {
+            "month": "2025-03",
+            "revenue": 2436.1,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-03-31 07:57:14+00"
+          },
+          {
+            "month": "2025-04",
+            "revenue": 3011.43,
+            "units": 48,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-04-30 04:44:18+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 2614.34,
+            "units": 44,
+            "customers": 43,
+            "orders": 43,
+            "latest_purchase": "2025-05-31 09:26:27+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 1772.83,
+            "units": 34,
+            "customers": 34,
+            "orders": 34,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "1f862da5249db00d",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T08:31:00.623817+00:00",
+        "source_latest_at": "2025-06-30 20:25:33+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140656,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 18.445
+}

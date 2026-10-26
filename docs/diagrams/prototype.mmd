@@ -1,25 +1,30 @@
 flowchart TB
-  user["User / local CLI"] -->|"Natural-language question"| plan["Gemini: typed plan"]
-  subgraph local["Implemented Python process"]
-    validate["Contract + authorization"]
-    execute["Direct application execution"]
-    facts["Verified facts + completeness"]
-    narrative["Optional ADK narration\nOne repair, then fallback"]
-    render["Deterministic tables + response"]
+  user["User / local CLI"] -->|"Question"| privacy["English contact-pattern check"]
+  privacy -->|"Screened input"| plan["Gemini: typed plan"]
+  plan --> validate["Contract + authorization + shared budget"]
+    execute["Compile and execute scoped SQL"]
+    context["Prior authorized evidence<br/>Bounded result operations + provenance"]
+    facts["Verified metrics + completeness"]
+    review["Reference checks + semantic review"]
+    render["CLI presentation<br/>Tables or accepted model prose"]
     library["Owner-scoped report service"]
-    confirm["Exact token confirmation"]
-  end
-  plan --> validate
-  validate -->|"Analysis"| execute
-  execute -->|"Scoped SQL / byte cap"| bq["BigQuery public dataset"]
-  bq -->|"Evidence"| facts
-  facts --> render
-  facts -->|"Requested actions"| narrative
-  narrative -->|"Validated output or figures only"| render
-  validate -->|"Library sequence"| library
+  validate -->|"Fresh analysis"| execute
+  execute -->|"Dry run + byte cap"| bq["BigQuery public dataset"]
+  bq --> facts
+  validate -->|"Result follow-up / explanation"| context
+  context -->|"Short answer / explanation"| writer["Gemini writer<br/>No execution tools"]
+  context -->|"Requested table / larger result"| render
+  writer --> review
+  review -->|"Accept prose or disclose failure"| render
+  facts -->|"Factual tables"| render
+  facts -->|"Optional post-query selection"| context
+  facts -->|"Requested report actions"| narrative["ADK structured narrative<br/>Validate / one repair / figures-only fallback"]
+  narrative --> render
+  facts -->|"Optional interpretation"| writer
+  validate -->|"Library operations"| library
   validate -->|"Help / clarify / refuse"| render
-  user -->|"Slash commands; no model"| library
-  user -->|"/confirm TOKEN; no model"| confirm
-  confirm --> library
-  library <-->|"Read / save / preview / cancel"| sqlite[("Local SQLite")]
+  user -->|"Slash commands; exact-token deletion"| library
+  library <-->|"Save / read / preview / cancel / confirm"| sqlite[("Local SQLite")]
   library --> render
+  classDef remote fill:#eef2ff,stroke:#64748b,color:#0f172a
+  class plan,writer,bq remote

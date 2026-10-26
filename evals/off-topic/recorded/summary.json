@@ -1,0 +1,71 @@
+[
+  {
+    "id": "fresh-weather-en",
+    "question": "What is the weather today?",
+    "expect": "refusal",
+    "routes": [
+      "unsupported"
+    ],
+    "query_events": [],
+    "passed": true,
+    "seconds": 5.503
+  },
+  {
+    "id": "fresh-age-en",
+    "question": "How old am I?",
+    "expect": "refusal",
+    "routes": [
+      "unsupported"
+    ],
+    "query_events": [],
+    "passed": true,
+    "seconds": 7.195
+  },
+  {
+    "id": "baseline",
+    "question": "Show our monthly revenue in 2025.",
+    "expect": "analysis",
+    "routes": [
+      "analysis"
+    ],
+    "query_events": [
+      "query_started",
+      "query_complete"
+    ],
+    "passed": true,
+    "seconds": 11.251
+  },
+  {
+    "id": "follow-weather-en",
+    "question": "What is the weather today?",
+    "expect": "refusal",
+    "routes": [
+      "unsupported"
+    ],
+    "query_events": [],
+    "passed": true,
+    "seconds": 6.041
+  },
+  {
+    "id": "follow-age-en",
+    "question": "How old am I?",
+    "expect": "refusal",
+    "routes": [
+      "unsupported"
+    ],
+    "query_events": [],
+    "passed": true,
+    "seconds": 18.97
+  },
+  {
+    "id": "return-to-analysis",
+    "question": "Back to the monthly results: show the two months with the highest revenue.",
+    "expect": "resume",
+    "routes": [
+      "result_view"
+    ],
+    "query_events": [],
+    "passed": true,
+    "seconds": 11.857
+  }
+]

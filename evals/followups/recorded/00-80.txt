@@ -1,0 +1,42 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                 
+
+Top 5 products by revenue                                                       
+
+                                                                                
+ Rank  Product ID  Product                                              Revenue 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     8252        Calvin Klein Women's Toggle Front Down               299.98  
+ 2     23740       Calvin Klein Men's Wool Car Coat With Bib            216.00  
+ 3     20078       Calvin Klein Mens Slim Fit Dark Gray Windowpane      199.99  
+                   Wool Suit                                                    
+ 4     23902       Calvin Klein Men's Plaza Coat                        199.00  
+ 5     20275       Calvin Klein Mens Double Breasted Solid Black Wool   189.99  
+                   Suit                                                         
+                                                                                
+
+Source: [E1].                                                                   
+
+Top 5 products by distinct customers                                            
+
+                                                                                
+ Rank  Product ID  Product                                   Distinct customers 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     1073        Calvin Klein Women's MSY Stripe V-Neck    2                  
+                   Pullover                                                     
+ 2     6514        Calvin Klein Ladies Bermuda Long Safari   2                  
+                   Shorts                                                       
+ 3     8252        Calvin Klein Women's Toggle Front Down    2                  
+ 4     10840       Calvin Klein Women's Naked Glamour        2                  
+                   Hipster                                                      
+ 5     16530       Calvin Klein Sportswear Men's Short       2                  
+                   Sleeve Micro Check Dobby Woven Shirt                         
+                                                                                
+
+Source: [E2].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

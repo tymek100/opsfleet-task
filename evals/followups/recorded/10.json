@@ -1,0 +1,80 @@
+{
+  "id": 10,
+  "question": "For those same products, show revenue in Q3 2025 instead.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jul 2025 to 30 Sep 2025 (UTC)\n\nSelected product IDs: 23740, 8252\nNo qualifying sales were found for this brand scope and period.\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [
+            23740,
+            8252
+          ],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [],
+        "job_id": "recorded",
+        "sql_hash": "66449860675a9d82",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T07:27:45.798321+00:00",
+        "source_latest_at": null,
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.155106,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [
+        23740,
+        8252
+      ],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "422941a33582840f",
+      "prompt": "45d31d0baf8304a2",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 23.125
+}

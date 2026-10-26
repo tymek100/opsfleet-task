@@ -1,0 +1,134 @@
+{
+  "unique_queries": 1,
+  "checks": [
+    {
+      "turn": "02-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "user_id": 2880,
+          "revenue": 97.45,
+          "units": 2,
+          "orders": 2,
+          "customers": 1
+        },
+        {
+          "user_id": 50,
+          "revenue": 54.54,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 442,
+          "revenue": 79.5,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 523,
+          "revenue": 75.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 651,
+          "revenue": 88.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 667,
+          "revenue": 52.13,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 778,
+          "revenue": 28.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 1072,
+          "revenue": 59.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "02-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "user_id": 2880,
+          "revenue": 97.45,
+          "units": 2,
+          "orders": 2,
+          "customers": 1
+        },
+        {
+          "user_id": 50,
+          "revenue": 54.54,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 442,
+          "revenue": 79.5,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 523,
+          "revenue": 75.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 651,
+          "revenue": 88.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 667,
+          "revenue": 52.13,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 778,
+          "revenue": 28.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 1072,
+          "revenue": 59.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    }
+  ],
+  "method": "Independent EXISTS-based sales SQL and eligible-minus-recent customer sets for inactivity; no production compiler."
+}

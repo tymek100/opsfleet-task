@@ -108,7 +108,7 @@
     {
       "source": "api",
       "target": "model",
-      "label": "HTTPS: plan / embeddings"
+      "label": "HTTPS: plan / write / review / embeddings"
     },
     {
       "source": "api",

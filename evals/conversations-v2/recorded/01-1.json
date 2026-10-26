@@ -1,0 +1,184 @@
+{
+  "id": "01-1",
+  "case": 1,
+  "turn": 0,
+  "question": "Which were our six best-selling products by units sold in Q4 2025?",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Oct 2025 to 31 Dec 2025 (UTC)\n\n### Top 6 products by units sold\n\n| Rank | Product ID | Product | Units sold |\n| --- | --- | --- | --- |\n| 1 | 23342 | Calvin Klein Jeans Shorts plus Belt | 3 |\n| 2 | 9801 | Calvin Klein Women's Essentials L/S Sleep V\\-neck | 2 |\n| 3 | 10720 | Calvin Klein Women's Invisibles Hipster Panty | 2 |\n| 4 | 10895 | Calvin Klein Women's Seductive Comfort Hipster | 2 |\n| 5 | 17815 | Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie | 2 |\n| 6 | 19051 | Calvin Klein Sportswear Men's Links 1/4 Zip | 2 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "units",
+          "limit": 6,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 23342,
+            "product_name": "Calvin Klein Jeans Shorts plus Belt",
+            "revenue": 132.36,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-12-26 14:51:02+00"
+          },
+          {
+            "product_id": 9801,
+            "product_name": "Calvin Klein Women's Essentials L/S Sleep V-neck",
+            "revenue": 78.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-12-27 16:45:18+00"
+          },
+          {
+            "product_id": 10720,
+            "product_name": "Calvin Klein Women's Invisibles Hipster Panty",
+            "revenue": 24.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-12-09 16:11:55+00"
+          },
+          {
+            "product_id": 10895,
+            "product_name": "Calvin Klein Women's Seductive Comfort Hipster",
+            "revenue": 56.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-12-05 01:45:00+00"
+          },
+          {
+            "product_id": 17815,
+            "product_name": "Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie",
+            "revenue": 196.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-11-25 21:01:30+00"
+          },
+          {
+            "product_id": 19051,
+            "product_name": "Calvin Klein Sportswear Men's Links 1/4 Zip",
+            "revenue": 139.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-12-28 02:00:59+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "925f485b68fea800",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T08:29:11.602121+00:00",
+        "source_latest_at": "2025-12-28 02:00:59+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140672,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "units",
+          "minimum_rows": 6
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "units",
+          "minimum_rows": 6
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "seconds": 11.226,
+  "capture_runner_check": {
+    "passed": true
+  },
+  "passed": true,
+  "acceptance_method": "check.py"
+}

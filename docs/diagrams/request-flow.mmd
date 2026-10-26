@@ -13,6 +13,18 @@ sequenceDiagram
   A->>A: Validate complete plan, permissions and budget
   alt Clarification / refusal / help / library
     A-->>U: Specific response or actual owner-scoped result
+  else Follow-up over prior authorized results
+    A->>A: Apply bounded selection or recover recorded calculation
+    alt Short answer / method explanation
+      A->>M: Question + verified references + executed operations
+      M-->>A: Conversational wording with reference tokens
+      A->>A: Validate references and substitute verified values
+      A->>M: Review resolved prose against evidence
+      M-->>A: Support / relevance / safety decision
+      A-->>U: Accepted prose or explicit failure with data available
+    else Requested table / larger result
+      A-->>U: Selected evidence table
+    end
   else Authorized analytical contract
     loop Each preflighted request
       A->>G: Contract + signed trusted user context
@@ -30,11 +42,14 @@ sequenceDiagram
     end
     opt All required queries succeeded
       A->>A: Compute facts and completeness
+      opt Final transformation requested in the same turn
+        A->>A: Apply validated post-query view to the base population
+      end
       opt Actions or interpretation requested
         A->>M: Verified metrics, no execution tools
         M-->>A: Structured narrative / optional commentary
         A->>A: Validate, bounded repair or omit/fallback
       end
-      A-->>U: Findings + definitions + evidence, draft not saved
+      A-->>U: Findings + definitions, source details on request, draft not saved
     end
   end

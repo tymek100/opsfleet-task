@@ -1,0 +1,24 @@
+{
+  "id": "categories-3",
+  "question": "How did you work that out? Explain the calculation in plain English.",
+  "answer": {
+    "view": null,
+    "text": "I calculated the average order value by taking the total revenue of 3,740\\.18 divided by 26 orders, which equals 143\\.85. Across the 8 categories retrieved from BigQuery in the earlier query, Suits & Sport Coats produced the highest revenue per order.",
+    "evidence": [],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.39261,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 38.463,
+  "queries": 0
+}

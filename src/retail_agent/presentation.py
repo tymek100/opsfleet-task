@@ -85,10 +85,22 @@ def table_findings(item: Evidence, values: dict[str, float | int | None]) -> str
         )
         for key in metrics
     ]
+    # Long names plus many numeric columns are unreadable in common 80-column terminals.
+    # Keep names in a keyed reference table instead of truncating them or hiding measures.
+    reference: list[str] = []
+    if "product_name" in groups and len(metrics) >= 4:
+        reference = ["Product reference", "", "| Product ID | Product |", "| --- | --- |"]
+        reference += [
+            f"| {escape_cell(item.rows[index].get('product_id'))} | {escape_cell(item.rows[index].get('product_name'))} |"
+            for index in sorted(selected)
+        ]
+        reference += ["", "Metrics by product ID", ""]
+        groups.remove("product_name")
     headers = (["Rank"] if ranked else []) + [LABELS[key] for key in groups] + labels
     lines = [
         f"### {title}",
         "",
+        *reference,
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join("---" for _ in headers) + " |",
     ]
@@ -154,7 +166,7 @@ def comparison_findings(
     lines = [
         summary + ".",
         "",
-        f"**{escape_cell(old.scope)}** · {old_name} versus {new_name} · UTC",
+        f"**{escape_cell(old.scope)}** · Evaluated: {new_name} · Baseline: {old_name} · UTC",
         "",
     ]
     if old.request.brands and ", ".join(old.request.brands) != old.scope:
@@ -164,7 +176,10 @@ def comparison_findings(
         lines += ["Selected product IDs: " + ", ".join(map(str, old.request.product_ids)), ""]
     if old.request.customer_id:
         lines += [f"Customer ID: {old.request.customer_id}", ""]
-    lines += [f"| Metric | {old_name} | {new_name} | Change |", "| --- | --- | --- | --- |"]
+    lines += [
+        f"| Metric | Baseline: {old_name} | Evaluated: {new_name} | Change |",
+        "| --- | --- | --- | --- |",
+    ]
     labels = {**LABELS, "days": "Calendar days", "revenue_per_day": "Average daily revenue"}
     for name in names:
         a, b = values.get(f"{old.id}.r0.{name}"), values.get(f"{new.id}.r0.{name}")
@@ -327,3 +342,19 @@ def churn_findings(item: Evidence) -> str:
         f"Source: [{item.id}].",
     ]
     return "\n".join(lines)
+
+
+def source_description(item: Evidence) -> str:
+    """Human-readable source identity; technical IDs remain available for diagnostics."""
+    dimension = item.request.dimension
+    if item.request.kind == "churn":
+        subject = "customer inactivity analysis"
+    elif dimension == Dimension.MONTH:
+        subject = "monthly sales breakdown"
+    elif dimension == Dimension.TOTAL:
+        subject = "sales totals"
+    elif item.request.product_ids or item.request.customer_id:
+        subject = f"{dimension.value} sales results"
+    else:
+        subject = f"{dimension.value} ranking by {LABELS[item.request.rank_by].lower()}"
+    return f"{escape_cell(item.scope)} {subject}, {period_label(item)}, from BigQuery"

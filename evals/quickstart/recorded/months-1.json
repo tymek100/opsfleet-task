@@ -1,0 +1,171 @@
+{
+  "id": "months-1",
+  "question": "Show our monthly revenue in 2025.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 31 Dec 2025 (UTC)\n\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-01 | 2,163.16 |\n| 2025\\-02 | 2,202.99 |\n| 2025\\-03 | 2,436.10 |\n| 2025\\-04 | 3,011.43 |\n| 2025\\-05 | 2,614.34 |\n| 2025\\-06 | 1,772.83 |\n| 2025\\-07 | 2,654.08 |\n| 2025\\-08 | 3,483.52 |\n| 2025\\-09 | 2,885.74 |\n| 2025\\-10 | 1,878.47 |\n| 2025\\-11 | 3,565.48 |\n| 2025\\-12 | 3,541.59 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-01-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 12,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-01",
+            "revenue": 2163.16,
+            "units": 39,
+            "customers": 39,
+            "orders": 39,
+            "latest_purchase": "2025-01-31 17:25:42+00"
+          },
+          {
+            "month": "2025-02",
+            "revenue": 2202.99,
+            "units": 38,
+            "customers": 37,
+            "orders": 38,
+            "latest_purchase": "2025-02-28 17:52:28+00"
+          },
+          {
+            "month": "2025-03",
+            "revenue": 2436.1,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-03-31 07:57:14+00"
+          },
+          {
+            "month": "2025-04",
+            "revenue": 3011.43,
+            "units": 48,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-04-30 04:44:18+00"
+          },
+          {
+            "month": "2025-05",
+            "revenue": 2614.34,
+            "units": 44,
+            "customers": 43,
+            "orders": 43,
+            "latest_purchase": "2025-05-31 09:26:27+00"
+          },
+          {
+            "month": "2025-06",
+            "revenue": 1772.83,
+            "units": 34,
+            "customers": 34,
+            "orders": 34,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          },
+          {
+            "month": "2025-07",
+            "revenue": 2654.08,
+            "units": 47,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-07-31 16:37:29+00"
+          },
+          {
+            "month": "2025-08",
+            "revenue": 3483.52,
+            "units": 52,
+            "customers": 52,
+            "orders": 52,
+            "latest_purchase": "2025-08-31 14:15:05+00"
+          },
+          {
+            "month": "2025-09",
+            "revenue": 2885.74,
+            "units": 45,
+            "customers": 45,
+            "orders": 45,
+            "latest_purchase": "2025-09-30 02:45:44+00"
+          },
+          {
+            "month": "2025-10",
+            "revenue": 1878.47,
+            "units": 40,
+            "customers": 40,
+            "orders": 40,
+            "latest_purchase": "2025-10-31 12:31:39+00"
+          },
+          {
+            "month": "2025-11",
+            "revenue": 3565.48,
+            "units": 55,
+            "customers": 55,
+            "orders": 55,
+            "latest_purchase": "2025-11-30 11:41:57+00"
+          },
+          {
+            "month": "2025-12",
+            "revenue": 3541.59,
+            "units": 53,
+            "customers": 52,
+            "orders": 52,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "af7139494c44f09e",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T07:55:34.967932+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140606,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 12
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 16.765
+}

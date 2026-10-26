@@ -1,0 +1,32 @@
+{
+  "id": 10,
+  "name": "cancel-list",
+  "user": "alice",
+  "session": "report",
+  "prompt": "Cancel the pending deletion and then list my saved reports so I can check that Autumn review is still there.",
+  "reports_before": [
+    "Autumn review"
+  ],
+  "pending_before": 1,
+  "answer": {
+    "text": "Pending deletion cancelled for this conversation. No reports were deleted.\n\nc8f820a05a02 | Autumn review",
+    "evidence": [],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.149614,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "4450325049b3b254",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 15.669,
+  "reports_after": [
+    "Autumn review"
+  ],
+  "pending_after": 0
+}

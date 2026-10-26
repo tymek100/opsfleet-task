@@ -1,0 +1,13 @@
+
+Report narrative could not be validated within this question's limits. Verified 
+figures are shown below; unsupported explanations and actions were withheld.    
+
+Calvin Klein · 01 Jul 2025 to 30 Sep 2025 (UTC) Selected product IDs: 23740,    
+8252 No qualifying sales were found for this brand scope and period. Source:    
+[E1].                                                                           
+
+Scope: Calvin Klein; period: 2025-07-01 to 2025-10-01 UTC (end exclusive).      
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

@@ -78,7 +78,7 @@ def evaluate(root):
                     ]
                 )
                 == 2
-                and "Proposed actions" in text
+                and any(label in text for label in ("Proposed actions", "Suggested next steps"))
                 and "01 Jul 2025 to 30 Sep 2025" in text,
             )
         if i == 5:

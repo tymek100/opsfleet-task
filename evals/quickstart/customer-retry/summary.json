@@ -1,0 +1,22 @@
+[
+  {
+    "id": "customers-1",
+    "question": "Show our top 5 customers by revenue in 2025, using customer IDs.",
+    "passed": true,
+    "seconds": 13.431
+  },
+  {
+    "id": "customers-2",
+    "question": "Add their order counts and average order value.",
+    "passed": false,
+    "error": "Gemini timed out (504). No complete model response was received. Please try again later. Trace: 7cb952ad96ad4c7db5481e4c9c3c2d3a",
+    "seconds": 88.674
+  },
+  {
+    "id": "customers-3",
+    "question": "Keep the three customers with the highest average order value among these five.",
+    "passed": false,
+    "error": "",
+    "seconds": 9.628
+  }
+]

@@ -1,0 +1,22 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Mar 2025 (UTC)                                                                         
+
+Top 5 products by revenue                                                                                               
+
+                                                                                   
+ Rank  Product ID  Product                                                 Revenue 
+ ───────────────────────────────────────────────────────────────────────────────── 
+ 1     24191       Calvin Klein Men's Slim Fit Coat                        175.00  
+ 2     20355       Calvin Klein Sportswear Men's Two Button Air Jacket     115.30  
+ 3     23816       Calvin Klein Men's Field Jacket                         112.00  
+ 4     12767       Calvin Klein Women's Shirred Bandeau 1 Piece            108.00  
+ 5     24404       Calvin Klein Sportswear Men's Light Weight Moto Jacket  89.99   
+                                                                                   
+
+Source: [E1].                                                                                                           
+
+Only completed orders and items are included.                                                                           
+
+Use /details for calculation rules and query diagnostics.                                                               

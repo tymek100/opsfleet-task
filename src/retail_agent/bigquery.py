@@ -15,7 +15,12 @@ from retail_agent.budget import Budget
 from retail_agent.models import AppError, Scalar
 from retail_agent.observability import Trace
 from retail_agent.privacy import safe_text
-from retail_agent.queries import CompiledQuery
+from retail_agent.queries import CompiledQuery, repair_sql_syntax
+
+
+class QueryErrorDetails(Protocol):
+    @property
+    def errors(self) -> list[dict[str, object]]: ...
 
 
 @dataclass
@@ -23,6 +28,7 @@ class QueryResult:
     rows: list[dict[str, Scalar]]
     job_id: str
     bytes_processed: int
+    sql_hash: str = ""
 
 
 class Executor(Protocol):
@@ -77,14 +83,42 @@ class BigQueryExecutor:
                 query_parameters=params,
                 maximum_bytes_billed=budget.settings.max_query_bytes,
             )
-            dry = self.client.query(
-                query.sql,
-                job_config=config,
-                retry=Retry(predicate=lambda _: False),
-                timeout=min(10, budget.remaining()),
-            )
+            try:
+                dry = self.client.query(
+                    query.sql,
+                    job_config=config,
+                    retry=Retry(predicate=lambda _: False),
+                    timeout=min(10, budget.remaining()),
+                )
+            except cloud_errors.BadRequest as exc:
+                # Only a dry-run syntax rejection is eligible. Never repair auth,
+                # missing columns, execution failures, or valid empty data.
+                if not any(
+                    item.get("reason") == "invalidQuery"
+                    and str(item.get("message", "")).lstrip().startswith("Syntax error:")
+                    for item in cast(QueryErrorDetails, exc).errors
+                ):
+                    raise
+                original_hash = query.fingerprint
+                query = repair_sql_syntax(query)
+                budget.query()  # The single recovery shares the original deadline/cap.
+                trace.emit(
+                    "query_syntax_repair",
+                    original_sql_hash=original_hash,
+                    sql_hash=query.fingerprint,
+                    attempt=1,
+                )
+                dry = self.client.query(
+                    query.sql,
+                    job_config=config,
+                    retry=Retry(predicate=lambda _: False),
+                    timeout=min(10, budget.remaining()),
+                )
             if (dry.total_bytes_processed or 0) > budget.settings.max_query_bytes:
-                raise AppError("Query exceeds the scan limit. Narrow the requested analysis.")
+                raise AppError(
+                    "Query exceeds the scan limit. Narrow the requested analysis.",
+                    code="query_byte_limit",
+                )
             config.dry_run = False
             config.use_query_cache = True
             config.labels = {"app": "retail-agent", "trace": trace.id}
@@ -145,13 +179,14 @@ class BigQueryExecutor:
                 bytes_billed=job.total_bytes_billed or 0,
                 cached=bool(job.cache_hit),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]  # SDK property lacks return annotation.,
             )
-            return QueryResult(rows, job_id, processed)
+            return QueryResult(rows, job_id, processed, query.fingerprint)
         except AppError:
             raise
         except cloud_errors.BadRequest:
             trace.emit("query_error", job_id=job_id, error="invalid_query")
             raise AppError(
-                "Query rejected by BigQuery. Recheck the analysis parameters once; do not expand access."
+                "BigQuery rejected the compiled query. No broader query was attempted. Check the trace or try another supported analysis.",
+                code="invalid_query",
             ) from None
         except (cloud_errors.TooManyRequests, cloud_errors.ServiceUnavailable):
             trace.emit("query_error", job_id=job_id, error="temporarily_unavailable")

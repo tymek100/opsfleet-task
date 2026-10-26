@@ -1,0 +1,59 @@
+{
+  "id": "14-1",
+  "case": 14,
+  "turn": 0,
+  "question": "Show Levi's total revenue for Q2 2025.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Your analytics access covers Calvin Klein. I cannot provide data outside your permissions. Ask about an authorized brand or contact your administrator for access.",
+    "evidence": [],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140048,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "access_denied",
+    "operations": [],
+    "help_topic": null,
+    "intent": null,
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [
+      {
+        "id": "743c358e0103",
+        "title": "Winter review v2"
+      }
+    ],
+    "pending": 0
+  },
+  "after": {
+    "reports": [
+      {
+        "id": "743c358e0103",
+        "title": "Winter review v2"
+      }
+    ],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 5.548
+}

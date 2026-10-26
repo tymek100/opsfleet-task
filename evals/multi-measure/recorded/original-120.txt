@@ -1,0 +1,87 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+Top 20 products by revenue                                                                                              
+
+Product reference                                                                                                       
+
+                                                                                   
+ Product ID  Product                                                               
+ ───────────────────────────────────────────────────────────────────────────────── 
+ 20469       Calvin Klein Sportswear Men's Washable Birdseye Classic Jacket        
+ 8252        Calvin Klein Women's Toggle Front Down                                
+ 24313       Calvin Klein Men's Calvin Coat                                        
+ 3209        Calvin Klein Women's Lux Stretch Rayon Career Dress                   
+ 24404       Calvin Klein Sportswear Men's Light Weight Moto Jacket                
+ 20090       Calvin Klein Sportswear Men's Washable Pindot Jacket                  
+ 23826       Calvin Klein Men's Slim Fit Coat                                      
+ 19943       Calvin Klein Sportswear Men's Pindot Jacket                           
+ 20355       Calvin Klein Sportswear Men's Two Button Air Jacket                   
+ 23740       Calvin Klein Men's Wool Car Coat With Bib                             
+ 23062       Calvin Klein Sportswear Men's Fine Line Plaid Short                   
+ 17815       Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie 
+ 24031       Calvin Klein Sportswear Men's Long Sleeve Full Zip French Terry Knit  
+ 20117       Calvin Klein Mens 2 Button Gray Plaid Slim Fit Wool Sport Coat Jacket 
+ 8354        Calvin Klein Women's 3/4 Single Breasted Coat                         
+ 20234       Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit         
+ 20235       Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit                 
+ 3110        Calvin Klein Women's Printed Maxi Dress                               
+ 3777        Calvin Klein Women's MSY Printed Seamed Dress                         
+ 8448        Calvin Klein Womens Long Packable Anorak                              
+                                                                                   
+
+Metrics by product ID                                                                                                   
+
+                                                                                      
+ Rank  Product ID  Revenue  Orders  Units sold  Distinct customers  Revenue per order 
+ ──────────────────────────────────────────────────────────────────────────────────── 
+ 1     20469       534.00   3       3           3                   178.00            
+ 2     8252        449.97   3       3           3                   149.99            
+ 3     24313       398.00   2       2           2                   199.00            
+ 4     3209        384.00   3       3           3                   128.00            
+ 5     24404       359.96   4       4           4                   89.99             
+ 6     20090       356.00   2       2           2                   178.00            
+ 7     23826       350.00   2       2           2                   175.00            
+ 8     19943       345.90   3       3           3                   115.30            
+ 9     20355       345.90   3       3           3                   115.30            
+ 10    23740       324.00   3       3           3                   108.00            
+ 11    23062       312.78   6       6           6                   52.13             
+ 12    17815       294.00   3       3           3                   98.00             
+ 13    24031       294.00   3       3           3                   98.00             
+ 14    20117       279.98   2       2           2                   139.99            
+ 15    8354        263.88   2       2           2                   131.94            
+ 16    20234       259.99   1       1           1                   259.99            
+ 17    20235       259.99   1       1           1                   259.99            
+ 18    3110        259.00   2       2           2                   129.50            
+ 19    3777        259.00   2       2           2                   129.50            
+ 20    8448        258.00   2       2           2                   129.00            
+                                                                                      
+
+Source: [E1].                                                                                                           
+
+Monthly performance                                                                                                     
+
+                                               
+ Month    Revenue   Orders  Distinct customers 
+ ───────────────────────────────────────────── 
+ 2025-01  2,163.16  39      39                 
+ 2025-02  2,202.99  38      37                 
+ 2025-03  2,436.10  45      45                 
+ 2025-04  3,011.43  47      47                 
+ 2025-05  2,614.34  43      43                 
+ 2025-06  1,772.83  34      34                 
+ 2025-07  2,654.08  47      47                 
+ 2025-08  3,483.52  52      52                 
+ 2025-09  2,885.74  45      45                 
+ 2025-10  1,878.47  40      40                 
+ 2025-11  3,565.48  55      55                 
+ 2025-12  3,541.59  52      52                 
+                                               
+
+Source: [E2].                                                                                                           
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

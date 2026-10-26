@@ -1,0 +1,21 @@
+
+Verified findings
+
+Calvin Klein · 01 Oct 2025 to 31 Dec 2025 (UTC)                                 
+
+Selected product IDs: 8252, 23740                                               
+
+Product comparison                                                              
+
+                                                                
+ Product ID  Product                                    Revenue 
+ ────────────────────────────────────────────────────────────── 
+ 8252        Calvin Klein Women's Toggle Front Down     149.99  
+ 23740       Calvin Klein Men's Wool Car Coat With Bib  108.00  
+                                                                
+
+Source: [E1].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

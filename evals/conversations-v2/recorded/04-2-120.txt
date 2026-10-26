@@ -1,0 +1,23 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Dec 2025 (UTC)                                                                         
+
+                                                           
+ Category             Revenue [E1]  Revenue per order [E1] 
+ ───────────────────────────────────────────────────────── 
+ Suits & Sport Coats  3,740.18      143.85                 
+ Outerwear & Coats    5,872.17      130.49                 
+ Dresses              1,816.05      113.50                 
+ Sweaters             4,257.67      67.58                  
+ Pants                2,193.66      59.29                  
+ Underwear            3,535.44      29.96                  
+                                                           
+
+Based on the previously shown results.                                                                                  
+
+Sources: [E1] (revenue ranking).                                                                                        
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

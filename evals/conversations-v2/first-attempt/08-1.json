@@ -1,0 +1,171 @@
+{
+  "id": "08-1",
+  "case": 8,
+  "turn": 0,
+  "question": "Show our top five products by revenue in Q1 2025 using only completed orders and completed items.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 31 Mar 2025 (UTC)\n\n### Top 5 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 24191 | Calvin Klein Men's Slim Fit Coat | 175.00 |\n| 2 | 20355 | Calvin Klein Sportswear Men's Two Button Air Jacket | 115.30 |\n| 3 | 23816 | Calvin Klein Men's Field Jacket | 112.00 |\n| 4 | 12767 | Calvin Klein Women's Shirred Bandeau 1 Piece | 108.00 |\n| 5 | 24404 | Calvin Klein Sportswear Men's Light Weight Moto Jacket | 89.99 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-01-01",
+          "end": "2025-04-01",
+          "rank_by": "revenue",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": true,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Override: Complete status only.",
+        "rows": [
+          {
+            "product_id": 24191,
+            "product_name": "Calvin Klein Men's Slim Fit Coat",
+            "revenue": 175.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-02-06 08:24:13+00"
+          },
+          {
+            "product_id": 20355,
+            "product_name": "Calvin Klein Sportswear Men's Two Button Air Jacket",
+            "revenue": 115.3,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-03-27 04:28:59+00"
+          },
+          {
+            "product_id": 23816,
+            "product_name": "Calvin Klein Men's Field Jacket",
+            "revenue": 112.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-03-28 06:29:07+00"
+          },
+          {
+            "product_id": 12767,
+            "product_name": "Calvin Klein Women's Shirred Bandeau 1 Piece",
+            "revenue": 108.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-03-09 11:30:45+00"
+          },
+          {
+            "product_id": 24404,
+            "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+            "revenue": 89.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-01-29 12:36:09+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "29a4961cddb9910a",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T08:33:10.398267+00:00",
+        "source_latest_at": "2025-03-28 06:29:07+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140734,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": true,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": true,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 17.684
+}

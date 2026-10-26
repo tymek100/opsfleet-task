@@ -9,7 +9,7 @@ description: Implement comprehensive testing strategies with pytest, fixtures, m
 
 This skill is vendored from `wshobson/agents` at revision `0874a27b17a22e2b7c2e2bcd725768e0803cad06`. This section is a local addition; upstream examples below are illustrative, not a ready-to-run suite.
 
-- Follow [the repo test strategy](../../../mds/testing_strategy.md) for required behavior and scope. The retail evaluation skill covers domain acceptance; this skill supplies pytest mechanics.
+- Follow [the repo test strategy](../../../docs/technical_reasoning.md#evaluation-and-limitations) for required behavior and scope. The retail evaluation skill covers domain acceptance; this skill supplies pytest mechanics.
 - Write tests for significant behavior and boundaries, not every trivial helper or implementation detail. Coverage helps find gaps; an arbitrary percentage is not a quality guarantee.
 - Use temporary databases/directories, explicit fake credentials, and injected clocks/provider adapters. Offline tests must not load the real `.env`, discover ADC, or access the network. Mock external boundaries, not authorization or the service being verified.
 - Use `pytest-asyncio` only for actual async code; select its mode explicitly. In strict mode async fixtures need `pytest_asyncio.fixture`. Check current official APIs against locked versions before adopting examples.

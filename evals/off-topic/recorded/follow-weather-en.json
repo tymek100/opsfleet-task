@@ -1,0 +1,28 @@
+{
+  "id": "follow-weather-en",
+  "question": "What is the weather today?",
+  "expect": "refusal",
+  "answer": {
+    "view": null,
+    "text": "I can help with retail data analysis and your saved reports only.",
+    "evidence": [],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.1488,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "routes": [
+    "unsupported"
+  ],
+  "query_events": [],
+  "passed": true,
+  "seconds": 6.041
+}

@@ -1,0 +1,196 @@
+{
+  "id": "products-1",
+  "question": "Show our top 5 products by revenue and, separately, by distinct customers in Q2 2025.",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Apr 2025 to 30 Jun 2025 (UTC)\n\n### Top 5 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 8252 | Calvin Klein Women's Toggle Front Down | 299.98 |\n| 2 | 23740 | Calvin Klein Men's Wool Car Coat With Bib | 216.00 |\n| 3 | 20078 | Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit | 199.99 |\n| 4 | 23902 | Calvin Klein Men's Plaza Coat | 199.00 |\n| 5 | 20275 | Calvin Klein Mens Double Breasted Solid Black Wool Suit | 189.99 |\n\nSource: [E1].\n### Top 5 products by distinct customers\n\n| Rank | Product ID | Product | Distinct customers |\n| --- | --- | --- | --- |\n| 1 | 1073 | Calvin Klein Women's MSY Stripe V\\-Neck Pullover | 2 |\n| 2 | 6514 | Calvin Klein Ladies Bermuda Long Safari Shorts | 2 |\n| 3 | 8252 | Calvin Klein Women's Toggle Front Down | 2 |\n| 4 | 10840 | Calvin Klein Women's Naked Glamour Hipster | 2 |\n| 5 | 16530 | Calvin Klein Sportswear Men's Short Sleeve Micro Check Dobby Woven Shirt | 2 |\n\nSource: [E2].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 8252,
+            "product_name": "Calvin Klein Women's Toggle Front Down",
+            "revenue": 299.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-03 21:13:06+00"
+          },
+          {
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "revenue": 216.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-05 12:17:06+00"
+          },
+          {
+            "product_id": 20078,
+            "product_name": "Calvin Klein Mens Slim Fit Dark Gray Windowpane Wool Suit",
+            "revenue": 199.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-06-30 16:01:59+00"
+          },
+          {
+            "product_id": 23902,
+            "product_name": "Calvin Klein Men's Plaza Coat",
+            "revenue": 199.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-08 04:13:31+00"
+          },
+          {
+            "product_id": 20275,
+            "product_name": "Calvin Klein Mens Double Breasted Solid Black Wool Suit",
+            "revenue": 189.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-04-22 23:00:49+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "1025cd47a4310b42",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T07:53:46.311215+00:00",
+        "source_latest_at": "2025-06-30 16:01:59+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "customers",
+          "limit": 5,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 1073,
+            "product_name": "Calvin Klein Women's MSY Stripe V-Neck Pullover",
+            "revenue": 159.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-19 14:16:10+00"
+          },
+          {
+            "product_id": 6514,
+            "product_name": "Calvin Klein Ladies Bermuda Long Safari Shorts",
+            "revenue": 55.9,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-05 19:03:44+00"
+          },
+          {
+            "product_id": 8252,
+            "product_name": "Calvin Klein Women's Toggle Front Down",
+            "revenue": 299.98,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-03 21:13:06+00"
+          },
+          {
+            "product_id": 10840,
+            "product_name": "Calvin Klein Women's Naked Glamour Hipster",
+            "revenue": 24.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-25 05:17:58+00"
+          },
+          {
+            "product_id": 16530,
+            "product_name": "Calvin Klein Sportswear Men's Short Sleeve Micro Check Dobby Woven Shirt",
+            "revenue": 139.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-05-18 09:36:38+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "999f5241fd0daffe",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T07:53:47.903120+00:00",
+        "source_latest_at": "2025-06-25 05:17:58+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.141279,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 5
+        },
+        {
+          "dimension": "product",
+          "metric": "customers",
+          "minimum_rows": 5
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 12.743
+}

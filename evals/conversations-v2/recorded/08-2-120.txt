@@ -1,0 +1,22 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 31 Mar 2025 (UTC)                                                                         
+
+Top 5 products by revenue                                                                                               
+
+                                                                                       
+ Rank  Product ID  Product                                                     Revenue 
+ ───────────────────────────────────────────────────────────────────────────────────── 
+ 1     23837       Calvin Klein Sportswear Men's Melton Wool Basic Peacoat     228.00  
+ 2     20232       Calvin Klein Body Mens Black Windowpane Slim Fit Wool Suit  199.99  
+ 3     24404       Calvin Klein Sportswear Men's Light Weight Moto Jacket      179.98  
+ 4     20090       Calvin Klein Sportswear Men's Washable Pindot Jacket        178.00  
+ 5     24191       Calvin Klein Men's Slim Fit Coat                            175.00  
+                                                                                       
+
+Source: [E1].                                                                                                           
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

@@ -1,0 +1,150 @@
+{
+  "id": "10-1",
+  "case": 10,
+  "turn": 0,
+  "question": "Compare customer inactivity on January 1 and April 1, 2025, using a 90-day inactivity threshold.",
+  "user": "bob",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Levi's** \u00b7 Customer inactivity \u00b7 UTC\n\n| As of (UTC) | Eligible customers | Inactive customers | Inactivity share |\n| --- | --- | --- | --- |\n| 2025\\-01\\-01 | 425 | 425 | 100.0000% |\n| 2025\\-04\\-01 | 468 | 468 | 100.0000% |\n\nInactivity was unchanged; change: +0.0000 percentage points.\nThese snapshots do not show an increase in inactivity.\nEligible customers: 425 \u2192 468; inactive customers: 425 \u2192 468.\n\nThis is an inactivity share, not a count of newly lost customers.\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "churn",
+          "dimension": "total",
+          "start": "2025-01-01",
+          "end": "2025-04-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots. Churn proxy: 90-day inactivity share at start/end (exclusive as-of). Eligible = first authorized purchase before as-of minus N days; inactive = last purchase before that cutoff. Empty denominator is undefined. Not newly churned customers in a month. Brand breakdown capped at 50 largest eligible cohorts, preserving both snapshots.",
+        "rows": [
+          {
+            "period": "2025-01-01",
+            "cohort": "all",
+            "eligible_customers": 425,
+            "inactive_customers": 425,
+            "inactivity_share": 1.0
+          },
+          {
+            "period": "2025-04-01",
+            "cohort": "all",
+            "eligible_customers": 468,
+            "inactive_customers": 468,
+            "inactivity_share": 1.0
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "3323d56c8320b6c2",
+        "bytes_processed": 11501835,
+        "queried_at": "2026-10-26T08:34:04.725750+00:00",
+        "source_latest_at": null,
+        "comparisons": [
+          {
+            "cohort": "all",
+            "percentage_point_change": 0.0,
+            "direction": "unchanged"
+          }
+        ]
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140716,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "churn",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "inactivity_share",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-04-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "churn",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "inactivity_share",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "seconds": 14.223,
+  "capture_runner_check": {
+    "passed": true
+  },
+  "passed": true,
+  "acceptance_method": "check.py"
+}

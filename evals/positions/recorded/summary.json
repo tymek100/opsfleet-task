@@ -1,0 +1,37 @@
+[
+  {
+    "id": "second",
+    "question": "what was the second position from top?",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": true,
+    "seconds": 26.447
+  },
+  {
+    "id": "last",
+    "question": "Which category was last in the displayed table?",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": true,
+    "seconds": 12.172
+  },
+  {
+    "id": "range",
+    "question": "Show positions two through four from that sorted table.",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": true,
+    "seconds": 16.858
+  },
+  {
+    "id": "first",
+    "question": "Just show the first category from that reordered list.",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": true,
+    "seconds": 18.474
+  },
+  {
+    "id": "outside",
+    "question": "What was at position ten in that displayed list?",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": true,
+    "seconds": 15.553
+  }
+]

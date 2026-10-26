@@ -1,0 +1,46 @@
+
+Verified findings
+
+Calvin Klein · 01 Oct 2025 to 31 Dec 2025 (UTC)                                 
+
+Monthly performance                                                             
+
+                                                                  
+ Month    Revenue   Orders  Distinct customers  Revenue per order 
+ ──────────────────────────────────────────────────────────────── 
+ 2025-10  326.25    9       9                   36.25             
+ 2025-11  1,035.99  11      11                  94.18             
+ 2025-12  896.36    13      13                  68.95             
+                                                                  
+
+Source: [E1].                                                                   
+
+Top 7 products by revenue                                                       
+
+                                                                                
+ Rank  Product ID  Product                     Revenue  Orders  Units per order 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     20234       Calvin Klein Mens Black     259.99   1       1.00            
+                   Pinstripe Slim Fit Wool                                      
+                   Cashmere Suit                                                
+ 2     20469       Calvin Klein Sportswear     178.00   1       1.00            
+                   Men's Washable Birdseye                                      
+                   Classic Jacket                                               
+ 3     23826       Calvin Klein Men's Slim     175.00   1       1.00            
+                   Fit Coat                                                     
+ 4     19831       Calvin Klein Sportswear     169.50   1       1.00            
+                   Men's Solid Classic Fit                                      
+                   Sport Coat                                                   
+ 5     13374       Calvin Klein Women's Tidal  144.99   1       1.00            
+                   Wave One Piece Swimsuit                                      
+ 6     8448        Calvin Klein Womens Long    129.00   1       1.00            
+                   Packable Anorak                                              
+ 7     783         Calvin Klein Women's MSY    99.50    1       1.00            
+                   Flyaway Sweater                                              
+                                                                                
+
+Source: [E2].                                                                   
+
+Only completed orders and items are included.                                   
+
+Use /details for calculation rules and query diagnostics.                       

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "02-1",
+    "case": 2,
+    "turn": 0,
+    "question": "Rank our top eight customers by number of distinct orders in 2025, using their customer IDs.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 19.194
+  },
+  {
+    "id": "02-2",
+    "case": 2,
+    "turn": 1,
+    "question": "How many of those eight customers placed at least two orders? Give the count only.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 10.838
+  }
+]

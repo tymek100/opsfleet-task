@@ -1,0 +1,973 @@
+{
+  "unique_queries": 19,
+  "checks": [
+    {
+      "turn": "01-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 23342,
+          "product_name": "Calvin Klein Jeans Shorts plus Belt",
+          "revenue": 132.36,
+          "units": 3,
+          "orders": 3,
+          "customers": 3
+        },
+        {
+          "product_id": 9801,
+          "product_name": "Calvin Klein Women's Essentials L/S Sleep V-neck",
+          "revenue": 78.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 10720,
+          "product_name": "Calvin Klein Women's Invisibles Hipster Panty",
+          "revenue": 24.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 10895,
+          "product_name": "Calvin Klein Women's Seductive Comfort Hipster",
+          "revenue": 56.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 17815,
+          "product_name": "Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie",
+          "revenue": 196.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 19051,
+          "product_name": "Calvin Klein Sportswear Men's Links 1/4 Zip",
+          "revenue": 139.98,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        }
+      ]
+    },
+    {
+      "turn": "01-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 23342,
+          "product_name": "Calvin Klein Jeans Shorts plus Belt",
+          "revenue": 132.36,
+          "units": 3,
+          "orders": 3,
+          "customers": 3
+        },
+        {
+          "product_id": 9801,
+          "product_name": "Calvin Klein Women's Essentials L/S Sleep V-neck",
+          "revenue": 78.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 10720,
+          "product_name": "Calvin Klein Women's Invisibles Hipster Panty",
+          "revenue": 24.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 10895,
+          "product_name": "Calvin Klein Women's Seductive Comfort Hipster",
+          "revenue": 56.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 17815,
+          "product_name": "Calvin Klein Sportswear Men's Longsleeve Full Zip French Terry Hoodie",
+          "revenue": 196.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 19051,
+          "product_name": "Calvin Klein Sportswear Men's Links 1/4 Zip",
+          "revenue": 139.98,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        }
+      ]
+    },
+    {
+      "turn": "03-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "month": "2025-01",
+          "revenue": 2163.16,
+          "units": 39,
+          "orders": 39,
+          "customers": 39
+        },
+        {
+          "month": "2025-02",
+          "revenue": 2202.99,
+          "units": 38,
+          "orders": 38,
+          "customers": 37
+        },
+        {
+          "month": "2025-03",
+          "revenue": 2436.1,
+          "units": 45,
+          "orders": 45,
+          "customers": 45
+        },
+        {
+          "month": "2025-04",
+          "revenue": 3011.43,
+          "units": 48,
+          "orders": 47,
+          "customers": 47
+        },
+        {
+          "month": "2025-05",
+          "revenue": 2614.34,
+          "units": 44,
+          "orders": 43,
+          "customers": 43
+        },
+        {
+          "month": "2025-06",
+          "revenue": 1772.83,
+          "units": 34,
+          "orders": 34,
+          "customers": 34
+        }
+      ]
+    },
+    {
+      "turn": "03-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "month": "2025-01",
+          "revenue": 2163.16,
+          "units": 39,
+          "orders": 39,
+          "customers": 39
+        },
+        {
+          "month": "2025-02",
+          "revenue": 2202.99,
+          "units": 38,
+          "orders": 38,
+          "customers": 37
+        },
+        {
+          "month": "2025-03",
+          "revenue": 2436.1,
+          "units": 45,
+          "orders": 45,
+          "customers": 45
+        },
+        {
+          "month": "2025-04",
+          "revenue": 3011.43,
+          "units": 48,
+          "orders": 47,
+          "customers": 47
+        },
+        {
+          "month": "2025-05",
+          "revenue": 2614.34,
+          "units": 44,
+          "orders": 43,
+          "customers": 43
+        },
+        {
+          "month": "2025-06",
+          "revenue": 1772.83,
+          "units": 34,
+          "orders": 34,
+          "customers": 34
+        }
+      ]
+    },
+    {
+      "turn": "04-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "category": "Outerwear & Coats",
+          "revenue": 5872.17,
+          "units": 45,
+          "orders": 45,
+          "customers": 45
+        },
+        {
+          "category": "Sweaters",
+          "revenue": 4257.67,
+          "units": 63,
+          "orders": 63,
+          "customers": 63
+        },
+        {
+          "category": "Suits & Sport Coats",
+          "revenue": 3740.18,
+          "units": 26,
+          "orders": 26,
+          "customers": 26
+        },
+        {
+          "category": "Underwear",
+          "revenue": 3535.44,
+          "units": 119,
+          "orders": 118,
+          "customers": 118
+        },
+        {
+          "category": "Pants",
+          "revenue": 2193.66,
+          "units": 37,
+          "orders": 37,
+          "customers": 37
+        },
+        {
+          "category": "Dresses",
+          "revenue": 1816.05,
+          "units": 16,
+          "orders": 16,
+          "customers": 16
+        }
+      ]
+    },
+    {
+      "turn": "04-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "category": "Outerwear & Coats",
+          "revenue": 5872.17,
+          "units": 45,
+          "orders": 45,
+          "customers": 45
+        },
+        {
+          "category": "Sweaters",
+          "revenue": 4257.67,
+          "units": 63,
+          "orders": 63,
+          "customers": 63
+        },
+        {
+          "category": "Suits & Sport Coats",
+          "revenue": 3740.18,
+          "units": 26,
+          "orders": 26,
+          "customers": 26
+        },
+        {
+          "category": "Underwear",
+          "revenue": 3535.44,
+          "units": 119,
+          "orders": 118,
+          "customers": 118
+        },
+        {
+          "category": "Pants",
+          "revenue": 2193.66,
+          "units": 37,
+          "orders": 37,
+          "customers": 37
+        },
+        {
+          "category": "Dresses",
+          "revenue": 1816.05,
+          "units": 16,
+          "orders": 16,
+          "customers": 16
+        }
+      ]
+    },
+    {
+      "turn": "05-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "state": "Guangdong",
+          "revenue": 2445.31,
+          "units": 42,
+          "orders": 42,
+          "customers": 41
+        },
+        {
+          "state": "Beijing",
+          "revenue": 1097.58,
+          "units": 21,
+          "orders": 21,
+          "customers": 21
+        },
+        {
+          "state": "California",
+          "revenue": 1276.71,
+          "units": 21,
+          "orders": 21,
+          "customers": 21
+        },
+        {
+          "state": "England",
+          "revenue": 1125.98,
+          "units": 19,
+          "orders": 19,
+          "customers": 19
+        },
+        {
+          "state": "S\u00e3o Paulo",
+          "revenue": 754.73,
+          "units": 12,
+          "orders": 12,
+          "customers": 12
+        }
+      ]
+    },
+    {
+      "turn": "05-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "state": "Guangdong",
+          "revenue": 2445.31,
+          "units": 42,
+          "orders": 42,
+          "customers": 41
+        },
+        {
+          "state": "Beijing",
+          "revenue": 1097.58,
+          "units": 21,
+          "orders": 21,
+          "customers": 21
+        },
+        {
+          "state": "California",
+          "revenue": 1276.71,
+          "units": 21,
+          "orders": 21,
+          "customers": 21
+        },
+        {
+          "state": "England",
+          "revenue": 1125.98,
+          "units": 19,
+          "orders": 19,
+          "customers": 19
+        },
+        {
+          "state": "S\u00e3o Paulo",
+          "revenue": 754.73,
+          "units": 12,
+          "orders": 12,
+          "customers": 12
+        }
+      ]
+    },
+    {
+      "turn": "06-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "brand": "Calvin Klein",
+          "revenue": 9023.34,
+          "units": 144,
+          "orders": 144,
+          "customers": 144
+        },
+        {
+          "brand": "7 For All Mankind",
+          "revenue": 8036.54,
+          "units": 47,
+          "orders": 47,
+          "customers": 47
+        },
+        {
+          "brand": "Carhartt",
+          "revenue": 7746.43,
+          "units": 109,
+          "orders": 109,
+          "customers": 109
+        },
+        {
+          "brand": "Tommy Hilfiger",
+          "revenue": 7670.04,
+          "units": 81,
+          "orders": 81,
+          "customers": 81
+        }
+      ]
+    },
+    {
+      "turn": "06-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "brand": "Calvin Klein",
+          "revenue": 9023.34,
+          "units": 144,
+          "orders": 144,
+          "customers": 144
+        },
+        {
+          "brand": "7 For All Mankind",
+          "revenue": 8036.54,
+          "units": 47,
+          "orders": 47,
+          "customers": 47
+        },
+        {
+          "brand": "Carhartt",
+          "revenue": 7746.43,
+          "units": 109,
+          "orders": 109,
+          "customers": 109
+        },
+        {
+          "brand": "Tommy Hilfiger",
+          "revenue": 7670.04,
+          "units": 81,
+          "orders": 81,
+          "customers": 81
+        }
+      ]
+    },
+    {
+      "turn": "07-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 8985.54,
+          "units": 148,
+          "orders": 147,
+          "customers": 147
+        }
+      ]
+    },
+    {
+      "turn": "07-1",
+      "evidence": "E2",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 9023.34,
+          "units": 144,
+          "orders": 144,
+          "customers": 144
+        }
+      ]
+    },
+    {
+      "turn": "07-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 9023.34,
+          "units": 144,
+          "orders": 144,
+          "customers": 144
+        }
+      ]
+    },
+    {
+      "turn": "07-2",
+      "evidence": "E2",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 8985.54,
+          "units": 148,
+          "orders": 147,
+          "customers": 147
+        }
+      ]
+    },
+    {
+      "turn": "08-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 24191,
+          "product_name": "Calvin Klein Men's Slim Fit Coat",
+          "revenue": 175.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 20355,
+          "product_name": "Calvin Klein Sportswear Men's Two Button Air Jacket",
+          "revenue": 115.3,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 23816,
+          "product_name": "Calvin Klein Men's Field Jacket",
+          "revenue": 112.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 12767,
+          "product_name": "Calvin Klein Women's Shirred Bandeau 1 Piece",
+          "revenue": 108.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 24404,
+          "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+          "revenue": 89.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "08-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 23837,
+          "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+          "revenue": 228.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 20232,
+          "product_name": "Calvin Klein Body Mens Black Windowpane Slim Fit Wool Suit",
+          "revenue": 199.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 24404,
+          "product_name": "Calvin Klein Sportswear Men's Light Weight Moto Jacket",
+          "revenue": 179.98,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 20090,
+          "product_name": "Calvin Klein Sportswear Men's Washable Pindot Jacket",
+          "revenue": 178.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 24191,
+          "product_name": "Calvin Klein Men's Slim Fit Coat",
+          "revenue": 175.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "09-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 8252,
+          "product_name": "Calvin Klein Women's Toggle Front Down",
+          "revenue": 299.98,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        },
+        {
+          "product_id": 23740,
+          "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+          "revenue": 216.0,
+          "units": 2,
+          "orders": 2,
+          "customers": 2
+        }
+      ]
+    },
+    {
+      "turn": "09-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 8252,
+          "product_name": "Calvin Klein Women's Toggle Front Down",
+          "revenue": 149.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 23740,
+          "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+          "revenue": 108.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "10-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "period": "2025-01-01",
+          "cohort": "all",
+          "eligible_customers": 425,
+          "inactive_customers": 425,
+          "inactivity_share": 1.0
+        },
+        {
+          "period": "2025-04-01",
+          "cohort": "all",
+          "eligible_customers": 468,
+          "inactive_customers": 468,
+          "inactivity_share": 1.0
+        }
+      ]
+    },
+    {
+      "turn": "10-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "period": "2025-01-01",
+          "cohort": "all",
+          "eligible_customers": 444,
+          "inactive_customers": 444,
+          "inactivity_share": 1.0
+        },
+        {
+          "period": "2025-04-01",
+          "cohort": "all",
+          "eligible_customers": 489,
+          "inactive_customers": 489,
+          "inactivity_share": 1.0
+        }
+      ]
+    },
+    {
+      "turn": "11-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": []
+    },
+    {
+      "turn": "11-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": []
+    },
+    {
+      "turn": "12-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 8985.54,
+          "units": 148,
+          "orders": 147,
+          "customers": 147
+        }
+      ]
+    },
+    {
+      "turn": "12-1",
+      "evidence": "E2",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "month": "2025-10",
+          "revenue": 1878.47,
+          "units": 40,
+          "orders": 40,
+          "customers": 40
+        },
+        {
+          "month": "2025-11",
+          "revenue": 3565.48,
+          "units": 55,
+          "orders": 55,
+          "customers": 55
+        },
+        {
+          "month": "2025-12",
+          "revenue": 3541.59,
+          "units": 53,
+          "orders": 52,
+          "customers": 52
+        }
+      ]
+    },
+    {
+      "turn": "12-1",
+      "evidence": "E3",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "product_id": 20234,
+          "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+          "revenue": 259.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 24199,
+          "product_name": "Calvin Klein Sportswear Men's 3/4 Coat With Stand Up Collar",
+          "revenue": 228.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "product_id": 24098,
+          "product_name": "Calvin Klein Men's Traditional Style Coat",
+          "revenue": 199.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "14-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 7398.6,
+          "units": 126,
+          "orders": 124,
+          "customers": 124
+        }
+      ]
+    },
+    {
+      "turn": "15-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "label": "all",
+          "revenue": 6802.25,
+          "units": 122,
+          "orders": 122,
+          "customers": 121
+        }
+      ]
+    },
+    {
+      "turn": "02-1",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "user_id": 2880,
+          "revenue": 97.45,
+          "units": 2,
+          "orders": 2,
+          "customers": 1
+        },
+        {
+          "user_id": 50,
+          "revenue": 54.54,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 442,
+          "revenue": 79.5,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 523,
+          "revenue": 75.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 651,
+          "revenue": 88.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 667,
+          "revenue": 52.13,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 778,
+          "revenue": 28.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 1072,
+          "revenue": 59.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    },
+    {
+      "turn": "02-2",
+      "evidence": "E1",
+      "passed": true,
+      "error": "",
+      "expected": [
+        {
+          "user_id": 2880,
+          "revenue": 97.45,
+          "units": 2,
+          "orders": 2,
+          "customers": 1
+        },
+        {
+          "user_id": 50,
+          "revenue": 54.54,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 442,
+          "revenue": 79.5,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 523,
+          "revenue": 75.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 651,
+          "revenue": 88.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 667,
+          "revenue": 52.13,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 778,
+          "revenue": 28.0,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        },
+        {
+          "user_id": 1072,
+          "revenue": 59.99,
+          "units": 1,
+          "orders": 1,
+          "customers": 1
+        }
+      ]
+    }
+  ],
+  "method": "Independent EXISTS-based sales SQL and eligible-minus-recent customer sets for inactivity; no production compiler.",
+  "note": "Case 2 oracle checks come from the replay; remaining checks come from the initial run."
+}

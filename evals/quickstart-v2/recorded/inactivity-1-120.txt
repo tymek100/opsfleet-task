@@ -1,0 +1,19 @@
+
+Calvin Klein · Customer inactivity · UTC                                                                                
+
+                                                                       
+ As of (UTC)  Eligible customers  Inactive customers  Inactivity share 
+ ───────────────────────────────────────────────────────────────────── 
+ 2025-10-01   1219                1219                100.0000%        
+ 2026-01-01   1361                1360                99.9265%         
+                                                                       
+
+Inactivity decreased; change: -0.0735 percentage points. These snapshots do not show an increase in inactivity. Eligible
+customers: 1,219 → 1,361; inactive customers: 1,219 → 1,360.                                                            
+
+This is an inactivity share, not a count of newly lost customers.                                                       
+
+Cancelled and returned orders/items are excluded. Inactivity means no qualifying purchase in 90 days, among customers   
+whose first qualifying purchase was more than that long ago.                                                            
+
+Use /details for calculation rules and query diagnostics.                                                               

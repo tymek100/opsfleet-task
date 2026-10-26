@@ -1,0 +1,24 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "baseline_passed": true,
+  "followups_passed": 10,
+  "followups_total": 10,
+  "seconds_total": 219.876,
+  "followup_median_seconds": 13.785,
+  "provider_responses": 11,
+  "query_executions": 3,
+  "plan_rejections": 0,
+  "quality_fallbacks": 0,
+  "provider_retries": 1,
+  "retry_statuses": [
+    "ReadTimeout"
+  ],
+  "tokens": {
+    "input_tokens": 58574,
+    "output_tokens": 2174,
+    "thinking_tokens": 15547
+  },
+  "source": "422941a33582840f",
+  "acceptance": "Entity membership, carried metric values, source ranks, column selection, retained subset, ordering, changed-period filters, validated output without narrative-failure warning; independent raw SQL oracle for case 10."
+}

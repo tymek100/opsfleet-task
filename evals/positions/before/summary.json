@@ -1,0 +1,10 @@
+[
+  {
+    "id": "second",
+    "question": "what was the second position from top?",
+    "context": "Replayed two previously captured user turns; real Gemini, no new BigQuery query.",
+    "passed": false,
+    "error": "Wrong displayed positions",
+    "seconds": 71.883
+  }
+]

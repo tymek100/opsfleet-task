@@ -13,7 +13,7 @@ TARGETS = {
     "architecture": "architecture.md",
     "request-flow": "architecture.md",
     "deletion": "architecture.md",
-    "prototype": "technical-design.md",
+    "prototype": "technical_reasoning.md",
 }
 
 

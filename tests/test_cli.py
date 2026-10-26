@@ -227,3 +227,43 @@ def test_controlled_error_filter_preserves_unexpected_errors_and_is_restored(
     except RateLimitError:
         logger.exception("outside CLI")
     assert caplog.records[-1].message == "outside CLI"
+
+
+@pytest.mark.parametrize("existing_title", [None, "Other review", "Winter review v2"])
+def test_natural_deletion_preview_matches_library_state(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: Answer, existing_title: str | None
+) -> None:
+    from tests.test_planning import Provider
+
+    settings = Settings(data_dir=tmp_path, google_cloud_project="")
+    monkeypatch.setattr(Settings, "load", lambda: settings)
+    Provider(monkeypatch, [{"route": "delete_preview", "match": "Winter review v2"}])
+    store = ReportStore(tmp_path / "reports.sqlite3")
+    if existing_title:
+        store.save("alice", "old", existing_title, answer)
+    store.save("bob", "old", "Winter review v2", answer)
+    store.close()
+    result = CliRunner().invoke(
+        app,
+        ["chat", "--user", "alice"],
+        input='Prepare a deletion preview for my saved report titled "Winter review v2".\n/quit\n',
+    )
+    assert result.exit_code == 0, result.output
+    output = " ".join(result.output.split())
+    store = ReportStore(tmp_path / "reports.sqlite3")
+    try:
+        assert len(store.list("alice")) == int(existing_title is not None)
+        assert len(store.list("bob")) == 1
+        pending = store.db.execute("SELECT count(*) FROM pending").fetchone()[0]
+        if existing_title == "Winter review v2":
+            assert "PERMANENT DELETION PREVIEW" in output
+            assert output.count("/confirm ") == 1
+            assert pending == 1
+        else:
+            assert output.count("No matching reports") == 1
+            assert "Use /reports to see your saved reports." in output
+            assert "Deletion preview prepared" not in output
+            assert "/confirm" not in output and "confirmation token" not in output
+            assert pending == 0
+    finally:
+        store.close()

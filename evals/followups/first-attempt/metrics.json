@@ -1,0 +1,20 @@
+{
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "baseline_passed": true,
+  "followups_passed": 9,
+  "followups_total": 10,
+  "seconds_total": 267.794,
+  "followup_median_seconds": 15.6065,
+  "provider_responses": 11,
+  "query_executions": 3,
+  "plan_rejections": 0,
+  "provider_retries": 1,
+  "tokens": {
+    "input_tokens": 121399,
+    "output_tokens": 2053,
+    "thinking_tokens": 17072
+  },
+  "source": "6f52f29c0390ee7a",
+  "review_note": "Initial data/subset checks: 9/10; case 2 failed with Gemini 504 after bounded retry. These initial checks did not yet reject the unnecessary empty-result narrative fallback."
+}

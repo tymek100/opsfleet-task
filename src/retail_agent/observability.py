@@ -1,4 +1,4 @@
-"""Content-free correlated events: never pass raw prompts or provider exceptions."""
+"""Minimized correlated diagnostics: no raw prompts or provider exceptions."""
 
 import json
 import logging

@@ -78,7 +78,7 @@ async def test_live_quarterly_report(tmp_path: Path) -> None:
         print("Q1 report:", len(report.evidence), "queries; reserve", report.estimated_cost_usd)
         print("Live event log:", tmp_path / "events.log")
         assert "01 Apr 2026 to 30 Jun 2026" in report.text
-        assert "Proposed actions" in report.text
+        assert "Suggested next steps" in report.text
         assert "Verified findings" in report.text
         assert "high-margin" not in report.text.lower()
         (tmp_path / "answer.json").write_text(report.model_dump_json(indent=2))

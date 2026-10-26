@@ -1,0 +1,24 @@
+
+Verified findings
+
+Calvin Klein · 01 Oct 2025 to 31 Dec 2025 (UTC)                                 
+
+Top 6 products by units sold                                                    
+
+                                                                                
+ Rank  Product ID  Product                                           Units sold 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 1     23342       Calvin Klein Jeans Shorts plus Belt               3          
+ 2     9801        Calvin Klein Women's Essentials L/S Sleep V-neck  2          
+ 3     10720       Calvin Klein Women's Invisibles Hipster Panty     2          
+ 4     10895       Calvin Klein Women's Seductive Comfort Hipster    2          
+ 5     17815       Calvin Klein Sportswear Men's Longsleeve Full     2          
+                   Zip French Terry Hoodie                                      
+ 6     19051       Calvin Klein Sportswear Men's Links 1/4 Zip       2          
+                                                                                
+
+Source: [E1].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

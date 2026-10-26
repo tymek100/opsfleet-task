@@ -15,7 +15,7 @@ flowchart TB
   api -->|"Trusted context + contract"| gateway
   gateway -->|"Scoped query API"| bq
   api -->|"SQL/TLS: state + outbox"| db
-  api -->|"HTTPS: plan / embeddings"| model
+  api -->|"HTTPS: plan / write / review / embeddings"| model
   api -->|"Approved source upload"| bucket
   api -->|"Dispatch committed outbox"| queue
   scheduler -->|"Authenticated maintenance"| api

@@ -1,0 +1,224 @@
+{
+  "question": "For the first half of 2025, rank our top 9 products by number of orders. Include orders, revenue, units sold and revenue per unit. Also show total revenue, orders and units for that half-year.",
+  "expected": [
+    [
+      "product",
+      "orders",
+      9,
+      [
+        "revenue",
+        "units",
+        "revenue_per_unit"
+      ]
+    ],
+    [
+      "total",
+      "revenue",
+      1,
+      [
+        "orders",
+        "units"
+      ]
+    ]
+  ],
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Jan 2025 to 30 Jun 2025 (UTC)\n\n### Top 9 products by orders\n\nProduct reference\n\n| Product ID | Product |\n| --- | --- |\n| 23062 | Calvin Klein Sportswear Men's Fine Line Plaid Short |\n| 26311 | Calvin Klein Men's Core Sculpt Compression Tank |\n| 6514 | Calvin Klein Ladies Bermuda Long Safari Shorts |\n| 19022 | Calvin Klein Sportswear Men's Wide Scooped Crew Neck Sweater |\n| 21920 | Calvin Klein Sportswear Men's Broken Micro Check Dylan Pant |\n| 25379 | Calvin Klein Men's 3 Pack Boxer Brief |\n| 25590 | ck one Men's Micro Slim Fit Boxer |\n| 26329 | Calvin Klein Men's Cotton Stretch 2 Pack Hip Keyhole Brief |\n| 1073 | Calvin Klein Women's MSY Stripe V\\-Neck Pullover |\n\nMetrics by product ID\n\n| Rank | Product ID | Orders | Revenue | Units sold | Revenue per unit |\n| --- | --- | --- | --- | --- | --- |\n| 1 | 23062 | 4 | 208.52 | 4 | 52.13 |\n| 2 | 26311 | 4 | 163.96 | 4 | 40.99 |\n| 3 | 6514 | 3 | 83.85 | 3 | 27.95 |\n| 4 | 19022 | 3 | 149.97 | 3 | 49.99 |\n| 5 | 21920 | 3 | 118.71 | 3 | 39.57 |\n| 6 | 25379 | 3 | 112.50 | 3 | 37.50 |\n| 7 | 25590 | 3 | 72.00 | 3 | 24.00 |\n| 8 | 26329 | 3 | 84.00 | 3 | 28.00 |\n| 9 | 1073 | 2 | 159.00 | 2 | 79.50 |\n\nSource: [E1].\n### Overall performance\n- revenue = 14,200.85 [E2]\n- distinct orders = 246 [E2]\n- units sold = 248 [E2]",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-01-01",
+          "end": "2025-07-01",
+          "rank_by": "orders",
+          "limit": 9,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 23062,
+            "product_name": "Calvin Klein Sportswear Men's Fine Line Plaid Short",
+            "revenue": 208.52,
+            "units": 4,
+            "customers": 4,
+            "orders": 4,
+            "latest_purchase": "2025-06-15 07:38:22+00"
+          },
+          {
+            "product_id": 26311,
+            "product_name": "Calvin Klein Men's Core Sculpt Compression Tank",
+            "revenue": 163.96,
+            "units": 4,
+            "customers": 4,
+            "orders": 4,
+            "latest_purchase": "2025-05-27 12:00:53+00"
+          },
+          {
+            "product_id": 6514,
+            "product_name": "Calvin Klein Ladies Bermuda Long Safari Shorts",
+            "revenue": 83.85,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-06-05 19:03:44+00"
+          },
+          {
+            "product_id": 19022,
+            "product_name": "Calvin Klein Sportswear Men's Wide Scooped Crew Neck Sweater",
+            "revenue": 149.97,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-06-04 11:12:01+00"
+          },
+          {
+            "product_id": 21920,
+            "product_name": "Calvin Klein Sportswear Men's Broken Micro Check Dylan Pant",
+            "revenue": 118.71,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-06-18 07:51:39+00"
+          },
+          {
+            "product_id": 25379,
+            "product_name": "Calvin Klein Men's 3 Pack Boxer Brief",
+            "revenue": 112.5,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-06-29 17:00:59+00"
+          },
+          {
+            "product_id": 25590,
+            "product_name": "ck one Men's Micro Slim Fit Boxer",
+            "revenue": 72.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-04-13 18:35:10+00"
+          },
+          {
+            "product_id": 26329,
+            "product_name": "Calvin Klein Men's Cotton Stretch 2 Pack Hip Keyhole Brief",
+            "revenue": 84.0,
+            "units": 3,
+            "customers": 3,
+            "orders": 3,
+            "latest_purchase": "2025-04-01 05:31:00+00"
+          },
+          {
+            "product_id": 1073,
+            "product_name": "Calvin Klein Women's MSY Stripe V-Neck Pullover",
+            "revenue": 159.0,
+            "units": 2,
+            "customers": 2,
+            "orders": 2,
+            "latest_purchase": "2025-06-19 14:16:10+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "30126c638816b800",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T09:49:46.628174+00:00",
+        "source_latest_at": "2025-06-29 17:00:59+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-01-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 14200.85,
+            "units": 248,
+            "customers": 245,
+            "orders": 246,
+            "latest_purchase": "2025-06-30 20:25:33+00"
+          }
+        ],
+        "job_id": "<redacted-id>",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T09:49:48.274726+00:00",
+        "source_latest_at": "2025-06-30 20:25:33+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "<redacted-id>",
+    "estimated_cost_usd": 0.146389,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-01-01",
+        "end": "2025-07-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "product",
+          "metric": "orders",
+          "measures": [
+            "revenue",
+            "units",
+            "revenue_per_unit"
+          ],
+          "minimum_rows": 9
+        },
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "measures": [
+            "orders",
+            "units"
+          ],
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "7b3567a15cb03d3d",
+      "prompt": "2856028f6153d8a8",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "capture_note": "Live Gemini and BigQuery replay after a 504 timeout; final renderer."
+}

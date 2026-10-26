@@ -1,0 +1,23 @@
+
+Verified findings
+
+Calvin Klein · 01 Jan 2025 to 30 Jun 2025 (UTC)                                 
+
+Monthly performance                                                             
+
+                   
+ Month    Revenue  
+ ───────────────── 
+ 2025-01  2,163.16 
+ 2025-02  2,202.99 
+ 2025-03  2,436.10 
+ 2025-04  3,011.43 
+ 2025-05  2,614.34 
+ 2025-06  1,772.83 
+                   
+
+Source: [E1].                                                                   
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

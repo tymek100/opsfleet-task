@@ -1,0 +1,263 @@
+{
+  "id": "12-1",
+  "case": 12,
+  "turn": 0,
+  "question": "Draft a Q4 2025 sales report with total revenue, monthly revenue, top three products and proposed actions for Q1 2026. Do not save it.",
+  "user": "alice",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**Calvin Klein** \u00b7 01 Oct 2025 to 31 Dec 2025 (UTC)\n\n### Overall performance\n- revenue = 8,985.54 [E1]\n### Monthly performance\n\n| Month | Revenue |\n| --- | --- |\n| 2025\\-10 | 1,878.47 |\n| 2025\\-11 | 3,565.48 |\n| 2025\\-12 | 3,541.59 |\n\nSource: [E2].\n### Top 3 products by revenue\n\n| Rank | Product ID | Product | Revenue |\n| --- | --- | --- | --- |\n| 1 | 20234 | Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit | 259.99 |\n| 2 | 24199 | Calvin Klein Sportswear Men's 3/4 Coat With Stand Up Collar | 228.00 |\n| 3 | 24098 | Calvin Klein Men's Traditional Style Coat | 199.00 |\n\nSource: [E3].\n\nUnverified hypotheses \u2014 these explanations have not been established by the cited observations.\n- Seasonality could contribute; compare the same periods across multiple years before drawing a conclusion. Observations to investigate: [E2]\n\nProposed actions \u2014 owners and targets are proposals, not forecasts or proven outcomes.\n- **01 Jan 2026 to 31 Mar 2026 (UTC) \u2014 Operations and Analytics (proposed owner):** Investigate demand using promotion, availability and calendar records; compare the selected measure before choosing an intervention.\n  Baseline: revenue = 8,985.54 [E1]. Set a target after the investigation or test design.\n\nTransaction data shows patterns; it does not establish causes or guarantee outcomes.",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 8985.54,
+            "units": 148,
+            "customers": 147,
+            "orders": 147,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-26T08:34:52.651566+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "month",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "month": "2025-10",
+            "revenue": 1878.47,
+            "units": 40,
+            "customers": 40,
+            "orders": 40,
+            "latest_purchase": "2025-10-31 12:31:39+00"
+          },
+          {
+            "month": "2025-11",
+            "revenue": 3565.48,
+            "units": 55,
+            "customers": 55,
+            "orders": 55,
+            "latest_purchase": "2025-11-30 11:41:57+00"
+          },
+          {
+            "month": "2025-12",
+            "revenue": 3541.59,
+            "units": 53,
+            "customers": 52,
+            "orders": 52,
+            "latest_purchase": "2025-12-30 23:01:11+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "f769079b549302d7",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T08:34:54.535969+00:00",
+        "source_latest_at": "2025-12-30 23:01:11+00",
+        "comparisons": []
+      },
+      {
+        "id": "E3",
+        "request": {
+          "kind": "sales",
+          "dimension": "product",
+          "start": "2025-10-01",
+          "end": "2026-01-01",
+          "rank_by": "revenue",
+          "limit": 3,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Calvin Klein",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "product_id": 20234,
+            "product_name": "Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit",
+            "revenue": 259.99,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-11-30 02:53:18+00"
+          },
+          {
+            "product_id": 24199,
+            "product_name": "Calvin Klein Sportswear Men's 3/4 Coat With Stand Up Collar",
+            "revenue": 228.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-13 07:16:04+00"
+          },
+          {
+            "product_id": 24098,
+            "product_name": "Calvin Klein Men's Traditional Style Coat",
+            "revenue": 199.0,
+            "units": 1,
+            "customers": 1,
+            "orders": 1,
+            "latest_purchase": "2025-12-23 00:33:26+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "6b4d8ee47921d5ea",
+        "bytes_processed": 14425300,
+        "queried_at": "2026-10-26T08:34:57.365556+00:00",
+        "source_latest_at": "2025-12-23 00:33:26+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.274323,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": {
+        "start": "2026-01-01",
+        "end": "2026-04-01"
+      },
+      "actions": true,
+      "report": true,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 3
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 3
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-10-01",
+        "end": "2026-01-01"
+      },
+      "comparison": null,
+      "action_period": {
+        "start": "2026-01-01",
+        "end": "2026-04-01"
+      },
+      "actions": true,
+      "report": true,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        },
+        {
+          "dimension": "month",
+          "metric": "revenue",
+          "minimum_rows": 3
+        },
+        {
+          "dimension": "product",
+          "metric": "revenue",
+          "minimum_rows": 3
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 33.683
+}

@@ -1,0 +1,15 @@
+{
+  "scenarios_passed": 3,
+  "turns_passed": 5,
+  "live_services": [
+    "Gemini",
+    "BigQuery"
+  ],
+  "checks": [
+    "base population and ranking unchanged",
+    "selected subset matches recomputed ratio ordering",
+    "requested columns retained",
+    "no report saved"
+  ],
+  "provenance": "Final separate replays after adding shared fresh-result column schemas. Earlier development attempts rejected incorrect post-view columns before executing queries. The separate-turn scenario also passed before that schema addition."
+}

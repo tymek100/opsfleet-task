@@ -1,0 +1,231 @@
+{
+  "questions": [
+    "For Q3 2025, first find our top 8 products by units sold. Include revenue, orders and revenue per order, then keep only the 3 with the lowest revenue per order within those eight."
+  ],
+  "answers": [
+    {
+      "view": {
+        "key": "product_id",
+        "columns": [
+          "product_id",
+          "product_name",
+          "E1.revenue",
+          "E1.customers",
+          "E1.orders",
+          "E1.units",
+          "E1.revenue_per_order",
+          "E1.revenue_per_unit",
+          "E1.units_per_order",
+          "E1.rank"
+        ],
+        "rows": [
+          {
+            "product_id": 28965,
+            "product_name": "Calvin Klein Men's 4-In-1 Reversible Plaque Belt",
+            "E1.revenue": 101.25,
+            "E1.customers": 3,
+            "E1.orders": 3,
+            "E1.units": 3,
+            "E1.revenue_per_order": 33.75,
+            "E1.revenue_per_unit": 33.75,
+            "E1.units_per_order": 1.0,
+            "E1.rank": 1
+          },
+          {
+            "product_id": 14289,
+            "product_name": "Calvin Klein Women's Basic Reversible Belt",
+            "E1.revenue": 72.0,
+            "E1.customers": 2,
+            "E1.orders": 2,
+            "E1.units": 2,
+            "E1.revenue_per_order": 36.0,
+            "E1.revenue_per_unit": 36.0,
+            "E1.units_per_order": 1.0,
+            "E1.rank": 4
+          },
+          {
+            "product_id": 18968,
+            "product_name": "Calvin Klein Sportswear Men's Merino Color Blocked V-Neck Sweater",
+            "E1.revenue": 101.98,
+            "E1.customers": 2,
+            "E1.orders": 2,
+            "E1.units": 2,
+            "E1.revenue_per_order": 50.99,
+            "E1.revenue_per_unit": 50.99,
+            "E1.units_per_order": 1.0,
+            "E1.rank": 7
+          }
+        ],
+        "displayed_columns": [
+          "product_id",
+          "product_name",
+          "E1.units",
+          "E1.revenue",
+          "E1.orders",
+          "E1.revenue_per_order"
+        ],
+        "source_ids": [
+          "E1"
+        ],
+        "concise": false,
+        "derivation": [
+          "I used E1 (8 rows) and applied the select operation.",
+          "I sorted the 8 matching rows by Revenue per order (lowest first).",
+          "I selected rows starting at offset 0, keeping up to 3 rows."
+        ],
+        "selection": {
+          "operation": "select",
+          "candidate_count": 8,
+          "sort_by": "E1.revenue_per_order",
+          "descending": false,
+          "offset": 0,
+          "limit": 3
+        }
+      },
+      "text": "Verified findings\n\nCalvin Klein \u00b7 01 Jul 2025 to 30 Sep 2025 (UTC)\n\n| Product ID | Product | Units sold | Revenue | Orders | Revenue per order |\n| --- | --- | --- | --- | --- | --- |\n| 28965 | Calvin Klein Men's 4\\-In\\-1 Reversible Plaque Belt | 3 | 101.25 | 3 | 33.75 |\n| 14289 | Calvin Klein Women's Basic Reversible Belt | 2 | 72.00 | 2 | 36.00 |\n| 18968 | Calvin Klein Sportswear Men's Merino Color Blocked V\\-Neck Sweater | 2 | 101.98 | 2 | 50.99 |\n",
+      "evidence": [
+        {
+          "id": "E1",
+          "request": {
+            "kind": "sales",
+            "dimension": "product",
+            "start": "2025-07-01",
+            "end": "2025-10-01",
+            "rank_by": "units",
+            "limit": 8,
+            "brands": [],
+            "product_ids": [],
+            "customer_id": null,
+            "completed_only": false,
+            "inactivity_days": 90
+          },
+          "scope": "Calvin Klein",
+          "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+          "rows": [
+            {
+              "product_id": 28965,
+              "product_name": "Calvin Klein Men's 4-In-1 Reversible Plaque Belt",
+              "revenue": 101.25,
+              "units": 3,
+              "customers": 3,
+              "orders": 3,
+              "latest_purchase": "2025-09-21 06:57:31+00"
+            },
+            {
+              "product_id": 3209,
+              "product_name": "Calvin Klein Women's Lux Stretch Rayon Career Dress",
+              "revenue": 256.0,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-08-22 21:19:08+00"
+            },
+            {
+              "product_id": 8354,
+              "product_name": "Calvin Klein Women's 3/4 Single Breasted Coat",
+              "revenue": 263.88,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-09-11 02:42:24+00"
+            },
+            {
+              "product_id": 14289,
+              "product_name": "Calvin Klein Women's Basic Reversible Belt",
+              "revenue": 72.0,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-09-11 13:50:13+00"
+            },
+            {
+              "product_id": 17742,
+              "product_name": "Calvin Klein Sportswear Men's Long Sleeve 2X2 Rib Crew Neck Knit",
+              "revenue": 119.0,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-09-28 17:47:28+00"
+            },
+            {
+              "product_id": 17849,
+              "product_name": "Calvin Klein Sportswear Men's Slim Fit Long Sleeve 1/4 Zip Hoodie",
+              "revenue": 123.1,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-08-28 10:41:38+00"
+            },
+            {
+              "product_id": 18968,
+              "product_name": "Calvin Klein Sportswear Men's Merino Color Blocked V-Neck Sweater",
+              "revenue": 101.98,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-08-23 06:12:57+00"
+            },
+            {
+              "product_id": 19102,
+              "product_name": "Calvin Klein Sportswear Men's Utilitarian Mixed Media Crew Neck",
+              "revenue": 112.78,
+              "units": 2,
+              "customers": 2,
+              "orders": 2,
+              "latest_purchase": "2025-09-18 01:08:55+00"
+            }
+          ],
+          "job_id": "<id>",
+          "sql_hash": "d30dfc7472757c64",
+          "bytes_processed": 14425300,
+          "queried_at": "2026-10-26T12:31:03.801469+00:00",
+          "source_latest_at": "2025-09-28 17:47:28+00",
+          "comparisons": []
+        }
+      ],
+      "trace_id": "<id>",
+      "estimated_cost_usd": 0.15185,
+      "quality_status": "validated",
+      "intent": {
+        "period": {
+          "start": "2025-07-01",
+          "end": "2025-10-01"
+        },
+        "comparison": null,
+        "action_period": null,
+        "actions": false,
+        "report": false,
+        "kind": "sales",
+        "requirements": [
+          {
+            "dimension": "product",
+            "metric": "units",
+            "measures": [
+              "revenue",
+              "orders",
+              "revenue_per_order"
+            ],
+            "minimum_rows": 8
+          }
+        ],
+        "comparison_requirements": [],
+        "customer_id": null,
+        "product_ids": [],
+        "comparison_metrics": [],
+        "brands": [],
+        "completed_only": false,
+        "inactivity_days": 90,
+        "explanation_requested": false
+      },
+      "versions": {
+        "source": "41aa58882c64ddcb",
+        "prompt": "471702de4a5ce515",
+        "model": "gemini-3.8-flash",
+        "intent": "direct-plan-v4",
+        "compiler": "v1"
+      },
+      "warnings": []
+    }
+  ],
+  "passed": true
+}

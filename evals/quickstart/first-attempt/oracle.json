@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "scenario": "products",
+      "evidence": "E1",
+      "passed": true,
+      "rows": 5
+    },
+    {
+      "scenario": "products",
+      "evidence": "E2",
+      "passed": true,
+      "rows": 5
+    },
+    {
+      "scenario": "customers",
+      "evidence": "E1",
+      "passed": true,
+      "rows": 5
+    },
+    {
+      "scenario": "months",
+      "evidence": "E1",
+      "passed": true,
+      "rows": 12
+    },
+    {
+      "scenario": "report",
+      "evidence": "E1",
+      "passed": true,
+      "rows": 1
+    }
+  ],
+  "method": "Independent EXISTS-based raw-table SQL; no production compiler"
+}

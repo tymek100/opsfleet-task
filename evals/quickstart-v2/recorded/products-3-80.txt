@@ -1,0 +1,13 @@
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                 
+
+                                                                                
+ Product ID  Product                                Revenue  Distinct customers 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 8252        Calvin Klein Women's Toggle Front      299.98   2                  
+             Down                                                               
+                                                                                
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

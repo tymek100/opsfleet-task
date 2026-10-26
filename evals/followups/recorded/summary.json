@@ -1,0 +1,68 @@
+[
+  {
+    "id": 0,
+    "question": "Show our top 5 products by revenue and, separately, by number of distinct customers in Q2 2025.",
+    "passed": true,
+    "seconds": 16.505
+  },
+  {
+    "id": 1,
+    "question": "Which products appear in both rankings?",
+    "passed": true,
+    "seconds": 8.179
+  },
+  {
+    "id": 2,
+    "question": "For those products, show revenue and distinct customers side by side.",
+    "passed": true,
+    "seconds": 78.882
+  },
+  {
+    "id": 3,
+    "question": "Add their original position in each ranking and average order value.",
+    "passed": true,
+    "seconds": 17.896
+  },
+  {
+    "id": 4,
+    "question": "Which products from the original revenue top 5 are absent from the original customer top 5?",
+    "passed": true,
+    "seconds": 8.759
+  },
+  {
+    "id": 5,
+    "question": "How many products are in that last subset? Just give me the count.",
+    "passed": true,
+    "seconds": 14.704
+  },
+  {
+    "id": 6,
+    "question": "Now list the opposite: products in the original customer top 5 but not the revenue top 5.",
+    "passed": true,
+    "seconds": 14.57
+  },
+  {
+    "id": 7,
+    "question": "Combine the two original top-five lists into one list of unique products, showing names and IDs only.",
+    "passed": true,
+    "seconds": 13.0
+  },
+  {
+    "id": 8,
+    "question": "From the original revenue ranking, keep only products with revenue above 200 and show their revenue.",
+    "passed": true,
+    "seconds": 12.978
+  },
+  {
+    "id": 9,
+    "question": "Order those remaining products by revenue from lowest to highest, keeping the same columns.",
+    "passed": true,
+    "seconds": 11.278
+  },
+  {
+    "id": 10,
+    "question": "For those same products, show revenue in Q3 2025 instead.",
+    "passed": true,
+    "seconds": 23.125
+  }
+]

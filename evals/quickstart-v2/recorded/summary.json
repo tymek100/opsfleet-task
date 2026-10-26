@@ -1,0 +1,149 @@
+[
+  {
+    "id": "products-1",
+    "question": "Show our top 5 products by revenue and, separately, by distinct customers in Q2 2025.",
+    "passed": true,
+    "seconds": 13.131,
+    "queries": 2
+  },
+  {
+    "id": "products-2",
+    "question": "Which products appear in both rankings?",
+    "passed": true,
+    "seconds": 30.751,
+    "queries": 0
+  },
+  {
+    "id": "products-3",
+    "question": "For just those shared products, show revenue and distinct customers side by side.",
+    "passed": true,
+    "seconds": 40.352,
+    "queries": 0
+  },
+  {
+    "id": "customers-1",
+    "question": "Show our top 5 customers by revenue in 2025, using customer IDs.",
+    "passed": true,
+    "seconds": 13.613,
+    "queries": 1
+  },
+  {
+    "id": "customers-2",
+    "question": "Add their order counts and average order value.",
+    "passed": true,
+    "seconds": 9.832,
+    "queries": 0
+  },
+  {
+    "id": "customers-3",
+    "question": "Keep the three customers with the highest average order value among these five.",
+    "passed": true,
+    "seconds": 38.619,
+    "queries": 0
+  },
+  {
+    "id": "months-1",
+    "question": "Show our monthly revenue, orders and distinct customers for 2025.",
+    "passed": true,
+    "seconds": 12.48,
+    "queries": 1
+  },
+  {
+    "id": "months-2",
+    "question": "Keep the three months with the highest revenue, including their revenue and order counts.",
+    "passed": true,
+    "seconds": 8.775,
+    "queries": 0
+  },
+  {
+    "id": "months-3",
+    "question": "Show those same three months in chronological order instead.",
+    "passed": true,
+    "seconds": 12.387,
+    "queries": 0
+  },
+  {
+    "id": "categories-1",
+    "question": "Show our top 8 product categories by revenue in 2025. Include revenue, orders, distinct customers, and revenue per order.",
+    "passed": true,
+    "seconds": 12.828,
+    "queries": 1
+  },
+  {
+    "id": "categories-2",
+    "question": "Which of those categories had the highest revenue per order, and how many orders did it have?",
+    "passed": true,
+    "seconds": 30.243,
+    "queries": 0
+  },
+  {
+    "id": "categories-3",
+    "question": "How did you work that out? Explain the calculation in plain English.",
+    "passed": true,
+    "seconds": 38.463,
+    "queries": 0
+  },
+  {
+    "id": "quarters-1",
+    "question": "Compare our total revenue in Q1 2026 with Q4 2025. Show the absolute and percentage change, using Q4 2025 as the baseline.",
+    "passed": true,
+    "seconds": 14.429,
+    "queries": 2
+  },
+  {
+    "id": "quarters-2",
+    "question": "Add average daily revenue and the number of calendar days for both quarters.",
+    "passed": true,
+    "seconds": 14.133,
+    "queries": 2
+  },
+  {
+    "id": "quarters-3",
+    "question": "Explain how you calculated the revenue percentage change and why the daily comparison can differ.",
+    "passed": true,
+    "seconds": 33.359,
+    "queries": 0
+  },
+  {
+    "id": "inactivity-1",
+    "question": "Did our customer inactivity rate increase during Q4 2025? Use a 90-day inactivity threshold and show eligible and inactive customer counts at both quarter boundaries.",
+    "passed": true,
+    "seconds": 13.024,
+    "queries": 1
+  },
+  {
+    "id": "inactivity-2",
+    "question": "Repeat the same analysis with a 60-day inactivity threshold.",
+    "passed": true,
+    "seconds": 10.132,
+    "queries": 1
+  },
+  {
+    "id": "inactivity-3",
+    "question": "Explain what this inactivity percentage means and which customers are included.",
+    "passed": true,
+    "seconds": 35.428,
+    "queries": 0
+  },
+  {
+    "id": "report-1",
+    "question": "Prepare a Q2 2025 sales report with total revenue, monthly revenue, top 5 products and recommended actions for Q3 2025. Do not save it yet.",
+    "passed": true,
+    "seconds": 27.785,
+    "queries": 3
+  },
+  {
+    "id": "report-2",
+    "question": "Save it as \"Q2 demo review\".",
+    "passed": true,
+    "seconds": 12.658,
+    "queries": 0
+  },
+  {
+    "id": "report-3",
+    "question": "List my saved reports.",
+    "passed": true,
+    "seconds": 12.254,
+    "queries": 0
+  }
+]

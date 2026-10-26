@@ -1,0 +1,21 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                                                         
+
+                                                                                      
+ Product ID  Product                                                                  
+ ──────────────────────────────────────────────────────────────────────────────────── 
+ 1073        Calvin Klein Women's MSY Stripe V-Neck Pullover                          
+ 6514        Calvin Klein Ladies Bermuda Long Safari Shorts                           
+ 10840       Calvin Klein Women's Naked Glamour Hipster                               
+ 16530       Calvin Klein Sportswear Men's Short Sleeve Micro Check Dobby Woven Shirt 
+                                                                                      
+
+Based on the previously shown results.                                                                                  
+
+Sources: [E1] (revenue ranking); [E2] (distinct customers ranking).                                                     
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

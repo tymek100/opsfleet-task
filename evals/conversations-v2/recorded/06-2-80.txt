@@ -1,0 +1,21 @@
+
+Verified findings
+
+all brands · 01 Jul 2025 to 30 Sep 2025 (UTC)                                   
+
+                                 
+ Brand              Revenue [E1] 
+ ─────────────────────────────── 
+ 7 For All Mankind  8,036.54     
+ Calvin Klein       9,023.34     
+ Carhartt           7,746.43     
+ Tommy Hilfiger     7,670.04     
+                                 
+
+Based on the previously shown results.                                          
+
+Sources: [E1] (revenue ranking).                                                
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

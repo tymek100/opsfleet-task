@@ -171,6 +171,9 @@ async def reviewed_commentary(
     findings: str,
     catalog: dict[str, Metric],
     evidence: list[Evidence] | None = None,
+    *,
+    writing_task: str = "",
+    show_sources: bool = True,
 ) -> str | None:
     async def request(instruction: str, payload: dict[str, object], schema: type[BaseModel]) -> str:
         req = LlmRequest(
@@ -207,7 +210,9 @@ async def reviewed_commentary(
             "metrics": {k: {"value": m.value, "context": m.context} for k, m in catalog.items()},
         }
         async with asyncio.timeout(budget.remaining()):
-            candidate = Commentary.model_validate_json(await request(WRITER, payload, Commentary))
+            candidate = Commentary.model_validate_json(
+                await request(WRITER + "\n" + writing_task, payload, Commentary)
+            )
             if not admissible(candidate, catalog, references):
                 trace.emit("commentary_omitted", reason="deterministic_check")
                 return None
@@ -215,7 +220,18 @@ async def reviewed_commentary(
                 "text": resolve_references(candidate.text, references),
                 "metric_ids": candidate.metric_ids,
             }
-            review = Review.model_validate_json(await request(REVIEWER, payload, Review))
+            review = Review.model_validate_json(
+                await request(
+                    REVIEWER
+                    + (
+                        "\nFor a conversational answer, also reject missing requested values, an incorrect highest/lowest relationship, or invented selection steps. Check the supplied question and executed selection. Selection metadata records operations already executed by trusted application code: sorting descending/ascending with offset zero and limit one establishes highest/lowest within candidate_count, even if only the selected row is supplied. It does not establish a global maximum/minimum."
+                        if writing_task
+                        else ""
+                    ),
+                    payload,
+                    Review,
+                )
+            )
             if not (review.supported and review.relevant and review.safe):
                 trace.emit(
                     "commentary_omitted",
@@ -226,6 +242,8 @@ async def reviewed_commentary(
                 )
                 return None
         trace.emit("commentary_accepted")
+        if not show_sources:
+            return resolve_references(candidate.text, references, markdown=True)
         sources = sorted({e for key in candidate.metric_ids for e in catalog[key].evidence_ids})
         return (
             resolve_references(candidate.text, references, markdown=True)

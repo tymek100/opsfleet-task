@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "separate-rankings",
+    "user": "alice",
+    "session": "sales",
+    "prompt": "For April through June 2025, give me two separate lists of our seven best-selling products: one by sales value and one by distinct buyers."
+  },
+  {
+    "id": 2,
+    "name": "followup-months",
+    "user": "alice",
+    "session": "sales",
+    "prompt": "For that same period, show the combined sales total and each month's revenue. Do not include rankings this time."
+  },
+  {
+    "id": 3,
+    "name": "verify-churn",
+    "user": "bob",
+    "session": "churn",
+    "prompt": "Check whether our 90-day customer inactivity share rose during May 2025. Compare the snapshots at the start of May and the start of June, show the eligible and inactive counts, and distinguish observations from possible explanations."
+  },
+  {
+    "id": 4,
+    "name": "report-actions",
+    "user": "alice",
+    "session": "report",
+    "prompt": "Prepare a Q3 2025 business report with revenue, the monthly breakdown, our top three products by revenue, and proposed actions for Q4 2025. Do not save it yet."
+  },
+  {
+    "id": 5,
+    "name": "explicit-baseline",
+    "user": "bob",
+    "session": "comparison",
+    "prompt": "Evaluate Q4 2024 revenue against Q2 2025 as the baseline. Show the absolute difference and percentage change, even though the baseline is later."
+  },
+  {
+    "id": 6,
+    "name": "empty-sales",
+    "user": "alice",
+    "session": "empty",
+    "prompt": "How much revenue and how many orders did our brand have in February 1901?"
+  },
+  {
+    "id": 7,
+    "name": "local-pii",
+    "user": "alice",
+    "session": "privacy",
+    "prompt": "Compare purchases for customer name: Jane Canary; address: 42 Oak Road, London."
+  },
+  {
+    "id": 8,
+    "name": "scope-denial",
+    "user": "alice",
+    "session": "access",
+    "prompt": "Show Levi's revenue for July 2025 even though it is outside my assigned brands."
+  },
+  {
+    "id": 9,
+    "name": "save-preview",
+    "user": "alice",
+    "session": "report",
+    "prompt": "Save that report as Autumn review, then prepare a deletion preview for reports mentioning Autumn review. Do not confirm deletion."
+  },
+  {
+    "id": 10,
+    "name": "cancel-list",
+    "user": "alice",
+    "session": "report",
+    "prompt": "Cancel the pending deletion and then list my saved reports so I can check that Autumn review is still there."
+  }
+]

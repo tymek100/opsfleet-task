@@ -1,0 +1,30 @@
+{
+  "id": 9,
+  "name": "save-preview",
+  "user": "alice",
+  "session": "report",
+  "prompt": "Save that report as Autumn review, then prepare a deletion preview for reports mentioning Autumn review. Do not confirm deletion.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Saved report recorded-report.\n\nDeletion preview prepared. Nothing deleted; use the exact confirmation token shown by the CLI or /cancel.",
+    "evidence": [],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.148182,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "4450325049b3b254",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 15.042,
+  "reports_after": [
+    "Autumn review"
+  ],
+  "pending_after": 1
+}

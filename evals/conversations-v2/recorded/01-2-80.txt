@@ -1,0 +1,22 @@
+
+Verified findings
+
+Calvin Klein · 01 Oct 2025 to 31 Dec 2025 (UTC)                                 
+
+                                                                                
+ Product ID  Product                                            Units sold [E1] 
+ ────────────────────────────────────────────────────────────────────────────── 
+ 10720       Calvin Klein Women's Invisibles Hipster Panty      2               
+ 10895       Calvin Klein Women's Seductive Comfort Hipster     2               
+ 17815       Calvin Klein Sportswear Men's Longsleeve Full Zip  2               
+             French Terry Hoodie                                                
+ 19051       Calvin Klein Sportswear Men's Links 1/4 Zip        2               
+                                                                                
+
+Based on the previously shown results.                                          
+
+Sources: [E1] (units sold ranking).                                             
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

@@ -1,0 +1,49 @@
+
+Verified findings
+
+Calvin Klein · 01 Oct 2025 to 31 Dec 2025 (UTC)                                                                         
+
+Overall performance                                                                                                     
+
+ • revenue = 8,985.54 [E1]                                                                                              
+
+Monthly performance                                                                                                     
+
+                   
+ Month    Revenue  
+ ───────────────── 
+ 2025-10  1,878.47 
+ 2025-11  3,565.48 
+ 2025-12  3,541.59 
+                   
+
+Source: [E2].                                                                                                           
+
+Top 3 products by revenue                                                                                               
+
+                                                                                          
+ Rank  Product ID  Product                                                        Revenue 
+ ──────────────────────────────────────────────────────────────────────────────────────── 
+ 1     20234       Calvin Klein Mens Black Pinstripe Slim Fit Wool Cashmere Suit  259.99  
+ 2     24199       Calvin Klein Sportswear Men's 3/4 Coat With Stand Up Collar    228.00  
+ 3     24098       Calvin Klein Men's Traditional Style Coat                      199.00  
+                                                                                          
+
+Source: [E3].                                                                                                           
+
+Unverified hypotheses — these explanations have not been established by the cited observations.                         
+
+ • Seasonality could contribute; compare the same periods across multiple years before drawing a conclusion.            
+   Observations to investigate: [E2]                                                                                    
+
+Proposed actions — owners and targets are proposals, not forecasts or proven outcomes.                                  
+
+ • 01 Jan 2026 to 31 Mar 2026 (UTC) — Operations and Analytics (proposed owner): Investigate demand using promotion,    
+   availability and calendar records; compare the selected measure before choosing an intervention. Baseline: revenue = 
+   8,985.54 [E1]. Set a target after the investigation or test design.                                                  
+
+Transaction data shows patterns; it does not establish causes or guarantee outcomes.                                    
+
+Cancelled and returned orders/items are excluded.                                                                       
+
+Use /details for calculation rules and query diagnostics.                                                               

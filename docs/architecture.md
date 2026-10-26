@@ -1,8 +1,32 @@
 # Production high-level design
 
-**Design proposal, not deployed infrastructure.** The [implemented prototype](technical-design.md#implemented-prototype) is a local CLI with SQLite, Gemini Developer API and BigQuery. The [coverage map](requirements.md) distinguishes working features from design-only requirements.
+**Design proposal, not deployed infrastructure.** The [implemented prototype](technical_reasoning.md#implemented-prototype) is a local CLI with SQLite, Gemini Developer API and BigQuery. The [coverage map](technical_reasoning.md#assignment-coverage) distinguishes working features from design-only requirements.
 
-The confirmed workload is roughly 100 managers × 10 questions/day, 100 saved reports/day, a few concurrent users and an existing dataset growing by about 1M rows/day. Targets are 10–30 seconds for simple answers and 1–2 minutes for reports. The configurable $1 question cap covers variable model/query work, not fixed infrastructure. Analysis is on demand; transaction ingestion, scheduled analysis and historical brand-revocation workflows are out of scope. [Client decisions](../mds/q&a.md)
+The confirmed workload is roughly 100 managers × 10 questions/day, 100 saved reports/day, a few concurrent users and an existing dataset growing by about 1M rows/day. Targets are 10–30 seconds for simple answers and 1–2 minutes for reports. The configurable $1 question cap covers variable model/query work, not fixed infrastructure. Analysis is on demand; transaction ingestion, scheduled analysis and historical brand-revocation workflows are out of scope. [Client decisions](architecture.md#confirmed-scope-and-client-decisions)
+
+Read by topic: [scope](#confirmed-scope-and-client-decisions) · [components](#components-and-trust-boundaries) · [request flow](#request-flow) · [Golden Knowledge](#golden-knowledge-publication-and-retrieval) · [persona and learning](#learning-and-persona-changes) · [deletion](#reports-and-deletion) · [resilience](#resilience-budgets-and-asynchronous-jobs).
+
+## Confirmed scope and client decisions
+
+Source: [client Q&A and explicitly unresolved questions](task/q&a.md).
+
+The assignment asks for a production HLD, detailed technical reasoning, and a runnable CLI prototype using the four TheLook tables (`orders`, `order_items`, `products`, `users`). The four mandatory implemented requirements are safety/privacy, destructive-operation confirmation, resilience and observability. All eight requirements are mapped in the [technical reasoning](technical_reasoning.md#assignment-coverage). Golden retrieval, learning and persona administration are production design requirements.
+
+| Topic | Confirmed decision or explicitly identified assumption |
+|---|---|
+| Credentials | Developers and reviewers supply their own GCP project, Gemini key and application credentials. No personal credentials are shipped. |
+| Access | Managers are brand-scoped; CEO analytics can span brands. Customer spend and churn use only authorized-brand history. Demo mappings may be local. |
+| Privacy | Never send names, emails, addresses, postal codes or exact coordinates to the model or output. Internal customer IDs/pseudonyms are permitted; state appears only in aggregates. The five-customer cohort threshold is our proposed safeguard, not a client-specified number. |
+| Metrics | Document defaults and allow supported explicit overrides. Revenue excludes Cancelled/Returned orders/items; inactivity defaults to 90 days. UTC calendar quarters are accepted; clarify material missing periods/years. |
+| Reports | Save only on explicit request. Libraries are private to creators, including from the CEO. Exact preview and explicit confirmation precede permanent hard deletion. “Client X” may mean an entity such as a brand/category; literal matching is our chosen default. |
+| Knowledge | No supplied bucket or analyst examples. Define the Trio format and illustrative seeds; working retrieval is optional for the prototype. Human editor/reviewer approval applies to Golden examples. |
+| Persona | Nondevelopers change tone without redeployment. Automated quality gate before publication; no manual approval requirement. |
+| Retention | Chats: 90 days. Saved reports: until hard deletion, no recovery window. Audit: one year. Diagnostic retention and physical backup erasure are design choices needing operational agreement. |
+| Workload | Approximately 100 managers, 1,000 questions and 100 reports daily, a few concurrent users, 1M new source rows/day. Simple answers target 10–30 seconds, reports 1–2 minutes. Configurable USD 1/question ceiling; no required region. |
+| Exclusions | On-demand analysis of existing data only; no transaction-ingestion project or scheduled analysis. Historical brand-access revocation is outside assignment scope. |
+| Demo priorities | Separate bestseller rankings by revenue and customers, verification of a claimed churn spike, and a Q1 report with Q2 actions. “Why” answers distinguish measured associations from hypotheses; transaction data alone does not establish causes. |
+
+The client did not supply the referenced FAQ, fixed company metric definitions or production editor identities. The assignment estimates 6–12 hours of work; that is an expectation, not a claim about actual effort. These summaries preserve confirmed scope without treating unanswered proposals as requirements.
 
 ## Components and trust boundaries
 
@@ -25,7 +49,7 @@ flowchart TB
   api -->|"Trusted context + contract"| gateway
   gateway -->|"Scoped query API"| bq
   api -->|"SQL/TLS: state + outbox"| db
-  api -->|"HTTPS: plan / embeddings"| model
+  api -->|"HTTPS: plan / write / review / embeddings"| model
   api -->|"Approved source upload"| bucket
   api -->|"Dispatch committed outbox"| queue
   scheduler -->|"Authenticated maintenance"| api
@@ -41,11 +65,11 @@ flowchart TB
 ```
 <!-- diagram:architecture:end -->
 
-All boxes in this diagram are proposed production containers or external services. API-internal planning, rendering and publication handlers are components of the same Cloud Run application, not separate agent services. One Cloud SQL instance hosts operational tables and the Golden index. Arrows show calls/data exchange, not permission inheritance. [Editable sources and export commands](diagrams/README.md)
+All boxes in this diagram are proposed production containers or external services. API-internal planning, rendering and publication handlers are components of the same Cloud Run application, not separate agent services. One Cloud SQL instance hosts operational tables and the Golden index. Arrows show calls/data exchange, not permission inheritance. [Editable sources and export commands](architecture.md#diagram-maintenance)
 
 | Container | Responsibility and identity |
 |---|---|
-| Cloud Run API, FastAPI + ADK | Validate organization OIDC; resolve owner/brand entitlements; typed planning, rendering, report library, publication/persona endpoints and outbox dispatcher. No raw-table access or query-account impersonation. |
+| Cloud Run API, FastAPI + ADK | Validate organization OIDC; screen input locally for PII; resolve owner/brand entitlements; typed planning, rendering, report library, publication/persona endpoints and outbox dispatcher. No raw-table access or query-account impersonation. |
 | Cloud Run query gateway | Independently validate signed caller/user context, resolve approved entitlement mapping, compile authorized queries and enforce budget/byte/result limits. Only this identity can impersonate approved query accounts. |
 | Gemini / embedding endpoints | Vertex AI managed APIs over HTTPS using workload identity. Evaluate regional model availability and quality before promotion; pin the evaluated model/version in each request. |
 | Cloud SQL PostgreSQL | Separate schemas for reports/chats/confirmations/preferences/personas; jobs/outbox; approved Golden metadata, full text and pgvector. SQL/TLS, bounded connection pools and separate API/worker permissions. |
@@ -75,6 +99,18 @@ sequenceDiagram
   A->>A: Validate complete plan, permissions and budget
   alt Clarification / refusal / help / library
     A-->>U: Specific response or actual owner-scoped result
+  else Follow-up over prior authorized results
+    A->>A: Apply bounded selection or recover recorded calculation
+    alt Short answer / method explanation
+      A->>M: Question + verified references + executed operations
+      M-->>A: Conversational wording with reference tokens
+      A->>A: Validate references and substitute verified values
+      A->>M: Review resolved prose against evidence
+      M-->>A: Support / relevance / safety decision
+      A-->>U: Accepted prose or explicit failure with data available
+    else Requested table / larger result
+      A-->>U: Selected evidence table
+    end
   else Authorized analytical contract
     loop Each preflighted request
       A->>G: Contract + signed trusted user context
@@ -92,22 +128,25 @@ sequenceDiagram
     end
     opt All required queries succeeded
       A->>A: Compute facts and completeness
+      opt Final transformation requested in the same turn
+        A->>A: Apply validated post-query view to the base population
+      end
       opt Actions or interpretation requested
         A->>M: Verified metrics, no execution tools
         M-->>A: Structured narrative / optional commentary
         A->>A: Validate, bounded repair or omit/fallback
       end
-      A-->>U: Findings + definitions + evidence, draft not saved
+      A-->>U: Findings + definitions, source details on request, draft not saved
     end
   end
 ```
 <!-- diagram:request-flow:end -->
 
-The sequence expands only an authorized analytical route. Clarification, refusal, help and owner-scoped library operations return before analytics; confirmation is a separate application endpoint. One plan may require several queries, all preflighted before execution. Simple facts are rendered without a second model call. Requested actions use optional tool-free narration; a failed narrative gate allows one repair, then a clearly labelled evidence-only fallback. Optional interpretation has its own reviewed prose boundary. Neither a valid schema nor successful quality checks prove arbitrary semantic correctness.
+The sequence expands only an authorized analytical route. Clarification, refusal, help and owner-scoped library operations return before analytics; confirmation is a separate application endpoint. One plan may require several queries, all preflighted before execution. Fresh factual tables are rendered without a second model call. Follow-ups over prior authorized evidence can reuse that data without querying BigQuery; short replies and method explanations use a tool-free writer, reference checks and a separate semantic review. Failed writing returns the verified table or an explicit explanation failure. Requested actions use optional tool-free narration; a failed narrative gate allows one repair, then a clearly labelled evidence-only fallback. Optional interpretation uses the same reviewed prose boundary. User-facing answers omit technical evidence IDs by default; source and query diagnostics remain available on request. Neither a valid schema nor successful quality checks prove arbitrary semantic correctness.
 
 The gateway maps the verified subject to an execution account for an approved brand entitlement set. Each account has job-creation permission and access only to **authorized, PII-free views** for that set; the data-owner account owns underlying tables and view definitions. The CEO maps to an all-brand safe view account. The general API/worker identities cannot select an execution account or access source tables directly. The gateway validates the propagated user context instead of trusting model arguments or a caller-supplied brand list. Provision mappings with cross-brand denial tests.
 
-Brand scope applies before item aggregation and customer-history calculations. The SQL compiler is the first boundary; restricted database views independently contain a missing application filter. The local public-data prototype has only the application boundary and trusted local ADC, not these deployed IAM guarantees. Models, retrieved methods, prior messages and catalog strings remain untrusted. [ADK identity guidance](https://adk.dev/safety/)
+Brand scope applies before item aggregation and customer-history calculations. The SQL compiler is the first boundary; restricted database views independently contain a missing application filter. The local public-data prototype has only the application boundary and trusted local ADC, not these deployed IAM guarantees. Models, retrieved methods, prior messages and catalog strings remain untrusted. The prototype uses lightweight English contact-pattern checks with explicit gaps for arbitrary names and addresses; no local entity model is required. Production free-text privacy needs separate evaluation before making broader guarantees. Source-column minimization remains mandatory. [ADK identity guidance](https://adk.dev/safety/)
 
 ## Golden Knowledge: publication and retrieval
 
@@ -171,7 +210,7 @@ Chats expire after 90 days, saved reports persist until explicit hard deletion, 
 
 ## Resilience, budgets and asynchronous jobs
 
-One request/job owns model attempts, query attempts, bytes, cost and deadline. A worker retry inherits that accounting rather than a fresh $1 allowance. Preflight capabilities/auth/query count; allow one bounded plan repair, never broaden permissions. Empty data is a valid result; no diagnostic query silently changes the requested scope. Provider failures have one bounded retry before partial output, then a specific availability error. Production circuit breakers reduce repeated outage calls; deterministic library controls remain available.
+One request/job owns model attempts, query attempts, bytes, cost and deadline. A worker retry inherits that accounting rather than a fresh $1 allowance. Preflight capabilities/auth/query count; allow one bounded plan repair and one syntax-only dry-run reserialization, never broaden permissions or change metrics. Empty data is a valid result; no diagnostic query silently changes the requested scope. Provider failures have one bounded retry before partial output, then a specific availability error. Production circuit breakers reduce repeated outage calls; deterministic library controls remain available.
 
 Stable BigQuery job IDs support recovery after uncertain submission. Dry run and `maximum_bytes_billed` constrain work; cancellation is best effort. A small LIMIT does not itself bound scanned bytes. Production response deadlines match the client targets; no latency guarantee is inferred from the sample runs.
 
@@ -185,4 +224,30 @@ Track task success and intent satisfaction separately: latency, schema repairs, 
 
 Separate three data classes: mutation audit (owner/action/count/time, no report bodies), restricted diagnostics (versions, job/query IDs, minimized typed plans and sanitized validation reasons), and owner-scoped analytical answers. Typed plans include date/brand/product/customer filters; diagnostics are not content-free. Never log raw contact data, raw prompts, provider exception bodies or hidden reasoning. Prototype events are local files with private permissions and no managed expiry; production proposes seven-day debug retention, separate from the client's one-year mutation audit policy. Restrict access and filter payloads before export.
 
-Trace IDs connect planner, gateway, model, evidence and response. Production debugging can show a redacted structured correspondence view; prototype diagnostics and stored answers do not provide a full raw-conversation replay. Validate intent, numerical meaning, authorization, mutation state and UX separately. Representative executive tasks should measure completion, time, errors, understanding of scope/confirmation and perceived usefulness. See [current evidence and reproducible commands](evaluation.md); small successful samples are not production reliability estimates.
+Trace IDs connect planner, gateway, model, evidence and response. Production debugging can show a redacted structured correspondence view; prototype diagnostics and stored answers do not provide a full raw-conversation replay. Validate intent, numerical meaning, authorization, mutation state and UX separately. Representative executive tasks should measure completion, time, errors, understanding of scope/confirmation and perceived usefulness. See [current evidence and reproducible commands](technical_reasoning.md#evaluation-and-limitations); small successful samples are not production reliability estimates.
+
+
+## Diagram maintenance
+
+Four diagrams accompany the submission:
+
+| Diagram | Scope | Preview |
+|---|---|---|
+| Architecture | Proposed production deployment and service dependencies | [SVG](diagrams/architecture.svg) |
+| Prototype | Implemented local CLI, typed planning and direct execution | [SVG](diagrams/prototype.svg) |
+| Request flow | Proposed production request, validation and report draft | [SVG](diagrams/request-flow.svg) |
+| Deletion | Confirmation lifecycle; invalid attempts leave pending state intact | [SVG](diagrams/deletion.svg) |
+
+`architecture.json` is the canonical graph for production architecture. It generates `architecture.mmd` and the editable native [draw.io file](diagrams/architecture.drawio). Edit labels, edges and draw.io coordinates in that JSON; manual changes to the generated draw.io file are overwritten on regeneration. The other three `.mmd` files are canonical sources. Generated Mermaid blocks are embedded in the HLD and technical design; SVGs are portable previews.
+
+From the repository root:
+
+```sh
+uv run python scripts/diagrams.py
+uv run python scripts/diagrams.py --check
+uv run python scripts/diagrams.py --render
+```
+
+Rendering requires Node/npm and uses pinned Mermaid CLI 12.0.0. Puppeteer needs its matching browser installed; alternatively set `PUPPETEER_EXECUTABLE_PATH` to an installed Chrome executable. The command may download the CLI/browser dependencies. See [Mermaid CLI](https://github.com/mermaid-js/mermaid-cli).
+
+`--check` verifies generated sources, draw.io and Markdown synchronization; it does not compare SVG pixels. After source changes, regenerate SVGs and visually review all affected diagrams. GitHub's Mermaid renderer may differ from the pinned local renderer. Colors distinguish external actors/services, application services, data stores and operational services; labels and arrows convey the actual responsibilities. The architecture diagram is a deployment overview, not a claim that the prototype deploys those services.

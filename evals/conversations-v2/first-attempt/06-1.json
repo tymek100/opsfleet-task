@@ -1,0 +1,158 @@
+{
+  "id": "06-1",
+  "case": 6,
+  "turn": 0,
+  "question": "Across all brands, show the top four brands by revenue in Q3 2025.",
+  "user": "ceo",
+  "answer": {
+    "view": null,
+    "text": "Verified findings\n\n**all brands** \u00b7 01 Jul 2025 to 30 Sep 2025 (UTC)\n\n### Top 4 brands by revenue\n\n| Rank | Brand | Revenue |\n| --- | --- | --- |\n| 1 | Calvin Klein | 9,023.34 |\n| 2 | 7 For All Mankind | 8,036.54 |\n| 3 | Carhartt | 7,746.43 |\n| 4 | Tommy Hilfiger | 7,670.04 |\n\nSource: [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "brand",
+          "start": "2025-07-01",
+          "end": "2025-10-01",
+          "rank_by": "revenue",
+          "limit": 4,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "all brands",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "brand": "Calvin Klein",
+            "revenue": 9023.34,
+            "units": 144,
+            "customers": 144,
+            "orders": 144,
+            "latest_purchase": "2025-09-30 02:45:44+00"
+          },
+          {
+            "brand": "7 For All Mankind",
+            "revenue": 8036.54,
+            "units": 47,
+            "customers": 47,
+            "orders": 47,
+            "latest_purchase": "2025-09-29 12:55:30+00"
+          },
+          {
+            "brand": "Carhartt",
+            "revenue": 7746.43,
+            "units": 109,
+            "customers": 109,
+            "orders": 109,
+            "latest_purchase": "2025-09-30 06:46:41+00"
+          },
+          {
+            "brand": "Tommy Hilfiger",
+            "revenue": 7670.04,
+            "units": 81,
+            "customers": 81,
+            "orders": 81,
+            "latest_purchase": "2025-09-30 20:07:40+00"
+          }
+        ],
+        "job_id": "recorded",
+        "sql_hash": "eee98fb12a73ac83",
+        "bytes_processed": 12949803,
+        "queried_at": "2026-10-26T08:32:11.518529+00:00",
+        "source_latest_at": "2025-09-30 20:07:40+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded",
+    "estimated_cost_usd": 0.140634,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "brand",
+          "metric": "revenue",
+          "minimum_rows": 4
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "ce0288248be636a3",
+      "prompt": "84c1a889a7b3d98e",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "plan": {
+    "route": "analysis",
+    "operations": [],
+    "help_topic": null,
+    "intent": {
+      "period": {
+        "start": "2025-07-01",
+        "end": "2025-10-01"
+      },
+      "comparison": null,
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "brand",
+          "metric": "revenue",
+          "minimum_rows": 4
+        }
+      ],
+      "comparison_requirements": [],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "view": null,
+    "clarification_question": "",
+    "reason": "none",
+    "issue": null,
+    "missing_information": [],
+    "report_id": "",
+    "title": "",
+    "match": "",
+    "conversation_only": false
+  },
+  "before": {
+    "reports": [],
+    "pending": 0
+  },
+  "after": {
+    "reports": [],
+    "pending": 0
+  },
+  "passed": true,
+  "seconds": 8.586
+}

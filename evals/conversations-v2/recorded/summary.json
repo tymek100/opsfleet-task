@@ -1,0 +1,212 @@
+[
+  {
+    "id": "01-1",
+    "question": "Which were our six best-selling products by units sold in Q4 2025?",
+    "user": "alice",
+    "passed": true,
+    "seconds": 11.226
+  },
+  {
+    "id": "01-2",
+    "question": "Leave out the first two products from that ranking and show the remaining products with their units sold.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 68.186
+  },
+  {
+    "id": "02-1",
+    "question": "Rank our top eight customers by number of distinct orders in 2025, using their customer IDs.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 19.194
+  },
+  {
+    "id": "02-2",
+    "question": "How many of those eight customers placed at least two orders? Give the count only.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 10.838
+  },
+  {
+    "id": "03-1",
+    "question": "Show our revenue for each month in the first half of 2025.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 18.445
+  },
+  {
+    "id": "03-2",
+    "question": "Keep only the months where revenue was below 2500, with the revenue alongside each month.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 9.683
+  },
+  {
+    "id": "04-1",
+    "question": "Show our six highest-revenue product categories in 2025.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 10.822
+  },
+  {
+    "id": "04-2",
+    "question": "For these categories, add revenue per order and sort the displayed categories by that value, highest first.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 9.88
+  },
+  {
+    "id": "05-1",
+    "question": "Which five states had the most distinct customers for our brand in 2025?",
+    "user": "alice",
+    "passed": true,
+    "seconds": 9.866
+  },
+  {
+    "id": "05-2",
+    "question": "Add revenue for each of those states, keeping the same states and order.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 22.024
+  },
+  {
+    "id": "06-1",
+    "question": "Across all brands, show the top four brands by revenue in Q3 2025.",
+    "user": "ceo",
+    "passed": true,
+    "seconds": 8.586
+  },
+  {
+    "id": "06-2",
+    "question": "Display just those brand names and revenues, ordered alphabetically by brand name.",
+    "user": "ceo",
+    "passed": true,
+    "seconds": 14.333
+  },
+  {
+    "id": "07-1",
+    "question": "Compare our total revenue in Q4 2025 against Q3 2025, including the absolute and percentage change.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 13.709
+  },
+  {
+    "id": "07-2",
+    "question": "Reverse the comparison: evaluate Q3 against Q4 as the baseline, with the absolute and percentage change.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 13.124
+  },
+  {
+    "id": "08-1",
+    "question": "Show our top five products by revenue in Q1 2025 using only completed orders and completed items.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 17.684
+  },
+  {
+    "id": "08-2",
+    "question": "Rerun that ranking for the same quarter with all qualifying statuses, still excluding cancelled and returned orders and items.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 11.466
+  },
+  {
+    "id": "09-1",
+    "question": "Show revenue for product IDs 8252 and 23740 in Q2 2025.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 16.27
+  },
+  {
+    "id": "09-2",
+    "question": "Use the same product IDs for Q4 2025 instead.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 12.281
+  },
+  {
+    "id": "10-1",
+    "question": "Compare customer inactivity on January 1 and April 1, 2025, using a 90-day inactivity threshold.",
+    "user": "bob",
+    "passed": true,
+    "seconds": 14.223
+  },
+  {
+    "id": "10-2",
+    "question": "Keep both snapshot dates but use 60 days of inactivity instead.",
+    "user": "bob",
+    "passed": true,
+    "seconds": 10.778
+  },
+  {
+    "id": "11-1",
+    "question": "Show our top three products by revenue in January 1900.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 10.666
+  },
+  {
+    "id": "11-2",
+    "question": "How many products were returned in that result?",
+    "user": "alice",
+    "passed": true,
+    "seconds": 12.843
+  },
+  {
+    "id": "12-1",
+    "question": "Draft a Q4 2025 sales report with total revenue, monthly revenue, top three products and proposed actions for Q1 2026. Do not save it.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 33.683
+  },
+  {
+    "id": "12-2",
+    "question": "Save that draft as \"Winter review v2\".",
+    "user": "alice",
+    "passed": true,
+    "seconds": 12.384
+  },
+  {
+    "id": "13-1",
+    "question": "Prepare a deletion preview for my saved report titled \"Winter review v2\".",
+    "user": "alice",
+    "passed": true,
+    "seconds": 12.342
+  },
+  {
+    "id": "13-2",
+    "question": "Cancel that deletion and then list my saved reports.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 8.329
+  },
+  {
+    "id": "14-1",
+    "question": "Show Levi's total revenue for Q2 2025.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 5.548
+  },
+  {
+    "id": "14-2",
+    "question": "Then show Calvin Klein total revenue for that same quarter instead.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 21.876
+  },
+  {
+    "id": "15-1",
+    "question": "Predict our revenue for Q1 2027.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 13.437
+  },
+  {
+    "id": "15-2",
+    "question": "Use actual revenue for Q1 2025 instead.",
+    "user": "alice",
+    "passed": true,
+    "seconds": 34.339
+  }
+]

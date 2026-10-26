@@ -1,0 +1,18 @@
+{
+  "passed": 29,
+  "total": 30,
+  "source": "ce0288248be636a3",
+  "model": "gemini-3.8-flash",
+  "thinking_level": "medium",
+  "seconds": 480.389,
+  "median_seconds": 12.363,
+  "query_executions": 22,
+  "provider_retries": 1,
+  "quality_fallbacks": 0,
+  "tokens": {
+    "input_tokens": 95204,
+    "output_tokens": 7643,
+    "thinking_tokens": 32209
+  },
+  "acceptance_note": "Use acceptance.json for reviewed outcomes. The initial runner eagerly evaluated unrelated selectors and reported spurious key errors; check.py corrects that evaluator bug without changing any captured provider response."
+}

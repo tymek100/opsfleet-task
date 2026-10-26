@@ -1,0 +1,24 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                 
+
+                                                                                
+                                   Distinct                          Revenue    
+ Product                Revenue    customers                         per order  
+ ID         Product     [E1]       [E2]        Rank [E1]  Rank [E2]  [E1]       
+ ────────────────────────────────────────────────────────────────────────────── 
+ 8252       Calvin      299.98     2           1          3          149.99     
+            Klein                                                               
+            Women's                                                             
+            Toggle                                                              
+            Front Down                                                          
+                                                                                
+
+Based on the previously shown results.                                          
+
+Sources: [E1] (revenue ranking); [E2] (distinct customers ranking).             
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

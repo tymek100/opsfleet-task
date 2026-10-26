@@ -1,0 +1,35 @@
+
+Verified findings
+
+Calvin Klein · 01 Apr 2025 to 30 Jun 2025 (UTC)                                 
+
+Top 8 customers by total spend                                                  
+
+                                                                       
+ Rank  Customer ID  Total spend  Orders  Units sold  Revenue per order 
+ ───────────────────────────────────────────────────────────────────── 
+ 1     71257        199.99       1       1           199.99            
+ 2     95003        199.00       1       1           199.00            
+ 3     3691         189.99       1       1           189.99            
+ 4     49592        178.00       1       1           178.00            
+ 5     12168        158.00       1       1           158.00            
+ 6     77892        149.99       1       1           149.99            
+ 7     96467        149.99       1       1           149.99            
+ 8     32445        149.96       1       2           149.96            
+                                                                       
+
+Highest spending shown: 199.99.                                                 
+
+Each customer in this ranking placed one qualifying order.                      
+
+Source: [E1].                                                                   
+
+Overall performance                                                             
+
+ • revenue = 7,398.60 [E2]                                                      
+ • distinct orders = 124 [E2]                                                   
+ • distinct customers = 124 [E2]                                                
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

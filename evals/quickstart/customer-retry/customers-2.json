@@ -1,0 +1,7 @@
+{
+  "id": "customers-2",
+  "question": "Add their order counts and average order value.",
+  "passed": false,
+  "error": "Gemini timed out (504). No complete model response was received. Please try again later. Trace: 7cb952ad96ad4c7db5481e4c9c3c2d3a",
+  "seconds": 88.674
+}

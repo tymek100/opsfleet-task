@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "product_ids": [
+    23740,
+    8252
+  ],
+  "expected": {},
+  "actual": {},
+  "bytes_processed": 0,
+  "method": "Independent EXISTS-based raw-table SQL; no production compiler"
+}

@@ -5,9 +5,9 @@ description: Build or run focused correctness, privacy, authorization, deletion,
 
 # Evaluate observable agent behavior
 
-Read the requirements relevant to the change in [client Q&A](../../../mds/q&a.md). Consult the evaluation cases in [the research plan](../../../mds/1-percent.md) when preparing broader submission checks. Inspect implemented interfaces first; do not describe planned controls as tested controls.
+Read the requirements relevant to the change in [client Q&A](../../../docs/architecture.md#confirmed-scope-and-client-decisions). Consult the evaluation cases in [the research plan](../../../docs/technical_reasoning.md#model-planning-workflow) when preparing broader submission checks. Inspect implemented interfaces first; do not describe planned controls as tested controls.
 
-Use [the testing strategy](../../../mds/testing_strategy.md) for fixture design, test layers, property/stateful cases, and release gates. The adjacent [Python testing skill](../python-testing-patterns/SKILL.md) supplies pytest mechanics when needed; it does not replace domain-specific assertions. Offline tests must be isolated from real credentials and providers. Distinguish schema-valid output, correct calculations, and a useful business answer as separate properties.
+Use [the testing strategy](../../../docs/technical_reasoning.md#evaluation-and-limitations) for fixture design, test layers, property/stateful cases, and release gates. The adjacent [Python testing skill](../python-testing-patterns/SKILL.md) supplies pytest mechanics when needed; it does not replace domain-specific assertions. Offline tests must be isolated from real credentials and providers. Distinguish schema-valid output, correct calculations, and a useful business answer as separate properties.
 
 ## Choose the right oracle
 

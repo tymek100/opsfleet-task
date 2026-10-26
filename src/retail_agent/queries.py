@@ -1,11 +1,12 @@
 """Compile a bounded analytical language; never execute model-supplied SQL."""
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 
 import sqlglot
 from sqlglot import exp
+from sqlglot.errors import SqlglotError
 
 from retail_agent.models import AccessDeniedError, Analysis, AppError, Dimension, Identity
 
@@ -169,3 +170,28 @@ def compile_query(request: Analysis, identity: Identity) -> CompiledQuery:
     if len(statements) != 1 or not isinstance(statements[0], exp.Select):
         raise AppError("Internal query compilation failed.")
     return CompiledQuery(sql, params, definition, columns)
+
+
+def repair_sql_syntax(query: CompiledQuery) -> CompiledQuery:
+    """Re-emit the same parsed SELECT in BigQuery dialect with quoted identifiers.
+
+    Only serialization changes: no model, optimization, new expressions or parameters.
+    This can recover dialect/quoting failures, not missing columns or schema drift.
+    """
+    try:
+        statements = sqlglot.parse(query.sql, read="bigquery")
+        if len(statements) != 1 or not isinstance(statements[0], exp.Select):
+            raise ValueError("Not a single SELECT")
+        tree = statements[0]
+        sql = tree.sql(dialect="bigquery", identify=True)
+        roundtrip = sqlglot.parse_one(sql, read="bigquery")
+        if roundtrip.sql(dialect="bigquery", identify=True) != sql:
+            raise ValueError("Unstable serialization")
+        if sql == query.sql:
+            raise ValueError("No safe serialization change available")
+        return replace(query, sql=sql)
+    except (SqlglotError, ValueError):
+        raise AppError(
+            "SQL syntax could not be corrected without changing the analysis. No query was run.",
+            code="sql_repair_unavailable",
+        ) from None

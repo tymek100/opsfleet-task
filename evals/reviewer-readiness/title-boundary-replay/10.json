@@ -1,0 +1,24 @@
+{
+  "case": 10,
+  "seed": "Previously captured live report from reviewer-readiness-final case 4; no new analytical query",
+  "answer": {
+    "text": "Pending deletion cancelled for this conversation. No reports were deleted.\n\n2238ed6efec3 | Autumn review",
+    "evidence": [],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.133206,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "820eee05141f14fc",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "reports": [
+    "Autumn review"
+  ],
+  "pending": 0
+}

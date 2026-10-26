@@ -1,0 +1,20 @@
+
+Verified findings
+
+Revenue fell 0.42%.                                                             
+
+Calvin Klein · Evaluated: Q4 2025 · Baseline: Q3 2025 · UTC                     
+
+                                                                 
+ Metric   Baseline: Q3 2025  Evaluated: Q4 2025  Change          
+ ─────────────────────────────────────────────────────────────── 
+ Revenue  9,023.34           8,985.54            -37.80 (-0.42%) 
+                                                                 
+
+Q4 2025 had 92 days versus 92 in Q3 2025.                                       
+
+Sources: [E2], [E1].                                                            
+
+Cancelled and returned orders/items are excluded.                               
+
+Use /details for calculation rules and query diagnostics.                       

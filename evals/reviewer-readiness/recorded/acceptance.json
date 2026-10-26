@@ -1,0 +1,218 @@
+[
+  {
+    "check": "complete declared scenario set",
+    "pass": true
+  },
+  {
+    "check": "1: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "1: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "1: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "2: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "2: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "2: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "3: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "3: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "3: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "4: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "4: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "4: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "5: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "5: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "5: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "6: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "6: validated analytical evidence",
+    "pass": true
+  },
+  {
+    "check": "6: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "8: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "8: no implicit save/preview",
+    "pass": true
+  },
+  {
+    "check": "9: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "10: expected outcome",
+    "pass": true
+  },
+  {
+    "check": "1: exact date boundaries",
+    "pass": true
+  },
+  {
+    "check": "2: exact date boundaries",
+    "pass": true
+  },
+  {
+    "check": "3: exact date boundaries",
+    "pass": true
+  },
+  {
+    "check": "4: exact date boundaries",
+    "pass": true
+  },
+  {
+    "check": "6: exact date boundaries",
+    "pass": true
+  },
+  {
+    "check": "separate seven-product rankings",
+    "pass": true
+  },
+  {
+    "check": "follow-up has only total and monthly output",
+    "pass": true
+  },
+  {
+    "check": "all three follow-up months",
+    "pass": true
+  },
+  {
+    "check": "inactivity definition and snapshots",
+    "pass": true
+  },
+  {
+    "check": "report requested sections",
+    "pass": true
+  },
+  {
+    "check": "three report products",
+    "pass": true
+  },
+  {
+    "check": "action period and caveats",
+    "pass": true
+  },
+  {
+    "check": "explicit reverse-time baseline",
+    "pass": true
+  },
+  {
+    "check": "comparison arithmetic",
+    "pass": true
+  },
+  {
+    "check": "comparison roles visible",
+    "pass": true
+  },
+  {
+    "check": "empty raw aggregate",
+    "pass": true
+  },
+  {
+    "check": "access denial has no evidence",
+    "pass": true
+  },
+  {
+    "check": "save and preview are real state changes",
+    "pass": true
+  },
+  {
+    "check": "cancel preserves saved report",
+    "pass": true
+  },
+  {
+    "check": "independent oracle covers all eleven evidence sets",
+    "pass": true
+  },
+  {
+    "check": "SQL 1/E1",
+    "pass": true
+  },
+  {
+    "check": "SQL 1/E2",
+    "pass": true
+  },
+  {
+    "check": "SQL 2/E1",
+    "pass": true
+  },
+  {
+    "check": "SQL 2/E2",
+    "pass": true
+  },
+  {
+    "check": "SQL 3/E1",
+    "pass": true
+  },
+  {
+    "check": "SQL 4/E1",
+    "pass": true
+  },
+  {
+    "check": "SQL 4/E2",
+    "pass": true
+  },
+  {
+    "check": "SQL 4/E3",
+    "pass": true
+  },
+  {
+    "check": "SQL 5/E1",
+    "pass": true
+  },
+  {
+    "check": "SQL 5/E2",
+    "pass": true
+  },
+  {
+    "check": "SQL 6/E1",
+    "pass": true
+  }
+]

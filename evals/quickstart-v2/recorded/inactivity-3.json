@@ -1,0 +1,24 @@
+{
+  "id": "inactivity-3",
+  "question": "Explain what this inactivity percentage means and which customers are included.",
+  "answer": {
+    "view": null,
+    "text": "This inactivity percentage measures customers whose last purchase fell before the inactivity cutoff out of eligible customers whose first purchase predated that same cutoff. For Calvin Klein on 2025\\-10\\-01, 1,264 inactive customers divided by 1,264 eligible customers gave an inactivity share of 100\\.0000%. On 2026\\-01\\-01, 1,398 inactive customers divided by 1,399 eligible customers produced an inactivity share of 99\\.9285%, shifting by \\-0\\.0715 percentage points.",
+    "evidence": [],
+    "trace_id": "<redacted>",
+    "estimated_cost_usd": 0.38586,
+    "quality_status": "not_applicable",
+    "intent": null,
+    "versions": {
+      "source": "41aa58882c64ddcb",
+      "prompt": "471702de4a5ce515",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "passed": true,
+  "seconds": 35.428,
+  "queries": 0
+}

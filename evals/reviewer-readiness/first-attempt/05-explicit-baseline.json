@@ -1,0 +1,134 @@
+{
+  "id": 5,
+  "name": "explicit-baseline",
+  "user": "bob",
+  "session": "comparison",
+  "prompt": "Evaluate Q4 2024 revenue against Q2 2025 as the baseline. Show the absolute difference and percentage change, even though the baseline is later.",
+  "reports_before": [],
+  "pending_before": 0,
+  "answer": {
+    "text": "Verified findings\n\nRevenue fell 19.50%.\n\n**Levi's** \u00b7 Q2 2025 versus Q4 2024 \u00b7 UTC\n\n| Metric | Q2 2025 | Q4 2024 | Change |\n| --- | --- | --- | --- |\n| Revenue | 3,241.78 | 2,609.65 | -632.13 (-19.50%) |\n\nQ4 2024 had 92 days versus 91 in Q2 2025.\n\nSources: [E2], [E1].",
+    "evidence": [
+      {
+        "id": "E1",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2024-10-01",
+          "end": "2025-01-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 2609.65,
+            "units": 52,
+            "customers": 51,
+            "orders": 52,
+            "latest_purchase": "2024-12-31 12:43:37+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 13011292,
+        "queried_at": "2026-10-25T17:35:37.699646+00:00",
+        "source_latest_at": "2024-12-31 12:43:37+00",
+        "comparisons": []
+      },
+      {
+        "id": "E2",
+        "request": {
+          "kind": "sales",
+          "dimension": "total",
+          "start": "2025-04-01",
+          "end": "2025-07-01",
+          "rank_by": "revenue",
+          "limit": 1,
+          "brands": [],
+          "product_ids": [],
+          "customer_id": null,
+          "completed_only": false,
+          "inactivity_days": 90
+        },
+        "scope": "Levi's",
+        "definitions": "v1: revenue=sum(item sale_price); units=item rows; customers=distinct user_id; orders=distinct order_id. Both order and item status exclude Cancelled/Returned. Dates use order_items.created_at, UTC [start,end). Current status, not historical snapshots.",
+        "rows": [
+          {
+            "label": "all",
+            "revenue": 3241.78,
+            "units": 60,
+            "customers": 60,
+            "orders": 60,
+            "latest_purchase": "2025-06-29 04:39:21+00"
+          }
+        ],
+        "job_id": "redacted-job-id",
+        "sql_hash": "41fc780bab209d80",
+        "bytes_processed": 0,
+        "queried_at": "2026-10-25T17:35:39.065560+00:00",
+        "source_latest_at": "2025-06-29 04:39:21+00",
+        "comparisons": []
+      }
+    ],
+    "trace_id": "recorded-trace",
+    "estimated_cost_usd": 0.133913,
+    "quality_status": "validated",
+    "intent": {
+      "period": {
+        "start": "2024-10-01",
+        "end": "2025-01-01"
+      },
+      "comparison": {
+        "start": "2025-04-01",
+        "end": "2025-07-01"
+      },
+      "action_period": null,
+      "actions": false,
+      "report": false,
+      "kind": "sales",
+      "requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "comparison_requirements": [
+        {
+          "dimension": "total",
+          "metric": "revenue",
+          "minimum_rows": 1
+        }
+      ],
+      "customer_id": null,
+      "product_ids": [],
+      "comparison_metrics": [
+        "revenue_change",
+        "revenue_change_pct"
+      ],
+      "brands": [],
+      "completed_only": false,
+      "inactivity_days": 90,
+      "explanation_requested": false
+    },
+    "versions": {
+      "source": "2805b32271d3fa5f",
+      "prompt": "80990c71abd431cd",
+      "model": "gemini-3.8-flash",
+      "intent": "direct-plan-v4",
+      "compiler": "v1"
+    },
+    "warnings": []
+  },
+  "seconds": 10.29,
+  "reports_after": [],
+  "pending_after": 0
+}
