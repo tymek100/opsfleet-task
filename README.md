@@ -9,6 +9,8 @@ The submission consists of two documents:
 
 Start with the separate [Quick Start Guide](QUICK_START.md) for setup, configuration and runnable examples. Use your own Gemini and Google Cloud credentials. The production HLD is a proposal; the delivered prototype runs locally.
 
+**Golden Knowledge status: designed and seeded, not connected to the running agent.** The repository includes a Trio schema, three illustrative examples and a production indexing/retrieval design. Working retrieval is optional under the [client Q&A](docs/task/q&a.md#6-golden-knowledge-prototype-scope) and is not implemented in this prototype.
+
 Try the [quick-start conversations](QUICK_START.md#example-conversations) for rankings, customer value, monthly trends and an explicit report save.
 
 The model interprets questions and writes conversational replies; application code controls permissions, SQL, calculations and report mutations. Source details remain available through `/details`.

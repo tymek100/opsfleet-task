@@ -150,6 +150,8 @@ Brand scope applies before item aggregation and customer-history calculations. T
 
 ## Golden Knowledge: publication and retrieval
 
+**Current status: designed and seeded, not connected to the running agent.** The CLI does not load or retrieve these examples. The publication and retrieval workflow below describes the proposed production system; working retrieval is optional under the [client Q&A](task/q&a.md#6-golden-knowledge-prototype-scope).
+
 There is no client bucket. [Three illustrative trios](golden-trios.json) and their [schema](golden-trio.schema.json) show Question → SQL → Analyst Report methods; their synthetic numbers are not reusable facts or approved production entries.
 
 Publication uses the API, PostgreSQL and the indexing worker:
