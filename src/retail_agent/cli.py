@@ -151,7 +151,7 @@ async def conversation(analyst: Analyst) -> None:
         )
     while True:
         try:
-            prompt = console.input("\n[bold]You> [/bold]").strip()
+            prompt = console.input("\n\n[bold]You> [/bold]").strip()
         except (EOFError, KeyboardInterrupt):
             break
         if not prompt:

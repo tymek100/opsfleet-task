@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from retail_agent.knowledge import GoldenStore, content_hash
+from retail_agent.services.golden import GoldenStore, content_hash
 
 REPO = Path(__file__).resolve().parents[1]
 CORPUS = REPO / "knowledge/golden/bootstrap.json"

@@ -14,7 +14,7 @@ from typer.testing import CliRunner
 
 from retail_agent import cli
 from retail_agent.contracts import DEMO_USERS, Answer, TurnResult
-from retail_agent.reports import ReportStore
+from retail_agent.services.reports import ReportStore
 
 
 def turn(

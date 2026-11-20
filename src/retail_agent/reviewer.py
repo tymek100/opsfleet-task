@@ -15,10 +15,17 @@ from retail_agent.budget import Budget
 from retail_agent.config import Settings
 from retail_agent.contracts import REVIEW_CATEGORIES, Review, ReviewIssue
 from retail_agent.provider import AccountedModel, ProviderUnavailable
+from retail_agent.skills import SkillCatalog
 
 
 async def evaluate(
-    payload: dict, model: BaseLlm, budget: Budget, settings: Settings, emit
+    payload: dict,
+    model: BaseLlm,
+    budget: Budget,
+    settings: Settings,
+    emit,
+    *,
+    review_skill: dict | None = None,
 ) -> Review:
     content = json.dumps(payload, ensure_ascii=False, default=str)
     if len(content.encode()) > settings.max_review_bytes:
@@ -31,10 +38,18 @@ async def evaluate(
                 )
             ],
         )
+    guidance = review_skill if review_skill is not None else SkillCatalog().review_skill()
+    emit(
+        "skill_loaded",
+        role="reviewer",
+        **{key: guidance[key] for key in ("name", "version", "sha256")},
+    )
+    instruction = (Path(__file__).parent / "prompts/reviewer.md").read_text()
+    instruction += "\n\n" + guidance["instructions"]
     reviewer = LlmAgent(
         name="completion_reviewer",
         model=AccountedModel(model=model.model, delegate=model).bind(budget, emit, reviewer=True),
-        instruction=(Path(__file__).parent / "prompts/reviewer.md").read_text(),
+        instruction=instruction,
         tools=[],
         generate_content_config=types.GenerateContentConfig(
             temperature=0,

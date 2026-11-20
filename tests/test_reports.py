@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from retail_agent.reports import ReportError, ReportStore
+from retail_agent.services.reports import ReportError, ReportStore
 
 
 @pytest.fixture

@@ -2,6 +2,10 @@
 
 Date: 20 November 2026. These are development smoke trials and regression checks, not a held-out benchmark or a production reliability claim.
 
+Follow-up work: [ranking interpretation guidance and regression observations](ranking-grounding-observations.md) records four additional live conversation turns, four focused evaluator calibration calls, and the remaining limits after a user-reported unsupported explanation. Counts below describe the original rewrite trials.
+
+The subsequent [runtime-skills refactor](runtime-skills-test-observations.md) records 158 passing offline tests, package verification, five more live conversation turns and four reviewer calibration calls. Its detailed methods now live in the skill library.
+
 ## Implemented application
 
 The replacement is installed from `src/retail_agent/`. It has one Google ADK analyst loop, ordinary LLM-authored Markdown, model-selected tables, working Golden search/read, scoped SQL, local result transformations, evaluated completion, owner-private reports, explicit saving and trusted deletion confirmation. The old implementation and its tests are preserved under `legacy/runtime-2026-11-20/` and are outside the active package.

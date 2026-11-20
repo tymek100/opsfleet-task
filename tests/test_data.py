@@ -8,7 +8,7 @@ import pytest
 import sqlglot
 from sqlglot import exp
 
-from retail_agent.data import DataError, QueryGateway, analyze_results, compile_query
+from retail_agent.services.warehouse import DataError, QueryGateway, analyze_results, compile_query
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "knowledge/fixtures/retail_seed_v1.sql"

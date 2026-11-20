@@ -22,11 +22,23 @@ from typing import Any
 from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS
 from retail_agent.runtime import Analyst
+from retail_agent.skills import SkillCatalog
 
 FIXTURE_SHA256 = "b9d69b87067b2fa0ea3332ad6775a52b435537f58af001c69f1ae4043425aa55"
 CASES = {
     "rankings": [
         "Show our top five products by revenue and, separately, by distinct customers in Q1 2026."
+    ],
+    "ranking_followup": [
+        "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. "
+        "Use two compact tables.",
+        "Which products appear in both rankings? Explain what this suggests about revenue "
+        "versus customer reach in one short paragraph, without a table.",
+    ],
+    "skill_reference": [
+        "Use the revenue-driver-analysis skill and its measurement guide to explain how you "
+        "would distinguish selling-price and quantity effects in revenue changes. "
+        "Answer in one short paragraph without querying or claiming current business figures."
     ],
     "prose_aov": [
         "What was our average order value in Q1 2026? Answer in one short paragraph without a table."
@@ -59,6 +71,21 @@ EXPECTED = {
         "distinct_customer_ranking": [["Alpha top", 4], ["Alpha jeans", 1]],
         "sold_products": 2,
         "interpretation": "Only two products qualify; a correct top five must disclose the short list.",
+    },
+    "ranking_followup": {
+        "revenue_ranking": [["Alpha top", 200.0], ["Alpha jeans", 175.0]],
+        "distinct_customer_ranking": [["Alpha top", 4], ["Alpha jeans", 1]],
+        "overlap": ["Alpha top", "Alpha jeans"],
+        "interpretation": (
+            "Both sold products appear in both lists. Rankings alone do not establish "
+            "unit prices, unit volumes, motives or brand-wide revenue concentration."
+        ),
+    },
+    "skill_reference": {
+        "interpretation": (
+            "A method-only answer should distinguish realized unit selling prices from revenue "
+            "per customer and quantity from distinct customers; it should not invent business facts."
+        ),
     },
     "prose_aov": {"revenue": 375.0, "orders": 6, "average_order_value": 62.5},
     "monthly_table": {"January": 125.0, "February": 100.0, "March": 150.0},
@@ -137,7 +164,7 @@ def observations(
             "Runtime approval observed; this alone does not establish correctness or readability.",
         ),
     ]
-    if case == "prose_aov":
+    if case == "prose_aov" or (case == "ranking_followup" and turn_index > 0):
         checks.append(
             _check(
                 "no_markdown_table",
@@ -159,6 +186,15 @@ def observations(
                 "retrieval_and_fresh_query_observed",
                 all(name in tools for name in ("search_golden", "read_golden", "query_data")),
                 "This prompt explicitly requests a Golden method. Tool presence does not prove that its adaptation is correct.",
+            )
+        )
+    if case == "skill_reference":
+        checks.append(
+            _check(
+                "skill_and_reference_read_without_query",
+                all(name in tools for name in ("load_skill", "load_skill_resource"))
+                and payload.get("usage", {}).get("queries") == 0,
+                "The explicitly requested skill/reference were read without a warehouse query; interpretation still needs manual review.",
             )
         )
     if case == "report_save":
@@ -393,7 +429,7 @@ def write_markdown(output: Path, run: dict) -> None:
             "- Numeric-token checks can miss incorrect attribution, wrong denominators and fabricated explanations. Independent expected facts and actual query evidence are included for manual review.",
             "- Fixture trials use a real model but synthetic local data. BigQuery trials use real warehouse data and do not apply the frozen-fixture oracle.",
             "- Reserved USD is conservative admission accounting, not an invoice estimate. Model usage is recorded separately.",
-            "- Each unrelated case starts a new analyst conversation; report creation and saving share one conversation. No real user reports are read or modified.",
+            "- Each unrelated case starts a new analyst conversation; turns within a case share its context. No real user reports are read or modified.",
             "",
         ]
     )
@@ -445,6 +481,9 @@ async def run_cases(args: argparse.Namespace) -> int:
         "golden_corpus_sha256": hashlib.sha256(settings.golden_path.read_bytes()).hexdigest(),
         "evaluation_type": "real-model smoke observations; manual quality review pending",
         "selected_cases": labels,
+        "runtime_skills": {
+            role: SkillCatalog().list(role=role) for role in ("analyst", "reviewer")
+        },
         "maximum_turns": sum(len(CASES[label]) for label in labels),
         "storage": "TemporaryDirectory per run; no user library reads/imports/mutations",
     }
@@ -563,7 +602,7 @@ def parser() -> argparse.ArgumentParser:
         "--case",
         action="append",
         choices=tuple(CASES),
-        help="Repeat to select cases; defaults to all eight.",
+        help="Repeat to select cases; defaults to all listed cases.",
     )
     result.add_argument("--user", choices=tuple(DEMO_USERS), default="alice")
     result.add_argument(

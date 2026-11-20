@@ -23,8 +23,9 @@ from pydantic import Field, PrivateAttr, SecretStr
 
 from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS, REVIEW_CATEGORIES
-from retail_agent.data import QueryGateway
-from retail_agent.runtime import Analyst, _Turn
+from retail_agent.runtime import Analyst
+from retail_agent.services.warehouse import QueryGateway
+from retail_agent.turn import Turn
 
 
 def _review_checks(*, failed: str | None = None) -> list[dict]:
@@ -160,7 +161,7 @@ async def test_reviewer_stop_wins_over_unauthorized_pending_save(tmp_path: Path)
 def test_poisoned_artifact_purpose_is_rejected_before_session_storage(tmp_path: Path) -> None:
     app = Analyst(_settings(tmp_path), DEMO_USERS["alice"], model=BoundaryModel())
     try:
-        turn = _Turn(app, "Summarize qualifying revenue.")
+        turn = Turn(app, "Summarize qualifying revenue.")
         with pytest.raises(ValueError, match="contact"):
             turn.artifact(
                 {"columns": ["revenue"], "rows": [{"revenue": 375.0}], "truncated": False},

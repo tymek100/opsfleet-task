@@ -21,8 +21,8 @@ from pydantic import Field, PrivateAttr, SecretStr
 
 from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS, REVIEW_CATEGORIES
-from retail_agent.data import QueryGateway
 from retail_agent.runtime import Analyst
+from retail_agent.services.warehouse import QueryGateway
 
 REPO = Path(__file__).resolve().parents[1]
 Q1_REVENUE = (
@@ -165,6 +165,151 @@ def reviewer_payload(request: dict[str, Any]) -> dict[str, Any]:
                 if part.get("text", "").startswith("{"):
                     return json.loads(part["text"])
     raise AssertionError("Reviewer did not receive the evidence bundle")
+
+
+@pytest.mark.asyncio
+async def test_skills_load_on_model_request_without_becoming_numerical_evidence(
+    tmp_path: Path,
+) -> None:
+    name = "revenue-driver-analysis"
+    approved = (
+        "Compare revenue, units sold and realized selling prices before explaining the change."
+    )
+    app, model, reviewer = make_app(
+        tmp_path,
+        [calls(("load_skill", {"name": name})), finish(approved)],
+        [review()],
+    )
+    try:
+        skill = app.skills.load(name, role="analyst")
+        result = await app.ask(
+            "How would you investigate a revenue change without guessing its cause?"
+        )
+        assert result.status == "approved", result.trace
+        assert result.answer is not None and result.answer.markdown == approved
+        first_request = json.dumps(model.requests[0])
+        assert name in first_request
+        assert json.dumps(skill["instructions"])[1:-1] not in first_request
+        loaded = observations(model.requests[1], "load_skill")[-1]
+        assert loaded["instructions"] == skill["instructions"]
+        assert loaded["sha256"] == skill["sha256"]
+        assert result.usage["tool_calls"] == 2  # Skill loading and reviewed completion.
+        assert result.usage["queries"] == 0
+        assert result.evidence == [] and result.answer.evidence_ids == []
+        bundle = reviewer_payload(reviewer.requests[0])
+        assert bundle["loaded_skills"] == [
+            {key: skill[key] for key in ("name", "version", "sha256")}
+        ]
+        assert {event["role"] for event in result.trace if event["event"] == "skill_loaded"} == {
+            "analyst",
+            "reviewer",
+        }
+        assert reviewer.requests[0]["registered_tools"] == []
+        assert "run_skill_script" not in model.requests[0]["registered_tools"]
+    finally:
+        app.reports.close()
+
+
+@pytest.mark.asyncio
+async def test_review_skill_is_present_even_when_analyst_loads_no_skill(tmp_path: Path) -> None:
+    app, model, reviewer = make_app(
+        tmp_path, [finish("Which year should I use?", outcome="clarification")], [review()]
+    )
+    try:
+        result = await app.ask("Compare Q1 revenue with Q2.")
+        assert result.status == "approved", result.trace
+        guidance = app.skills.review_skill()
+        assert json.dumps(guidance["instructions"])[1:-1] in json.dumps(reviewer.requests[0])
+        assert json.dumps(guidance["instructions"])[1:-1] not in json.dumps(model.requests[0])
+        loaded = [event for event in result.trace if event["event"] == "skill_loaded"]
+        assert len(loaded) == 1 and loaded[0]["role"] == "reviewer"
+        assert loaded[0]["sha256"] == guidance["sha256"]
+    finally:
+        app.reports.close()
+
+
+@pytest.mark.asyncio
+async def test_unknown_or_reviewer_only_skill_cannot_escape_role_catalog(tmp_path: Path) -> None:
+    app, model, reviewer = make_app(
+        tmp_path,
+        [
+            calls(("load_skill", {"name": "../../.env"})),
+            calls(("load_skill", {"name": "analytical-review"})),
+            finish("That skill is not available to the analyst.", outcome="partial"),
+        ],
+        [review()],
+    )
+    try:
+        result = await app.ask("Read the unavailable skill.")
+        assert result.status == "approved", result.trace
+        assert observations(model.requests[1], "load_skill")[-1]["status"] != "ok"
+        assert observations(model.requests[2], "load_skill")[-1]["status"] != "ok"
+        assert reviewer_payload(reviewer.requests[0])["loaded_skills"] == []
+        assert result.usage["tool_calls"] == 3
+    finally:
+        app.reports.close()
+
+
+@pytest.mark.asyncio
+async def test_skill_reads_share_tool_budget_and_preserve_completion_reserve(
+    tmp_path: Path,
+) -> None:
+    app, _model, reviewer = make_app(
+        tmp_path,
+        [
+            calls(("load_skill", {"name": "period-comparison"})),
+            calls(("load_skill", {"name": "product-ranking-analysis"})),
+        ],
+        [],
+    )
+    app.settings.max_tool_calls = 2
+    try:
+        result = await app.ask("Load methods for comparing periods and rankings.")
+        assert result.status == "tools", result.trace
+        assert result.answer is None and reviewer.requests == []
+        assert result.usage["tool_calls"] == 1
+        assert [event["name"] for event in result.trace if event["event"] == "skill_loaded"] == [
+            "period-comparison"
+        ]
+    finally:
+        app.reports.close()
+
+
+@pytest.mark.asyncio
+async def test_reference_content_requires_skill_loading_and_separate_resource_read(
+    tmp_path: Path,
+) -> None:
+    name = "revenue-driver-analysis"
+    path = "references/measurement-guide.md"
+    app, model, _reviewer = make_app(
+        tmp_path,
+        [
+            calls(("load_skill_resource", {"name": name, "path": path})),
+            calls(("load_skill", {"name": name})),
+            calls(("load_skill_resource", {"name": name, "path": path})),
+            finish(
+                "Measure realized selling prices and quantities before attributing revenue changes."
+            ),
+        ],
+        [review()],
+    )
+    try:
+        resource = app.skills.read_resource(name, path)
+        result = await app.ask("Explain how to investigate a revenue change.")
+        assert result.status == "approved", result.trace
+        assert (
+            observations(model.requests[1], "load_skill_resource")[-1]["status"]
+            == "invalid_request"
+        )
+        assert json.dumps(resource["content"])[1:-1] not in json.dumps(model.requests[2])
+        response = observations(model.requests[3], "load_skill_resource")[-1]
+        assert response["content"] == resource["content"]
+        assert result.usage["tool_calls"] == 4
+        events = [event for event in result.trace if event["event"] == "skill_resource_read"]
+        assert len(events) == 1 and events[0]["resource_sha256"] == resource["resource_sha256"]
+        assert "content" not in events[0] and "instructions" not in events[0]
+    finally:
+        app.reports.close()
 
 
 @pytest.mark.asyncio

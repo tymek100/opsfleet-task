@@ -1,0 +1,779 @@
+{
+  "metadata": {
+    "started_at": "2026-11-20T13:09:06.585907+00:00",
+    "backend": "bigquery",
+    "user": "alice",
+    "scope": "Calvin Klein",
+    "settings": {
+      "gemini_model": "gemini-3.8-flash",
+      "thinking_level": "low",
+      "review_thinking_level": "medium",
+      "backend": "bigquery",
+      "golden_bootstrap": true,
+      "turn_timeout_seconds": 120.0,
+      "question_budget_usd": 1.0,
+      "max_model_calls": 12,
+      "max_tool_calls": 24,
+      "max_queries": 8,
+      "max_query_bytes": 100000000,
+      "max_output_tokens": 4096,
+      "review_output_tokens": 2048,
+      "max_answer_reviews": 3,
+      "max_context_bytes": 150000,
+      "max_review_bytes": 60000,
+      "review_reserve_seconds": 30.0,
+      "input_usd_per_million": 2.0,
+      "output_usd_per_million": 12.0,
+      "bigquery_usd_per_tib": 6.25,
+      "model_min_interval_seconds": 0.0
+    },
+    "packages": {
+      "google-adk": "2.12.0",
+      "google-genai": "2.32.0",
+      "sqlglot": "30.24.0",
+      "duckdb": "2.0.0"
+    },
+    "fixture_sha256": null,
+    "independent_fixture_oracle_active": false,
+    "golden_corpus_sha256": "c376f96dadf11329e0a71ac58ed3966661165e24d8fed2ca0b5075b5dd7c5720",
+    "evaluation_type": "real-model smoke observations; manual quality review pending",
+    "selected_cases": [
+      "ranking_followup"
+    ],
+    "runtime_skills": {
+      "analyst": [
+        {
+          "name": "business-report-writing",
+          "description": "Write concise business reports or executive summaries from analytical evidence, choosing useful presentation and measurable proposed actions without a fixed template.",
+          "version": "1",
+          "sha256": "260738557ddb01a814fd5b591b912c7171abf39aa03acca17d70b4e5c8b03b71"
+        },
+        {
+          "name": "customer-retention",
+          "description": "Analyze acquisition cohorts, repeat purchasing, retention, churn or inactivity. Use when customer history, time eligibility or cohort denominators determine the answer.",
+          "version": "1",
+          "sha256": "1accb5a99a51cd021c61352bc226eb5d2e1b1945f8335797f8c5c25d8077055e"
+        },
+        {
+          "name": "period-comparison",
+          "description": "Compare revenue or other metrics across months, quarters or other periods, including partial periods, percentage changes and zero baselines.",
+          "version": "1",
+          "sha256": "49b10351be16d647e5ac8b93ca6f6c18ca329e764eae4fde0784b091d2b1b3be"
+        },
+        {
+          "name": "product-ranking-analysis",
+          "description": "Compare product rankings, top-N selections, customer reach, ranking overlap and boundary ties. Use for interpreting leaders or follow-ups about products in earlier lists.",
+          "version": "1",
+          "sha256": "939d4b5d0a17ac7f30b2084d65f534b67234167dd5f09bb143548d4b010d6bc9"
+        },
+        {
+          "name": "revenue-driver-analysis",
+          "description": "Investigate why revenue differs or changes, including prices, quantities, customers, order patterns and revenue concentration. Use when an explanation needs more than ranking membership.",
+          "version": "1",
+          "sha256": "2b64b783bd7621c2bc7b7edde9b47fdb963931eeb3d88770b236566f9c175b23"
+        }
+      ],
+      "reviewer": [
+        {
+          "name": "analytical-review",
+          "description": "Review analytical answers for requested coverage, supported interpretations, metric validity, useful presentation and authorized operations. Supplied to the evaluator on every review.",
+          "version": "1",
+          "sha256": "25723ae360572065bca83c44216b7f621e45eb4cf876ac1ea0b26c8003157b2e"
+        }
+      ]
+    },
+    "maximum_turns": 2,
+    "storage": "TemporaryDirectory per run; no user library reads/imports/mutations",
+    "finished_at": "2026-11-20T13:10:12.661513+00:00",
+    "runtime_incomplete_or_failed_turns": 0
+  },
+  "cases": [
+    {
+      "id": "ranking_followup",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. Use two compact tables.",
+          "prompt_sha256": {
+            "analyst.md": "129962c0e0776730df9aab90498808dab223f39a46ccdb2fe5ec71ad84de7acf",
+            "reviewer.md": "191b59070bd914a69599eb4a80764f8ecda3f09982233984b1e27a93ee90073d"
+          },
+          "result": {
+            "answer": {
+              "id": "A530fe4e541",
+              "markdown": "### Top 5 Products by Revenue (Q1 2026)\n\n| Rank | Product ID | Product Name | Revenue | Distinct Customers | Items Sold |\n|---|---|---|---|---|---|\n| 1 | 20041 | Calvin Klein Mens 2 Button Solid Black Wool Suit | 259.99 | 1 | 1 |\n| 2 | 20235 | Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit | 259.99 | 1 | 1 |\n| 3 | 19152 | Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater | 236.00 | 2 | 2 |\n| 4 | 23837 | Calvin Klein Sportswear Men's Melton Wool Basic Peacoat | 228.00 | 1 | 1 |\n| 5 | 23740 | Calvin Klein Men's Wool Car Coat With Bib | 216.00 | 2 | 2 |\n\n*Note: Ranks 1 and 2 tied on revenue (259.99); ordered by ascending Product ID.*\n\n---\n\n### Top 5 Products by Distinct Customers (Q1 2026)\n\n| Rank | Product ID | Product Name | Distinct Customers | Revenue | Items Sold |\n|---|---|---|---|---|---|\n| 1 | 29 | Calvin Klein Women's 2 Pocket Collar Blouse | 3 | 208.50 | 3 |\n| 2 | 13390 | Calvin Klein Women's Solid Skirtini | 3 | 162.00 | 3 |\n| 3 | 19152 | Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater | 2 | 236.00 | 2 |\n| 4 | 23740 | Calvin Klein Men's Wool Car Coat With Bib | 2 | 216.00 | 2 |\n| 5 | 22352 | Calvin Klein Sportswear Men's Pindot Bowery Pant | 2 | 159.00 | 2 |\n\n*Note: Exactly 2 products reached 3 distinct customers in Q1 2026; 16 products tied at 2 distinct customers. Ranks 3 to 5 were ordered by total revenue descending, then ascending Product ID.*\n\n---\n\n### Scope & Methodology\n- **Timeframe:** Q1 2026 (`2026-01-01 00:00:00 UTC` to `2026-04-01 00:00:00 UTC`).\n- **Brand Scope:** Calvin Klein.\n- **Population:** Qualifying completed sales (excluding cancelled and returned items and orders). Currency is unspecified in the source data.\n- **Overlap:** Two products appear in both top-5 rankings: *Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater* (Product ID 19152) and *Calvin Klein Men's Wool Car Coat With Bib* (Product ID 23740).",
+              "evidence_ids": [
+                "E1",
+                "E2"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.195,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 2.363,
+                "tool": "load_skill"
+              },
+              {
+                "event": "skill_loaded",
+                "elapsed": 2.364,
+                "role": "analyst",
+                "name": "product-ranking-analysis",
+                "version": "1",
+                "sha256": "939d4b5d0a17ac7f30b2084d65f534b67234167dd5f09bb143548d4b010d6bc9"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 2.364,
+                "tool": "load_skill",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 2.366,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 2.366,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 2.375,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 6.998,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 9.776,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 9.789,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 12.449,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 14.323,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E2"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 14.337,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 20.398,
+                "attempt": 1
+              },
+              {
+                "event": "skill_loaded",
+                "elapsed": 20.398,
+                "role": "reviewer",
+                "name": "analytical-review",
+                "version": "1",
+                "sha256": "25723ae360572065bca83c44216b7f621e45eb4cf876ac1ea0b26c8003157b2e"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 20.405,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_checks",
+                "elapsed": 29.105,
+                "checks": [
+                  {
+                    "category": "coverage",
+                    "passed": true
+                  },
+                  {
+                    "category": "grounding",
+                    "passed": false
+                  },
+                  {
+                    "category": "metrics",
+                    "passed": true
+                  },
+                  {
+                    "category": "presentation",
+                    "passed": true
+                  },
+                  {
+                    "category": "operations",
+                    "passed": true
+                  }
+                ]
+              },
+              {
+                "event": "review_end",
+                "elapsed": 29.105,
+                "decision": "revise",
+                "issue_categories": [
+                  "grounding"
+                ]
+              },
+              {
+                "event": "model_call",
+                "elapsed": 29.118,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 35.213,
+                "attempt": 2
+              },
+              {
+                "event": "skill_loaded",
+                "elapsed": 35.213,
+                "role": "reviewer",
+                "name": "analytical-review",
+                "version": "1",
+                "sha256": "25723ae360572065bca83c44216b7f621e45eb4cf876ac1ea0b26c8003157b2e"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 35.223,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_checks",
+                "elapsed": 44.999,
+                "checks": [
+                  {
+                    "category": "coverage",
+                    "passed": true
+                  },
+                  {
+                    "category": "grounding",
+                    "passed": true
+                  },
+                  {
+                    "category": "metrics",
+                    "passed": true
+                  },
+                  {
+                    "category": "presentation",
+                    "passed": true
+                  },
+                  {
+                    "category": "operations",
+                    "passed": true
+                  }
+                ]
+              },
+              {
+                "event": "review_end",
+                "elapsed": 44.999,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 44.999,
+                "answer_id": "A530fe4e541",
+                "sha256": "79c52c341e15e9f8c41b1f8b96e4c5ed05499d0abc34a5ead90e14e5e18f9b3c"
+              }
+            ],
+            "usage": {
+              "model_calls": 7,
+              "queries": 2,
+              "tool_calls": 6,
+              "reserved_usd": 0.652141,
+              "input_tokens": 34679,
+              "output_tokens": 2811,
+              "thinking_tokens": 1320
+            },
+            "evidence": [
+              {
+                "sql": "WITH product_metrics AS (\n  SELECT\n    product_id,\n    product_name,\n    SUM(sale_price) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers,\n    COUNT(DISTINCT order_id) AS distinct_orders,\n    COUNT(item_id) AS items_sold\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name\n),\nrev_ranked AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY total_revenue DESC, product_id ASC) AS rev_rank\n  FROM product_metrics\n),\ncust_ranked AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC) AS cust_rank\n  FROM product_metrics\n)\nSELECT\n  'revenue' AS metric_type,\n  rev_rank AS rank,\n  product_id,\n  product_name,\n  total_revenue,\n  distinct_customers,\n  items_sold\nFROM rev_ranked\nWHERE rev_rank <= 5\nUNION ALL\nSELECT\n  'customers' AS metric_type,\n  cust_rank AS rank,\n  product_id,\n  product_name,\n  total_revenue,\n  distinct_customers,\n  items_sold\nFROM cust_ranked\nWHERE cust_rank <= 5\nORDER BY metric_type, rank\n",
+                "columns": [
+                  "metric_type",
+                  "rank",
+                  "product_id",
+                  "product_name",
+                  "total_revenue",
+                  "distinct_customers",
+                  "items_sold"
+                ],
+                "rows": [
+                  {
+                    "metric_type": "customers",
+                    "rank": 1,
+                    "product_id": 29,
+                    "product_name": "Calvin Klein Women's 2 Pocket Collar Blouse",
+                    "total_revenue": 208.5,
+                    "distinct_customers": 3,
+                    "items_sold": 3
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 2,
+                    "product_id": 13390,
+                    "product_name": "Calvin Klein Women's Solid Skirtini",
+                    "total_revenue": 162.0,
+                    "distinct_customers": 3,
+                    "items_sold": 3
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 3,
+                    "product_id": 19152,
+                    "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+                    "total_revenue": 236.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 4,
+                    "product_id": 23740,
+                    "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+                    "total_revenue": 216.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 5,
+                    "product_id": 22352,
+                    "product_name": "Calvin Klein Sportswear Men's Pindot Bowery Pant",
+                    "total_revenue": 159.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 1,
+                    "product_id": 20041,
+                    "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+                    "total_revenue": 259.989990234375,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 2,
+                    "product_id": 20235,
+                    "product_name": "Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit",
+                    "total_revenue": 259.989990234375,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 3,
+                    "product_id": 19152,
+                    "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+                    "total_revenue": 236.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 4,
+                    "product_id": 23837,
+                    "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+                    "total_revenue": 228.0,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 5,
+                    "product_id": 23740,
+                    "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+                    "total_revenue": 216.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  }
+                ],
+                "total_rows": 10,
+                "truncated": false,
+                "backend": "bigquery",
+                "job_id": "retail_f19db58786f44f5296fcdd77da89fb2f",
+                "bytes_processed": 15892333,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "09730e356da2e2359a8e6d0fe3c41131f62755f6785d24689eefae638bd94761",
+                "executed_at": "2026-11-20T13:09:16.383825+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Find top 5 products by revenue and top 5 products by distinct customers in Q1 2026",
+                "queried_at": "2026-11-20T13:09:16.386262+00:00",
+                "parents": []
+              },
+              {
+                "sql": "WITH product_metrics AS (\n  SELECT\n    product_id,\n    product_name,\n    SUM(sale_price) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name\n)\nSELECT\n  distinct_customers,\n  COUNT(*) AS product_count\nFROM product_metrics\nGROUP BY distinct_customers\nORDER BY distinct_customers DESC\n",
+                "columns": [
+                  "distinct_customers",
+                  "product_count"
+                ],
+                "rows": [
+                  {
+                    "distinct_customers": 3,
+                    "product_count": 2
+                  },
+                  {
+                    "distinct_customers": 2,
+                    "product_count": 16
+                  },
+                  {
+                    "distinct_customers": 1,
+                    "product_count": 129
+                  }
+                ],
+                "total_rows": 3,
+                "truncated": false,
+                "backend": "bigquery",
+                "job_id": "retail_93706af1eb4449da8bf14a3ed64d4e46",
+                "bytes_processed": 12993053,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "5132e1e4f94957c211e1b6db43fc2a5d6d40cfc34d17cb2c6d710417b8018268",
+                "executed_at": "2026-11-20T13:09:20.932636+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E2",
+                "purpose": "Check customer rank tie distribution around cutoff",
+                "queried_at": "2026-11-20T13:09:20.933997+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 45.001,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            }
+          ],
+          "file": "ranking_followup-1.json"
+        },
+        {
+          "index": 1,
+          "prompt": "Which products appear in both rankings? Explain what this suggests about revenue versus customer reach in one short paragraph, without a table.",
+          "prompt_sha256": {
+            "analyst.md": "129962c0e0776730df9aab90498808dab223f39a46ccdb2fe5ec71ad84de7acf",
+            "reviewer.md": "191b59070bd914a69599eb4a80764f8ecda3f09982233984b1e27a93ee90073d"
+          },
+          "result": {
+            "answer": {
+              "id": "A00e834d22f",
+              "markdown": "Two products appear in both top-5 rankings for Q1 2026: **Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater** (Product ID 19152; revenue 236.00, 2 distinct customers) and **Calvin Klein Men's Wool Car Coat With Bib** (Product ID 23740; revenue 216.00, 2 distinct customers) [E1]. This overlap demonstrates that top revenue in this period was achieved through two distinct patterns: while the very highest revenue leaders (such as the two wool suits at 259.99 each) reached the top via single high-value transactions from a single customer, these two overlapping items generated comparable top-tier revenue by combining moderate transaction values with broader customer reach across multiple buyers [E1]. Customer reach alone did not guarantee the highest revenue—as seen with items reaching 3 customers but generating lower totals (162.00 to 208.50)—meaning both high unit value and multiple purchasing customers served as viable paths to top revenue performance [E1].",
+              "evidence_ids": [
+                "E1"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.025,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.803,
+                "tool": "load_skill"
+              },
+              {
+                "event": "skill_loaded",
+                "elapsed": 1.805,
+                "role": "analyst",
+                "name": "product-ranking-analysis",
+                "version": "1",
+                "sha256": "939d4b5d0a17ac7f30b2084d65f534b67234167dd5f09bb143548d4b010d6bc9"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.806,
+                "tool": "load_skill",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 1.817,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 3.537,
+                "tool": "read_result"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 3.541,
+                "tool": "read_result",
+                "status": "ok",
+                "evidence_id": "E3"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 3.554,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 7.332,
+                "attempt": 1
+              },
+              {
+                "event": "skill_loaded",
+                "elapsed": 7.332,
+                "role": "reviewer",
+                "name": "analytical-review",
+                "version": "1",
+                "sha256": "25723ae360572065bca83c44216b7f621e45eb4cf876ac1ea0b26c8003157b2e"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 7.344,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_checks",
+                "elapsed": 21.034,
+                "checks": [
+                  {
+                    "category": "coverage",
+                    "passed": true
+                  },
+                  {
+                    "category": "grounding",
+                    "passed": true
+                  },
+                  {
+                    "category": "metrics",
+                    "passed": true
+                  },
+                  {
+                    "category": "presentation",
+                    "passed": true
+                  },
+                  {
+                    "category": "operations",
+                    "passed": true
+                  }
+                ]
+              },
+              {
+                "event": "review_end",
+                "elapsed": 21.034,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 21.034,
+                "answer_id": "A00e834d22f",
+                "sha256": "96ac642cf009d24d15b6973d0c263c6942ed38ff4ac463cdc9c62bd4a4566176"
+              }
+            ],
+            "usage": {
+              "model_calls": 4,
+              "queries": 0,
+              "tool_calls": 3,
+              "reserved_usd": 0.351518,
+              "input_tokens": 17946,
+              "output_tokens": 586,
+              "thinking_tokens": 1316
+            },
+            "evidence": [
+              {
+                "sql": "WITH product_metrics AS (\n  SELECT\n    product_id,\n    product_name,\n    SUM(sale_price) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers,\n    COUNT(DISTINCT order_id) AS distinct_orders,\n    COUNT(item_id) AS items_sold\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name\n),\nrev_ranked AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY total_revenue DESC, product_id ASC) AS rev_rank\n  FROM product_metrics\n),\ncust_ranked AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC) AS cust_rank\n  FROM product_metrics\n)\nSELECT\n  'revenue' AS metric_type,\n  rev_rank AS rank,\n  product_id,\n  product_name,\n  total_revenue,\n  distinct_customers,\n  items_sold\nFROM rev_ranked\nWHERE rev_rank <= 5\nUNION ALL\nSELECT\n  'customers' AS metric_type,\n  cust_rank AS rank,\n  product_id,\n  product_name,\n  total_revenue,\n  distinct_customers,\n  items_sold\nFROM cust_ranked\nWHERE cust_rank <= 5\nORDER BY metric_type, rank\n",
+                "columns": [
+                  "metric_type",
+                  "rank",
+                  "product_id",
+                  "product_name",
+                  "total_revenue",
+                  "distinct_customers",
+                  "items_sold"
+                ],
+                "rows": [
+                  {
+                    "metric_type": "customers",
+                    "rank": 1,
+                    "product_id": 29,
+                    "product_name": "Calvin Klein Women's 2 Pocket Collar Blouse",
+                    "total_revenue": 208.5,
+                    "distinct_customers": 3,
+                    "items_sold": 3
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 2,
+                    "product_id": 13390,
+                    "product_name": "Calvin Klein Women's Solid Skirtini",
+                    "total_revenue": 162.0,
+                    "distinct_customers": 3,
+                    "items_sold": 3
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 3,
+                    "product_id": 19152,
+                    "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+                    "total_revenue": 236.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 4,
+                    "product_id": 23740,
+                    "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+                    "total_revenue": 216.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "customers",
+                    "rank": 5,
+                    "product_id": 22352,
+                    "product_name": "Calvin Klein Sportswear Men's Pindot Bowery Pant",
+                    "total_revenue": 159.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 1,
+                    "product_id": 20041,
+                    "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+                    "total_revenue": 259.989990234375,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 2,
+                    "product_id": 20235,
+                    "product_name": "Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit",
+                    "total_revenue": 259.989990234375,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 3,
+                    "product_id": 19152,
+                    "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+                    "total_revenue": 236.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 4,
+                    "product_id": 23837,
+                    "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+                    "total_revenue": 228.0,
+                    "distinct_customers": 1,
+                    "items_sold": 1
+                  },
+                  {
+                    "metric_type": "revenue",
+                    "rank": 5,
+                    "product_id": 23740,
+                    "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+                    "total_revenue": 216.0,
+                    "distinct_customers": 2,
+                    "items_sold": 2
+                  }
+                ],
+                "total_rows": 10,
+                "truncated": false,
+                "backend": "bigquery",
+                "job_id": "retail_f19db58786f44f5296fcdd77da89fb2f",
+                "bytes_processed": 15892333,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "09730e356da2e2359a8e6d0fe3c41131f62755f6785d24689eefae638bd94761",
+                "executed_at": "2026-11-20T13:09:16.383825+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E3",
+                "purpose": "Page of E1",
+                "queried_at": "2026-11-20T13:09:55.157872+00:00",
+                "parents": [
+                  "E1"
+                ],
+                "parent_total_rows": 10,
+                "page_offset": 0,
+                "stored_rows_in_parent": 10
+              }
+            ],
+            "elapsed_seconds": 21.036,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "no_markdown_table",
+              "observation": "matched",
+              "description": "Checks the explicit no-table request only; paragraph quality needs review."
+            }
+          ],
+          "file": "ranking_followup-2.json"
+        }
+      ],
+      "independent_expected_facts": null
+    }
+  ]
+}

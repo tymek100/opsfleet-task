@@ -32,23 +32,28 @@ Paths in this table are relative to the replacement's `retail_agent` package.
 | Module | Implemented responsibility |
 |---|---|
 | `cli.py` | Typer commands, Rich Markdown, actual progress, library and confirmation UI |
-| `runtime.py` | One analyst loop, registered tools, bounded prior context, artifacts and completion |
+| `runtime.py` | One analyst loop, ADK assembly and bounded prior context |
+| `turn.py` | Shared turn state, tool accounting, artifacts and metadata events |
+| `tools/` | Model-facing analytics, Golden, report, skill and completion adapters; explicit registry |
 | `provider.py` | Gemini adapter, contact screening, shared accounting and bounded transient retry |
 | `reviewer.py` | Isolated tool-free structured review and bounded schema repair |
-| `data.py` | SQL capability validation, scoped BigQuery execution, fixture/local worker and state aggregates |
-| `knowledge.py` | Eligible Golden records, FTS5 search, full-trio reading and integrity metadata |
-| `reports.py` | Owner-scoped SQLite storage, idempotent save, exact deletion and explicit legacy import |
+| `services/warehouse.py` | SQL capability validation, scoped BigQuery execution, fixture/local worker and state aggregates |
+| `services/golden.py` | Eligible Golden records, FTS5 search, full-trio reading and integrity metadata |
+| `services/reports.py` | Owner-scoped SQLite storage, idempotent save, exact deletion and explicit legacy import |
 | `budget.py` | Shared deadline, model/query/tool admission and completion reservation |
 | `contracts.py`, `config.py`, `privacy.py` | Small records, explicit settings and contact-pattern screening |
-| `prompts/` | Analyst instructions and reviewer rubric, separate from execution permissions |
+| `prompts/` | Concise universal analyst/reviewer instructions and completion protocol |
+| `skills/` | ADK-parsed analytical methods, optional references and always-supplied review rubric |
 
 ## Tool surface
 
-The 14 tools expose capabilities rather than named business questions. Trusted identity and scope are injected by application code, never supplied by the model.
+The 16 tools expose capabilities rather than named business questions. Trusted identity and scope are injected by application code, never supplied by the model. Their registration is centralized in `tools/registry.py`. See [runtime skills and package organization](runtime-skills.md).
 
 | Tool | Purpose |
 |---|---|
 | `describe_data` | Discover authorized relations, columns, join grain and metric defaults |
+| `load_skill` | Read a relevant packaged analytical method by catalog name |
+| `load_skill_resource` | Read a listed Markdown reference from a skill loaded this turn |
 | `query_data` | Execute scoped read-only SQL with scalar parameters and bounded evidence |
 | `read_result` | Read another bounded page of stored evidence |
 | `analyze_results` | Query selected result snapshots locally while retaining parent lineage |

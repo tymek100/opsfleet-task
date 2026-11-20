@@ -21,7 +21,7 @@ The [client Q&A](task/q&a.md) defines the requirements. Analysis is on demand ag
 ```mermaid
 flowchart TD
     U[CLI with trusted demo identity] --> A[One ADK analyst tool loop]
-    A -->|Choose a capability| T[Schema, SQL, results, Golden methods and reports]
+    A -->|Choose a capability| T[Skills, schema, SQL, results, Golden methods and reports]
     T -->|Observations or safe errors| A
     A -->|finish_answer with Markdown and evidence IDs| E[Tool-free evaluator]
     E -->|Concrete revision issues| A
@@ -32,6 +32,8 @@ flowchart TD
 ```
 
 The analyst decides which tools to call, which SQL to write, whether another investigation is useful, and how to present its answer. The model writes ordinary Markdown and can choose prose, lists or tables. The renderer displays that Markdown; it does not append evidence tables, choose columns or replace numbers with a separate rendering language.
+
+The [runtime skill library](runtime-skills.md) supplies five analyst methods through metadata-first discovery and optional instruction/reference reads. A sixth skill provides the evaluator rubric on every review. Skills do not prescribe a fixed tool sequence or grant capabilities. Model-facing adapters live in `tools/`; database and storage implementations live in `services/`.
 
 A question uses one ADK `LlmAgent` tool conversation. An isolated reviewer call sees the candidate, original request, bounded relevant conversation, trusted result artifacts and proposed save. A rejection returns issues to the same analyst conversation. The reviewer has no query, report or execution tools and does not rewrite approved text. Application code publishes the exact accepted candidate using the completion tool's skip-summarization action. Direct final prose cannot bypass the gate.
 

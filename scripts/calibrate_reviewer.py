@@ -2,6 +2,7 @@
 
 Run explicitly with:
     uv run --locked python scripts/calibrate_reviewer.py --live
+    uv run --locked python scripts/calibrate_reviewer.py --live --suite ranking_grounding
 
 This is regression calibration, not held-out evaluation. It performs no warehouse
 queries, invokes no analyst, and never changes or saves reports. Four candidate
@@ -28,6 +29,7 @@ from retail_agent.budget import Budget, LimitReached
 from retail_agent.config import Settings, repository_root
 from retail_agent.provider import ProviderUnavailable, make_gemini
 from retail_agent.reviewer import evaluate
+from retail_agent.skills import SkillCatalog
 
 ROOT = repository_root()
 CASE_SPECS: tuple[dict[str, Any], ...] = (
@@ -75,24 +77,38 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def load_cases(source_dir: Path) -> list[dict[str, Any]]:
+def load_cases(source_dir: Path, suite: str = "core") -> list[dict[str, Any]]:
     """Reconstruct reviewer inputs without leaking expected labels into the prompt."""
+    fixture_path = ROOT / "evals/rewrite/ranking_grounding_cases.json"
+    fixture = json.loads(fixture_path.read_text()) if suite == "ranking_grounding" else None
+    if suite not in ("core", "ranking_grounding"):
+        raise ValueError(f"Unknown calibration suite: {suite}")
     cases = []
-    for spec in CASE_SPECS:
+    for spec in fixture["cases"] if fixture else CASE_SPECS:
         case_directory = (
             source_dir.parent / spec["source_sibling"] if "source_sibling" in spec else source_dir
         )
-        path = case_directory / spec["capture"]
+        path = ROOT / fixture["source_capture"] if fixture else case_directory / spec["capture"]
         capture = json.loads(path.read_text())
         result = capture["result"]
         answer = result["answer"]
+        candidate = spec["candidate_markdown"] if fixture else answer["markdown"]
         available = {artifact["id"]: artifact for artifact in result["evidence"]}
         evidence = [available[key] for key in answer["evidence_ids"]]
         payload = {
-            "question": capture["prompt"],
+            "question": fixture["question"] if fixture else capture["prompt"],
             "scope": evidence[0]["scope"] if evidence else "Calvin Klein",
-            "conversation": [],
-            "candidate": {"markdown": answer["markdown"], "outcome": answer["outcome"]},
+            "conversation": [
+                {
+                    "question": capture["prompt"],
+                    "answer_id": answer["id"],
+                    "markdown": answer["markdown"],
+                    "evidence_ids": answer["evidence_ids"],
+                }
+            ]
+            if fixture
+            else [],
+            "candidate": {"markdown": candidate, "outcome": answer["outcome"]},
             "evidence": evidence,
             "other_results_manifest": [
                 {
@@ -113,15 +129,18 @@ def load_cases(source_dir: Path) -> list[dict[str, Any]]:
                 **spec,
                 "source_path": str(path),
                 "source_sha256": sha256(path),
-                "candidate_sha256": hashlib.sha256(answer["markdown"].encode()).hexdigest(),
+                "candidate_sha256": hashlib.sha256(candidate.encode()).hexdigest(),
+                **({"case_fixture_sha256": sha256(fixture_path)} if fixture else {}),
                 "payload": payload,
             }
         )
     return cases
 
 
-async def calibrate(source_dir: Path, output: Path, timeout: float) -> dict[str, Any]:
-    cases = load_cases(source_dir)
+async def calibrate(
+    source_dir: Path, output: Path, timeout: float, suite: str = "core"
+) -> dict[str, Any]:
+    cases = load_cases(source_dir, suite)
     settings = Settings.load()
     settings.backend = "fixture"
     settings.question_budget_usd = min(settings.question_budget_usd, 1.0)
@@ -133,11 +152,18 @@ async def calibrate(source_dir: Path, output: Path, timeout: float) -> dict[str,
     document: dict[str, Any] = {
         "started_at": datetime.now(UTC).isoformat(),
         "evaluation_type": "known-regression reviewer calibration; not a held-out benchmark",
-        "data": "Previously captured synthetic fixture evidence; no SQL is executed.",
+        "suite": suite,
+        "data": (
+            "Previously captured public TheLook ranking evidence, a user-reported defective "
+            "follow-up and authored regression controls; no SQL is executed."
+            if suite == "ranking_grounding"
+            else "Previously captured synthetic fixture evidence; no SQL is executed."
+        ),
         "model": settings.gemini_model,
         "review_thinking_level": settings.review_thinking_level,
         "reviewer_prompt_sha256": sha256(prompt_path),
         "reviewer_source_sha256": sha256(ROOT / "src/retail_agent/reviewer.py"),
+        "review_skill": SkillCatalog().list(role="reviewer"),
         "packages": {
             package: importlib.metadata.version(package)
             for package in ("google-adk", "google-genai")
@@ -222,6 +248,12 @@ def main() -> None:
         "--live", action="store_true", help="Explicitly allow the real reviewer API calls."
     )
     parser.add_argument(
+        "--suite",
+        choices=("core", "ranking_grounding"),
+        default="core",
+        help="Replay the original calibration cases or ranking-interpretation regressions.",
+    )
+    parser.add_argument(
         "--source-dir", type=Path, default=ROOT / "evals/rewrite/runs/fixture-smoke-01"
     )
     parser.add_argument(
@@ -235,7 +267,7 @@ def main() -> None:
         parser.error("Use --live to explicitly allow real reviewer calls. No model was invoked.")
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120 seconds.")
-    document = asyncio.run(calibrate(args.source_dir, args.output, args.timeout))
+    document = asyncio.run(calibrate(args.source_dir, args.output, args.timeout, args.suite))
     print(f"Recorded calibration observations: {args.output}")
     if not all(case["expected_decision_matched"] for case in document["cases"]):
         raise SystemExit(1)

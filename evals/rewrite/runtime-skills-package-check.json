@@ -1,0 +1,53 @@
+{
+  "wheel": "opsfleet_retail_agent-0.2.0-py3-none-any.whl",
+  "wheel_sha256": "d87a6436ee120bc8cd20e1a0352339489db152453e2c103a1f11fbecbbeb01fe",
+  "loaded_from_extracted_wheel_outside_repository": true,
+  "skill_files": [
+    "retail_agent/skills/library/analytical-review/SKILL.md",
+    "retail_agent/skills/library/business-report-writing/SKILL.md",
+    "retail_agent/skills/library/customer-retention/SKILL.md",
+    "retail_agent/skills/library/period-comparison/SKILL.md",
+    "retail_agent/skills/library/product-ranking-analysis/SKILL.md",
+    "retail_agent/skills/library/revenue-driver-analysis/SKILL.md"
+  ],
+  "skills": [
+    {
+      "name": "business-report-writing",
+      "description": "Write concise business reports or executive summaries from analytical evidence, choosing useful presentation and measurable proposed actions without a fixed template.",
+      "version": "1",
+      "sha256": "260738557ddb01a814fd5b591b912c7171abf39aa03acca17d70b4e5c8b03b71"
+    },
+    {
+      "name": "customer-retention",
+      "description": "Analyze acquisition cohorts, repeat purchasing, retention, churn or inactivity. Use when customer history, time eligibility or cohort denominators determine the answer.",
+      "version": "1",
+      "sha256": "1accb5a99a51cd021c61352bc226eb5d2e1b1945f8335797f8c5c25d8077055e"
+    },
+    {
+      "name": "period-comparison",
+      "description": "Compare revenue or other metrics across months, quarters or other periods, including partial periods, percentage changes and zero baselines.",
+      "version": "1",
+      "sha256": "49b10351be16d647e5ac8b93ca6f6c18ca329e764eae4fde0784b091d2b1b3be"
+    },
+    {
+      "name": "product-ranking-analysis",
+      "description": "Compare product rankings, top-N selections, customer reach, ranking overlap and boundary ties. Use for interpreting leaders or follow-ups about products in earlier lists.",
+      "version": "2",
+      "sha256": "663bd2ef145ed41c07b0aca4f69e687eae761f88e859b2c83faedc6c129f1bf5"
+    },
+    {
+      "name": "revenue-driver-analysis",
+      "description": "Investigate why revenue differs or changes, including prices, quantities, customers, order patterns and revenue concentration. Use when an explanation needs more than ranking membership.",
+      "version": "1",
+      "sha256": "2b64b783bd7621c2bc7b7edde9b47fdb963931eeb3d88770b236566f9c175b23"
+    },
+    {
+      "name": "analytical-review",
+      "description": "Review analytical answers for requested coverage, supported interpretations, metric validity, useful presentation and authorized operations. Supplied to the evaluator on every review.",
+      "version": "1",
+      "sha256": "25723ae360572065bca83c44216b7f621e45eb4cf876ac1ea0b26c8003157b2e"
+    }
+  ],
+  "reference_read": true,
+  "tools_and_services_included": true
+}

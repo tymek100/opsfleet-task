@@ -1,0 +1,14 @@
+........................................................................ [ 45%]
+........................................................................ [ 91%]
+..............                                                           [100%]
+=============================== warnings summary ===============================
+tests/test_data.py::test_byte_cap_prevents_real_submission
+  /Users/tymoteuszilczyszyn/CODING/opsfleet-task/.venv/lib/python3.12/site-packages/pytest_socket/__init__.py:138: UserWarning: A test tried to use socket.socket.
+    raise SocketBlockedError()
+
+tests/test_runtime.py::test_skills_load_on_model_request_without_becoming_numerical_evidence
+  /Users/tymoteuszilczyszyn/CODING/opsfleet-task/.venv/lib/python3.12/site-packages/google/adk/models/llm_request.py:306: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
+    declaration = tool._get_declaration()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+158 passed, 2 warnings in 5.23s

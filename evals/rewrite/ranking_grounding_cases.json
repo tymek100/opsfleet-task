@@ -1,0 +1,32 @@
+{
+  "evaluation_type": "known-regression reviewer calibration, not a held-out benchmark",
+  "source_capture": "evals/rewrite/runs/ranking-ties-03/rankings-1.json",
+  "provenance": "The first candidate reproduces the user's reported follow-up verbatim. The remaining candidates are authored controls. Evidence and the prior answer are replayed unchanged from a public TheLook capture; this is not a fresh analyst run or current warehouse data.",
+  "question": "Which products appear in both rankings? Explain what this suggests about revenue versus customer reach in one short paragraph, without a table.",
+  "cases": [
+    {
+      "id": "reported_rankings_overreach",
+      "candidate_markdown": "None of the products appear in both rankings. This complete divergence indicates that Calvin Klein's Q1 2026 revenue leaders were driven by higher-priced, lower-volume items—specifically men's outerwear and suits—whereas customer reach was led by lower-priced women's apparel and swimwear, demonstrating that top line sales in this period were concentrated in premium ticket sizes rather than broad customer volume.",
+      "expected_decisions": ["revise"],
+      "known_issue": "No overlap is supported for the displayed top-five selections, but unit prices, units sold, causal drivers and brand-wide revenue concentration are not established by the supplied rankings. A total revenue and distinct-customer count permit revenue-per-customer comparisons, not average unit price or unit volume. Boundary ties also limit claims of complete separation."
+    },
+    {
+      "id": "hedged_rankings_overreach",
+      "candidate_markdown": "No products appear in both displayed top-five lists. This suggests that the revenue leaders earned more solely because of higher unit prices, with fewer units sold, and that most Calvin Klein revenue came from premium-priced products rather than broad customer reach.",
+      "expected_decisions": ["revise"],
+      "known_issue": "The hedge 'suggests' does not supply evidence for an exclusive price explanation, fewer units, or a majority share of brand revenue. The evidence lacks unit counts, selling prices and a whole-brand revenue denominator."
+    },
+    {
+      "id": "supported_rankings_observation",
+      "candidate_markdown": "None of the products appear in both displayed top-five lists under the product-ID tie-break. The leading revenue products therefore differ from the selected customer-reach leaders, although boundary ties mean this is not a clean separation of the groups. These rankings alone do not explain whether the difference comes from unit prices, units bought per customer, or both.",
+      "expected_decisions": ["approve"],
+      "known_issue": null
+    },
+    {
+      "id": "labelled_nonexclusive_hypotheses",
+      "candidate_markdown": "None of the products overlap in the displayed top-five lists under the stated tie-break. Higher selling prices, more units bought per customer, or a combination are possible explanations for differences between revenue and customer reach; these are untested hypotheses, not findings from these rankings. Unit counts and selling prices would help distinguish them, and assessing overall revenue concentration would also require total brand revenue.",
+      "expected_decisions": ["approve"],
+      "known_issue": null
+    }
+  ]
+}
