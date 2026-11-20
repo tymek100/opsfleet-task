@@ -1,0 +1,30 @@
+Here are Calvin Klein's top five products by revenue and distinct customers for Q1 2026 (2026-01-01 to        
+2026-04-01 UTC).                                                                                              
+
+Top Products by Revenue                                                                                       
+
+                                                                               
+ Rank  Product Name                                                    Revenue 
+ ───────────────────────────────────────────────────────────────────────────── 
+ 1     Calvin Klein Mens 2 Button Solid Black Wool Suit                259.99  
+ 2     Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit           259.99  
+ 3     Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater  236.00  
+ 4     Calvin Klein Sportswear Men's Melton Wool Basic Peacoat         228.00  
+ 5     Calvin Klein Men's Wool Car Coat With Bib                       216.00  
+                                                                               
+
+Top Products by Distinct Customers                                                                            
+
+                                                                          
+ Rank  Product Name                                    Distinct Customers 
+ ──────────────────────────────────────────────────────────────────────── 
+ 1     Calvin Klein Women's 2 Pocket Collar Blouse     3                  
+ 2     Calvin Klein Women's Solid Skirtini             3                  
+ 3     Calvin Klein Women's MSY Crew Neck Roll Sleeve  2                  
+ 4     Calvin Klein Three Quarter Sleeve Dress         2                  
+ 5     Calvin Klein Women's Naked Glamour Bikini       2                  
+                                                                          
+
+Note: Based on qualifying sales items (excluding cancelled and returned orders/items); currency is unstated.  
+Ties are broken deterministically by ascending product ID (ranks 3–5 in customer reach tie with 13 other      
+products having 2 distinct customers).                                                                        

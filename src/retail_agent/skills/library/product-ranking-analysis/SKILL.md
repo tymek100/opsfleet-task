@@ -3,7 +3,7 @@ name: product-ranking-analysis
 description: Compare product rankings, top-N selections, customer reach, ranking overlap and boundary ties. Use for interpreting leaders or follow-ups about products in earlier lists.
 metadata:
   audience: analyst
-  version: "2"
+  version: "3"
 ---
 
 # Product ranking analysis
@@ -30,4 +30,8 @@ When quantities are measured, revenue divided by units supports average realized
 
 Choose compact prose or useful tables according to the user request. Show only relevant columns. Do not reproduce internal evidence records or imply the displayed list explains a cause.
 
-For compact ranking tables, prioritize product names and the requested ranking metric; add ranks or identifiers only when they help. Fields obtained for verification or a possible follow-up do not all need to be printed. Avoid adding units, the other ranking metric, an unsolicited overlap section or an extended methodology section to a request for two compact lists. Keep any necessary scope, status and tie caveats brief and shared across the tables. These are presentation choices, not a fixed answer template.
+For an explicitly compact ranking, show product names and the requested metric; include a rank column only if useful. Omit unrequested product IDs when names distinguish the products. Keep IDs in the query/evidence for grouping, stable tie-breaking and follow-ups without necessarily printing them. Include IDs when the user asks for them or duplicate names need disambiguation. Fields obtained for verification or a possible follow-up do not all need to be printed.
+
+State the brand and period once. Consolidate material sales exclusions, unknown currency and tie selection into a brief shared note, ideally one sentence. Do not repeat scope in the introduction, both table headings and a separate notes section. Do not repeat product names, IDs or values already in the tables, or enumerate the whole tie distribution. A short statement that a cutoff is tied can be useful; additional queries solely to decorate a tie footnote are unnecessary.
+
+Avoid units, the other ranking metric, unsolicited overlap analysis and extended methodology in a request for two compact lists. User requests for identifiers, full methodology, all ties or audit details take precedence over these compact defaults. Keep genuine ambiguities or limitations visible. Choose the final wording and table structure to fit the question; these defaults are not a universal answer template.

@@ -3,7 +3,7 @@ name: analytical-review
 description: Review analytical answers for requested coverage, supported interpretations, metric validity, useful presentation and authorized operations. Supplied to the evaluator on every review.
 metadata:
   audience: reviewer
-  version: "1"
+  version: "2"
 ---
 
 # Analytical review
@@ -37,6 +37,8 @@ Eligibility under a rolling age/date threshold can change with time even without
 ## Presentation
 
 Check that the answer is proportionate and readable in a terminal. A brief request should not produce repeated explanations, extra metrics, large tables or caveat sections. Only useful columns belong in a table. Avoid LaTeX, raw policy dumps, staging/review protocol explanations or unnecessary IDs. A save acknowledgment should not expose internal answer IDs or orchestration details. The analyst chooses wording, structure and whether tables help; do not impose a universal format.
+
+For an explicitly compact ranking, check that columns serve the request: product names and the ranking metric are normally sufficient, with rank optional. Unrequested IDs need a real disambiguation purpose. Scope and period should not be repeated throughout the answer, and material caveats should be consolidated into a brief shared note. Request revision for substantial repeated table details, tie-count inventories or extended methodology that makes a compact answer cumbersome. Preserve necessary limitations and honor explicit requests for IDs, detailed methods or all ties. Do not reject a clear supported answer merely for a different sentence count, heading choice or other minor style preference.
 
 ## Operations
 

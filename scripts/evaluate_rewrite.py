@@ -29,6 +29,14 @@ CASES = {
     "rankings": [
         "Show our top five products by revenue and, separately, by distinct customers in Q1 2026."
     ],
+    "compact_rankings": [
+        "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. "
+        "Use two compact tables."
+    ],
+    "rankings_with_details": [
+        "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. "
+        "Include product IDs in both tables and explain the sales exclusions and tie-breaking."
+    ],
     "ranking_followup": [
         "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. "
         "Use two compact tables.",
@@ -110,6 +118,8 @@ EXPECTED = {
     "golden_method": {"customers": 5, "repeat_customers": 1, "repeat_percent": 20.0},
     "report_save": {"revenue": 375.0, "orders": 6, "items": 7, "customers": 5},
 }
+EXPECTED["compact_rankings"] = EXPECTED["rankings"]
+EXPECTED["rankings_with_details"] = EXPECTED["rankings"]
 
 
 def _write_json(path: Path, payload: Any) -> None:

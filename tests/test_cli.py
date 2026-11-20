@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import signal
 from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +12,7 @@ from typing import cast
 import pytest
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.status import Status
 from typer.testing import CliRunner
 
 from retail_agent import cli
@@ -116,6 +119,86 @@ def test_ask_failure_returns_nonzero_exit_and_closes_store(
     assert result.exit_code == 1
     assert "could not complete" in terminal.getvalue()
     assert closed == [True]
+
+
+@pytest.mark.asyncio
+async def test_elapsed_seconds_advance_without_events_and_reset_for_each_question(
+    monkeypatch: pytest.MonkeyPatch, terminal: StringIO
+) -> None:
+    clock = [100.0]
+    monkeypatch.setattr(cli, "monotonic", lambda: clock[0])
+    indicators: list[Status] = []
+    real_status = cli.console.status
+
+    def capture_status(*args, **kwargs) -> Status:
+        indicator = real_status(*args, **kwargs)
+        indicators.append(indicator)
+        return indicator
+
+    monkeypatch.setattr(cli.console, "status", capture_status)
+
+    def render() -> str:
+        output = StringIO()
+        Console(file=output, width=120, color_system=None).print(indicators[-1].renderable)
+        return output.getvalue()
+
+    result = turn("Completed answer.")
+
+    async def ask(_prompt: str) -> TurnResult:
+        started = clock[0]
+        assert "Elapsed: 0s | Status: Considering your question..." in render()
+        clock[0] = started + 5.9
+        assert "Elapsed: 5s | Status: Considering your question..." in render()
+        analyst.progress({"event": "tool_start", "tool": "query_data", "elapsed": 999})
+        assert "Elapsed: 5s | Status: Looking up retail data..." in render()
+        clock[0] = started + 8.1
+        assert "Elapsed: 8s | Status: Looking up retail data..." in render()
+        analyst.progress({"event": "model_call", "role": "reviewer", "elapsed": 0})
+        assert "Elapsed: 8s | Status: Checking the answer against the evidence..." in render()
+        return result
+
+    analyst = SimpleNamespace(ask=ask, progress=None)
+    for _ in range(2):
+        assert await cli.run_question(cast(cli.Analyst, analyst), "Summarize sales.") is result
+        clock[0] += 100
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("outcome", ["success", "failure", "cancelled"])
+async def test_question_indicator_stops_and_restores_callbacks(
+    monkeypatch: pytest.MonkeyPatch, terminal: StringIO, outcome: str
+) -> None:
+    stopped: list[Status] = []
+    real_stop = Status.stop
+
+    def stop(indicator: Status) -> None:
+        real_stop(indicator)
+        stopped.append(indicator)
+
+    monkeypatch.setattr(Status, "stop", stop)
+    result = turn("Completed answer.")
+
+    async def ask(_prompt: str) -> TurnResult:
+        if outcome == "failure":
+            raise RuntimeError("Simulated failure")
+        if outcome == "cancelled":
+            raise asyncio.CancelledError
+        return result
+
+    def original_progress(_event: dict) -> None:
+        pass
+
+    analyst = SimpleNamespace(ask=ask, progress=original_progress)
+    original_handler = signal.getsignal(signal.SIGINT)
+    if outcome == "success":
+        assert await cli.run_question(cast(cli.Analyst, analyst), "Summarize sales.") is result
+    else:
+        expected = RuntimeError if outcome == "failure" else asyncio.CancelledError
+        with pytest.raises(expected):
+            await cli.run_question(cast(cli.Analyst, analyst), "Summarize sales.")
+    assert len(stopped) == 1
+    assert analyst.progress is original_progress
+    assert signal.getsignal(signal.SIGINT) is original_handler
 
 
 @pytest.mark.asyncio

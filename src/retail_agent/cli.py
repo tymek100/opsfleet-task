@@ -5,14 +5,16 @@ import json
 import logging
 import signal
 import warnings
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from time import monotonic
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
+from rich.text import Text
 
 from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS, TurnResult
@@ -68,25 +70,58 @@ def display(result: TurnResult) -> None:
         show_preview(result.deletion_preview)
 
 
+_TOOL_STATUS_MESSAGES = {
+    "describe_data": "Checking available data...",
+    "load_skill": "Reading analysis guidance...",
+    "load_skill_resource": "Reading supporting guidance...",
+    "search_golden": "Finding relevant analysis examples...",
+    "read_golden": "Reading an analysis example...",
+    "query_data": "Looking up retail data...",
+    "read_result": "Reading query results...",
+    "analyze_results": "Analyzing the results...",
+    "query_state_summary": "Summarizing sales by state...",
+    "search_reports": "Searching your saved reports...",
+    "read_report": "Reading a saved report...",
+    "read_answer": "Reading an earlier answer...",
+    "stage_report_save": "Preparing to save your report...",
+    "preview_report_deletion": "Preparing a report deletion preview...",
+    "cancel_report_deletion": "Cancelling the pending deletion...",
+    "finish_answer": "Submitting the answer for review...",
+}
+
+
+@dataclass
+class _QuestionStatus:
+    started: float
+    detail: str = "Considering your question..."
+
+    def __rich__(self) -> Text:
+        # Rich refreshes this even while the agent is waiting without emitting events.
+        elapsed = int(monotonic() - self.started)
+        return Text(f"Elapsed: {elapsed}s | Status: {self.detail}")
+
+
 async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
-    with console.status("Analyst is considering your question...", spinner="dots") as status:
+    indicator = _QuestionStatus(started=monotonic())
+    with console.status(indicator, spinner="dots"):
 
         def progress(event: dict) -> None:
             name = event["event"]
             if name == "tool_start":
-                detail = f"Using {event['tool']}"
+                detail = _TOOL_STATUS_MESSAGES.get(event["tool"], "Working on your request...")
             elif name == "review_start":
-                detail = "Reviewing the proposed answer"
+                detail = "Reviewing the answer..."
             elif name == "model_call":
                 detail = (
-                    "Reviewer is checking evidence"
+                    "Checking the answer against the evidence..."
                     if event.get("role") == "reviewer"
-                    else "Analyst is choosing the next action"
+                    else "Considering the next step..."
                 )
             else:
                 return
-            status.update(f"{detail} ({event['elapsed']:.0f}s)")
+            indicator.detail = detail
 
+        previous_progress = getattr(analyst, "progress", None)
         analyst.progress = progress
         task = asyncio.create_task(analyst.ask(prompt))
         loop = asyncio.get_running_loop()
@@ -95,6 +130,7 @@ async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
         try:
             result = await task
         finally:
+            analyst.progress = previous_progress
             loop.remove_signal_handler(signal.SIGINT)
             signal.signal(signal.SIGINT, previous_handler)
     return result
@@ -151,11 +187,12 @@ async def conversation(analyst: Analyst) -> None:
         )
     while True:
         try:
-            prompt = console.input("\n\n[bold]You> [/bold]").strip()
+            prompt = console.input("[bold]You> [/bold]").strip()
         except (EOFError, KeyboardInterrupt):
             break
         if not prompt:
             continue
+        console.print()
         command, _, argument = prompt.partition(" ")
         try:
             match command:
@@ -200,6 +237,7 @@ async def conversation(analyst: Analyst) -> None:
                         console.print("Unknown command. Use /help.")
                     else:
                         display(await run_question(analyst, prompt))
+                        console.print()
         except (KeyboardInterrupt, asyncio.CancelledError):
             console.print("Investigation cancelled.")
         except Exception as exc:

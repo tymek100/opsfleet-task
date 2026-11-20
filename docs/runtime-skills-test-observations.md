@@ -51,6 +51,19 @@ The final wording still sounds broader than necessary (“driven by” and “ou
 
 All four expected decisions matched, with genuine grounding reasons for the two rejections. This does not establish a general reliability rate. The evaluator's skill is always supplied, and its metadata appears in the trace on every review; it remains a separate tool-free LLM call within the shared allowance.
 
+## Compact ranking presentation follow-up
+
+The user requested less repetition after an otherwise correct ranking answer. `product-ranking-analysis` version **3** now omits unrequested IDs when names are unambiguous, keeps identifiers in evidence for grouping and follow-ups, and consolidates material caveats into a brief shared note. `analytical-review` version **2** checks substantial clutter while preserving explicit requests for identifiers, methods and all ties. The LLM still chooses the wording and generates the tables; no renderer filtering or fixed response template was added.
+
+**49 focused loader, runtime and reviewer tests passed**, along with Ruff, formatting, Pyright and diff checks. Two real-model checks used temporary storage:
+
+| Prompt | Seconds | Manual observation |
+| --- | ---: | --- |
+| [Exact compact-ranking request, public BigQuery](../evals/rewrite/runs/compact-rankings-01/observations.md) | 26.423 | Exactly five rows in each of two three-column tables: rank, product name, requested metric. No ID column, repeated scope section or extended methodology. One shared note. Values/order agree with captured evidence. A quantified tie parenthesis remains; wording is still model-selected. |
+| [Explicit IDs and methods, synthetic fixture](../evals/rewrite/runs/compact-rankings-explicit-details-01/observations.md) | 33.735 | IDs retained in both tables, sales exclusions and tie-breaking explained, and the genuine two-product shortfall disclosed. Fixture values and excluded-item counts agree with evidence. |
+
+The [terminal preview](../evals/rewrite/runs/compact-rankings-01/terminal-preview.txt) uses the actual CLI renderer at 110 columns. These selected trials demonstrate improved compactness and preserved explicit-detail behavior, not a guarantee of identical future formatting. Restart the CLI to load the new skill snapshot. The reusable evaluation cases are `compact_rankings` and `rankings_with_details`.
+
 ## Reproduce
 
 ```bash
