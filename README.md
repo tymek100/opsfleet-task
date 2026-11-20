@@ -15,7 +15,7 @@ For real Gemini calls against a frozen synthetic dataset, without BigQuery crede
 uv run --locked retail-agent chat --user alice --backend fixture --golden-bootstrap
 ```
 
-The application provides schema discovery, Golden search/read, warehouse queries, local result analysis, prior-answer access and private report management. Permissions, privacy, budgets and confirmed deletion are enforced by application services. Normal answers contain the model's reviewed Markdown; `/details` reveals the supporting SQL and evidence on request.
+The application provides schema discovery, a Golden example catalog, warehouse queries, local result analysis, prior-answer access and private report management. The analyst can list eligible example summaries and choose which ones to read; relevance is decided by the LLM. Permissions, privacy, budgets and confirmed deletion are enforced by application services. Normal answers contain the model's reviewed Markdown; `/details` reveals the supporting SQL and evidence on request.
 
 Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Model-facing functions live in `src/retail_agent/tools/`, their database/storage implementations in `services/`, and skill Markdown in `skills/library/`. See [how skills and Golden examples work](docs/architecture.md#skills-and-golden-examples) and [skill authoring](src/retail_agent/skills/README.md).
 

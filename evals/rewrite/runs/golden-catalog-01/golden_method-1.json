@@ -1,0 +1,296 @@
+{
+  "index": 0,
+  "prompt": "Consult a relevant Golden example, then calculate our Q1 2026 repeat-customer share from current authorized data. Explain the result briefly.",
+  "prompt_sha256": {
+    "analyst.md": "ca706851ec995f82f94d37aa8efb8bcb20289748e4153cae33589edb003a8a6e",
+    "reviewer.md": "191b59070bd914a69599eb4a80764f8ecda3f09982233984b1e27a93ee90073d"
+  },
+  "result": {
+    "answer": {
+      "id": "A5043a9226c",
+      "markdown": "Following the methodology in Golden example `repeat_customer_share`, the repeat-customer share is calculated by determining the number of distinct qualifying orders placed by each customer within the period.\n\n### Q1 2026 Repeat-Customer Share\n\n* **Total Active Customers:** 5\n* **Repeat Customers (>1 order in Q1 2026):** 1\n* **Repeat-Customer Share:** **20.00%** [E1]\n\n### Explanation\n* **Metric Definition:** Repeat-customer share here measures the percentage of distinct customers who placed two or more separate qualifying orders between 2026-01-01 00:00:00 UTC and 2026-04-01 00:00:00 UTC [E1].\n* **Order vs. Item Level:** Purchasing multiple items within a single order counts as one order, not a repeat purchase.\n* **Scope & Status Caveats:** Analysis is restricted to authorized Calvin Klein transactions and excludes cancelled or returned orders and items. This reflects an intra-quarter repeat purchase behavior rather than a lifetime customer retention rate.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.198,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "model_usage",
+        "elapsed": 2.163,
+        "role": "analyst",
+        "input_tokens": 2863,
+        "output_tokens": 38,
+        "thinking_tokens": 0,
+        "spent_usd": 0.006182,
+        "reserved_usd": 0
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.166,
+        "tool": "load_skill"
+      },
+      {
+        "event": "skill_loaded",
+        "elapsed": 2.166,
+        "role": "analyst",
+        "name": "customer-retention",
+        "version": "1",
+        "sha256": "1accb5a99a51cd021c61352bc226eb5d2e1b1945f8335797f8c5c25d8077055e"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.167,
+        "tool": "load_skill",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.17,
+        "tool": "list_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.172,
+        "tool": "list_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 2.182,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "model_usage",
+        "elapsed": 4.185,
+        "role": "analyst",
+        "input_tokens": 5680,
+        "output_tokens": 32,
+        "thinking_tokens": 0,
+        "spent_usd": 0.017926,
+        "reserved_usd": 0
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.188,
+        "tool": "read_golden"
+      },
+      {
+        "event": "golden_read",
+        "elapsed": 4.188,
+        "id": "repeat_customer_share",
+        "revision": 1
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 4.189,
+        "tool": "read_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.19,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 4.191,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 4.205,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "model_usage",
+        "elapsed": 7.317,
+        "role": "analyst",
+        "input_tokens": 7243,
+        "output_tokens": 201,
+        "thinking_tokens": 0,
+        "spent_usd": 0.034824,
+        "reserved_usd": 0
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 7.318,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 7.84,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 7.849,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "model_usage",
+        "elapsed": 11.649,
+        "role": "analyst",
+        "input_tokens": 7997,
+        "output_tokens": 273,
+        "thinking_tokens": 0,
+        "spent_usd": 0.054094,
+        "reserved_usd": 0.000568
+      },
+      {
+        "event": "review_start",
+        "elapsed": 11.652,
+        "attempt": 1
+      },
+      {
+        "event": "skill_loaded",
+        "elapsed": 11.652,
+        "role": "reviewer",
+        "name": "analytical-review",
+        "version": "2",
+        "sha256": "5b69641f73fbeb71c155890e746c3b930e9b07990d77672d1a13020f97185dfb"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 11.663,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "model_usage",
+        "elapsed": 19.663,
+        "role": "reviewer",
+        "input_tokens": 2386,
+        "output_tokens": 346,
+        "thinking_tokens": 239,
+        "spent_usd": 0.065886,
+        "reserved_usd": 0.000568
+      },
+      {
+        "event": "review_checks",
+        "elapsed": 19.664,
+        "checks": [
+          {
+            "category": "coverage",
+            "passed": true
+          },
+          {
+            "category": "grounding",
+            "passed": true
+          },
+          {
+            "category": "metrics",
+            "passed": true
+          },
+          {
+            "category": "presentation",
+            "passed": true
+          },
+          {
+            "category": "operations",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "event": "review_end",
+        "elapsed": 19.665,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 19.665,
+        "answer_id": "A5043a9226c",
+        "sha256": "b9deddff329e05ca52d7a95ba6772272de0c8d9fd14e93935fe21c245b98054b"
+      }
+    ],
+    "usage": {
+      "model_calls": 5,
+      "queries": 1,
+      "tool_calls": 6,
+      "reserved_usd": 0.000568,
+      "spent_usd": 0.065886,
+      "accounted_usd": 0.066454,
+      "remaining_usd": 0.933546,
+      "input_tokens": 26169,
+      "output_tokens": 890,
+      "thinking_tokens": 239
+    },
+    "evidence": [
+      {
+        "sql": "WITH customer_orders AS (\n  SELECT user_id, COUNT(DISTINCT order_id) AS orders\n  FROM sales\n  WHERE purchased_at >= TIMESTAMP '2026-01-01 00:00:00 UTC'\n    AND purchased_at < TIMESTAMP '2026-04-01 00:00:00 UTC'\n  GROUP BY user_id\n)\nSELECT \n  COUNT(*) AS total_customers, \n  COUNTIF(orders > 1) AS repeat_customers,\n  ROUND(100.0 * SAFE_DIVIDE(COUNTIF(orders > 1), COUNT(*)), 2) AS repeat_customer_share_pct\nFROM customer_orders",
+        "columns": [
+          "total_customers",
+          "repeat_customers",
+          "repeat_customer_share_pct"
+        ],
+        "rows": [
+          {
+            "total_customers": 5,
+            "repeat_customers": 1,
+            "repeat_customer_share_pct": 20.0
+          }
+        ],
+        "total_rows": 1,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "ccdc55fad281e86b0915837ba229ea4529a42bff5ad3654d502060938f10fb15",
+        "executed_at": "2026-11-20T23:29:53.892790+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Calculate Q1 2026 repeat-customer share for Calvin Klein",
+        "queried_at": "2026-11-20T23:29:53.895970+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 19.667,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "retrieval_and_fresh_query_observed",
+      "observation": "matched",
+      "description": "This prompt explicitly requests a Golden method. Tool presence does not prove that its adaptation is correct."
+    },
+    {
+      "name": "fixture_number_presence_smoke",
+      "observation": "matched",
+      "description": "Expected numeric tokens [20.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+    }
+  ],
+  "file": "golden_method-1.json",
+  "manual_assessment": "Codex inspected the captured answer, query, result rows and tool trace. The live analyst browsed the catalog and selected repeat_customer_share, then queried fresh fixture data rather than treating the example numbers as evidence. The SQL counts distinct qualifying orders per customer within the Q1 UTC half-open window; the resulting 1 repeat customer out of 5 active customers gives 20%, matching the independently enumerated fixture facts. Brand scope and the qualifying-sales relation are correct. One review approved the answer; the run used 5 model calls and 1 query in 19.667 seconds. Report storage stayed empty. The answer correctly distinguishes intra-quarter repeat purchasing from lifetime retention, but is more verbose than the requested brief explanation. This single seeded fixture smoke run verifies functioning catalog selection and fresh calculation; it does not establish better relevance, generalization, cost or latency than keyword search. Offline validation also passed: 226 tests, Ruff, formatting, Pyright and the Golden fixture validator."
+}

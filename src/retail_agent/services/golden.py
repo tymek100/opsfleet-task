@@ -12,7 +12,7 @@ Production editor authentication/signatures are outside this local file loader.
 Every entry has scope={brands: [...], all_brands: bool}. All-brand content is
 visible only to an all-brand principal (brands=None). A manager may read an entry
 only when its entire source scope is a subset of that manager's allowed brands.
-No lexical search snippets are generated before these filters are applied.
+Catalog summaries and full examples are exposed only after these filters apply.
 """
 
 from __future__ import annotations
@@ -21,7 +21,6 @@ import copy
 import hashlib
 import json
 import re
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
@@ -35,62 +34,7 @@ WARNING = (
 BOOTSTRAP_STATUS = "synthetic_fixture_validated_not_human_approved"
 MAX_CORPUS_BYTES = 2_000_000
 MAX_EXAMPLE_BYTES = 48_000
-# General search syntax/noise filtering, not routing by business question.
-STOP_WORDS = frozenset(
-    [
-        "a",
-        "an",
-        "and",
-        "are",
-        "as",
-        "at",
-        "be",
-        "by",
-        "can",
-        "could",
-        "do",
-        "does",
-        "for",
-        "from",
-        "give",
-        "had",
-        "has",
-        "have",
-        "how",
-        "i",
-        "in",
-        "is",
-        "it",
-        "me",
-        "of",
-        "on",
-        "or",
-        "our",
-        "please",
-        "show",
-        "that",
-        "the",
-        "their",
-        "them",
-        "these",
-        "this",
-        "to",
-        "us",
-        "was",
-        "we",
-        "were",
-        "what",
-        "when",
-        "which",
-        "who",
-        "why",
-        "will",
-        "with",
-        "would",
-        "you",
-        "your",
-    ]
-)
+MAX_CATALOG_PAGE_SIZE = 20
 
 
 def content_hash(record: dict[str, Any]) -> str:
@@ -132,7 +76,7 @@ def _valid_timestamp(value: Any) -> bool:
 
 
 class GoldenStore:
-    """One principal's immutable in-memory index of eligible Golden examples."""
+    """One principal's immutable in-memory catalog of eligible Golden examples."""
 
     def __init__(
         self,
@@ -142,12 +86,6 @@ class GoldenStore:
         schema_version: str = "scoped-retail-v1",
         metric_version: str = "retail-defaults-v1",
     ) -> None:
-        self._db = sqlite3.connect(":memory:", check_same_thread=False)
-        self._db.execute(
-            "CREATE VIRTUAL TABLE methods USING fts5("
-            "example_id UNINDEXED, question, tags, notes, "
-            "tokenize='porter unicode61 remove_diacritics 2')"
-        )
         self._records: dict[str, dict[str, Any]] = {}
         self._metadata: dict[str, Any] = {}
         self._available = True
@@ -157,11 +95,10 @@ class GoldenStore:
         self._metric_version = metric_version
         try:
             self._load(Path(corpus_path))
-        except (OSError, ValueError, TypeError, KeyError, sqlite3.Error):
-            # Reject the entire corpus rather than exposing a partially built index.
+        except (OSError, ValueError, TypeError, KeyError):
+            # Reject the entire corpus rather than exposing a partially loaded catalog.
             self._available = False
             self._records.clear()
-            self._db.execute("DELETE FROM methods")
 
     def _load(self, path: Path) -> None:
         if path.stat().st_size > MAX_CORPUS_BYTES:
@@ -190,7 +127,7 @@ class GoldenStore:
             "corpus_sha256": hashlib.sha256(raw).hexdigest(),
             "schema_version": collection.get("schema_version"),
             "metric_version": collection.get("metric_version"),
-            "index_version": "fts5-porter-bm25-v1",
+            "catalog_version": "golden-catalog-v1",
             "synthetic_demo_mode": self._bootstrap,
         }
         if not compatible:
@@ -230,15 +167,6 @@ class GoldenStore:
             stored["schema_version"] = self._schema_version
             stored["metric_version"] = self._metric_version
             self._records[key] = stored
-            self._db.execute(
-                "INSERT INTO methods(example_id, question, tags, notes) VALUES (?, ?, ?, ?)",
-                (
-                    key,
-                    record["question"],
-                    " ".join(record["tags"]).replace("_", " "),
-                    " ".join(record["method_notes"]),
-                ),
-            )
 
     def _verify_fixture(self, corpus_path: Path, collection: dict[str, Any]) -> None:
         fixture = _object(collection.get("fixture", {}))
@@ -312,7 +240,7 @@ class GoldenStore:
             if not isinstance(record.get(field), str) or not record[field].strip():
                 raise ValueError("Incomplete trio")
         if not _strings(record.get("tags")) or not _strings(record.get("method_notes")):
-            raise ValueError("Missing search content")
+            raise ValueError("Missing method descriptions")
         queries = _array(record.get("queries"))
         if not queries:
             raise ValueError("Missing SQL examples")
@@ -337,39 +265,29 @@ class GoldenStore:
     def _base(self) -> dict[str, Any]:
         return {"warning": WARNING, **self._metadata}
 
-    def search(self, query: str, limit: int = 3) -> dict[str, Any]:
-        """Find a few eligible method summaries; never return example result rows."""
+    def list_examples(self, offset: int = 0, limit: int = 20) -> dict[str, Any]:
+        """Browse eligible summaries in corpus order; the analyst judges relevance."""
         if not self._available:
             return {
                 "status": "unavailable",
                 "message": "Golden corpus failed loading or integrity checks.",
             }
-        if len(query) > 2000 or type(limit) is not int:
+        if (
+            type(offset) is not int
+            or offset < 0
+            or type(limit) is not int
+            or not 1 <= limit <= MAX_CATALOG_PAGE_SIZE
+        ):
             return {
                 "status": "invalid_request",
-                "message": "Use a short search query and integer limit.",
+                "message": "Use an integer offset of 0 or greater and an integer limit from 1 to 20.",
             }
-        tokens = list(
-            dict.fromkeys(
-                token.lower()
-                for token in re.findall(r"[^\W_]+", query, flags=re.UNICODE)
-                if token.lower() not in STOP_WORDS and not token.isdigit() and len(token) <= 64
-            )
-        )[:32]
-        if not tokens or not self._records:
-            return {"status": "empty", "matches": [], **self._base()}
-        expression = " OR ".join(f'"{token}"' for token in tokens)
-        rows = self._db.execute(
-            "SELECT example_id FROM methods WHERE methods MATCH ? "
-            "ORDER BY bm25(methods, 0, 6, 5, 1), example_id LIMIT ?",
-            (expression, max(1, min(limit, 5))),
-        ).fetchall()
-        matches: list[dict[str, Any]] = []
-        for (key,) in rows:
-            record = self._records[key]
-            matches.append(
+        records = list(self._records.values())[offset : offset + limit]
+        examples: list[dict[str, Any]] = []
+        for record in records:
+            examples.append(
                 {
-                    "id": key,
+                    "id": record["id"],
                     "revision": record["revision"],
                     "question": record["question"],
                     "tags": record["tags"],
@@ -380,7 +298,12 @@ class GoldenStore:
                 }
             )
         return copy.deepcopy(
-            {"status": "ok" if matches else "empty", "matches": matches, **self._base()}
+            {
+                "status": "ok" if examples else "empty",
+                "examples": examples,
+                "next_offset": offset + limit if offset + limit < len(self._records) else None,
+                **self._base(),
+            }
         )
 
     def read(self, example_id: str) -> dict[str, Any]:
@@ -398,7 +321,3 @@ class GoldenStore:
                 **self._base(),
             }
         return copy.deepcopy({"status": "ok", "example": record, **self._base()})
-
-    def close(self) -> None:
-        """Release the in-memory index when its session closes."""
-        self._db.close()

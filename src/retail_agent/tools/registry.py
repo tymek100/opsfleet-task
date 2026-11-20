@@ -25,7 +25,7 @@ def build_tools(turn: Turn) -> list:
         data.describe_data,
         skills.load_skill,
         skills.load_skill_resource,
-        knowledge.search_golden,
+        knowledge.list_golden,
         knowledge.read_golden,
         data.query_data,
         data.read_result,

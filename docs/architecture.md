@@ -45,7 +45,7 @@ The [tool registry](../src/retail_agent/tools/registry.py) exposes these capabil
 | Understand and query data | `describe_data`, `query_data`, `query_state_summary` |
 | Inspect and calculate from existing results | `read_result`, `analyze_results` |
 | Read analytical guidance | `load_skill`, `load_skill_resource` |
-| Find worked examples | `search_golden`, `read_golden` |
+| Browse worked examples | `list_golden`, `read_golden` |
 | Read saved reports or previous answers | `search_reports`, `read_report`, `read_answer` |
 | Request report actions | `stage_report_save`, `preview_report_deletion`, `cancel_report_deletion` |
 | Submit an answer for review | `finish_answer` |
@@ -64,7 +64,9 @@ These give the model reusable guidance while leaving the next action to the anal
 
 The analyst sees skill summaries and can load relevant instructions on demand. The evaluator always receives the review skill. Skills do not grant permissions or execute scripts.
 
-The Golden bootstrap contains 11 synthetic examples and is enabled with `--golden-bootstrap`. Search uses SQLite full-text retrieval. The analyst may adapt or ignore an example, but must query current data for current facts. Synthetic examples are not company-approved reports. Evaluation answers stay outside the retrieval index.
+For Golden examples, `list_golden` returns up to 20 short summaries per page. The same analyst decides which examples are relevant and calls `read_golden` for their full question, SQL, and answer, or uses none. A `next_offset` lets it request another page. There is no keyword ranking or separate retrieval agent.
+
+Application code filters examples by approval, visibility, authorized scope, and schema/metric compatibility before exposing them, and checks content integrity. The bootstrap contains 11 synthetic examples and is enabled with `--golden-bootstrap`. The analyst may adapt or ignore an example, but must query current data for current facts. Synthetic examples are not company-approved reports. Evaluation answers stay outside this catalog.
 
 ## Data access
 

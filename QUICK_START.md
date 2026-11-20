@@ -27,7 +27,7 @@ uv run --locked retail-agent chat --user alice --golden-bootstrap
 
 Demo identities: `alice` can analyze Calvin Klein; `bob` can analyze Levi's; `ceo` can analyze all brands. These are local simulations, not production authentication. Report libraries remain owner-private.
 
-`--golden-bootstrap` enables synthetic, unapproved demonstration methods explicitly. The model chooses when to retrieve one; it must query fresh authorized data for current numerical answers. Without that flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
+`--golden-bootstrap` enables synthetic, unapproved demonstration methods explicitly. The model can list eligible example summaries and choose which examples to read, or use none. It must query fresh authorized data for current numerical answers. Without that flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
 
 Example conversations:
 

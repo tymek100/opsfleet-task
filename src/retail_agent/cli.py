@@ -76,7 +76,7 @@ _TOOL_STATUS_MESSAGES = {
     "describe_data": "Checking available data...",
     "load_skill": "Reading analysis guidance...",
     "load_skill_resource": "Reading supporting guidance...",
-    "search_golden": "Finding relevant analysis examples...",
+    "list_golden": "Browsing analysis examples...",
     "read_golden": "Reading an analysis example...",
     "query_data": "Looking up retail data...",
     "read_result": "Reading query results...",

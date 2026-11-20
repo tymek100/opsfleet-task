@@ -169,6 +169,50 @@ def reviewer_payload(request: dict[str, Any]) -> dict[str, Any]:
 
 
 @pytest.mark.asyncio
+async def test_model_can_browse_golden_catalog_and_read_its_selected_method(
+    tmp_path: Path,
+) -> None:
+    selected_id = "monthly_cohort_retention"
+    approved = "Group customers by their first purchase month and measure next-month activity."
+
+    def select_example(request: dict[str, Any]) -> types.Content:
+        catalog = observations(request, "list_golden")[-1]
+        assert catalog["status"] == "ok"
+        assert len(catalog["examples"]) == 11
+        assert selected_id in [item["id"] for item in catalog["examples"]]
+        assert all("queries" not in item for item in catalog["examples"])
+        return calls(("read_golden", {"example_id": selected_id}))
+
+    def use_method(request: dict[str, Any]) -> types.Content:
+        example = observations(request, "read_golden")[-1]
+        assert example["example"]["id"] == selected_id
+        assert "not current analytical evidence" in example["warning"]
+        return finish(approved)
+
+    app, model, reviewer = make_app(
+        tmp_path,
+        [calls(("list_golden", {})), select_example, use_method],
+        [review()],
+    )
+    try:
+        result = await app.ask(
+            "Explain a method for measuring whether newly acquired customers return. "
+            "Use an example if useful; do not calculate current figures."
+        )
+        assert result.status == "approved", result.trace
+        assert result.answer and result.answer.markdown == approved
+        assert "list_golden" in model.requests[0]["registered_tools"]
+        assert "search_golden" not in model.requests[0]["registered_tools"]
+        payload = reviewer_payload(reviewer.requests[0])
+        assert [item["id"] for item in payload["retrieved_methods"]] == [selected_id]
+        assert payload["evidence"] == []
+        assert result.evidence == []
+        assert result.usage["queries"] == 0
+    finally:
+        app.reports.close()
+
+
+@pytest.mark.asyncio
 async def test_follow_up_receives_a_fresh_cost_budget_with_usage_settled_before_review(
     tmp_path: Path,
 ) -> None:
@@ -201,7 +245,6 @@ async def test_follow_up_receives_a_fresh_cost_budget_with_usage_settled_before_
             assert analyst_usage < review_start
     finally:
         app.reports.close()
-        app.knowledge.close()
 
 
 @pytest.mark.asyncio
@@ -216,7 +259,6 @@ async def test_cost_limit_message_identifies_the_per_question_allowance(tmp_path
         assert model.requests == []
     finally:
         app.reports.close()
-        app.knowledge.close()
 
 
 @pytest.mark.asyncio

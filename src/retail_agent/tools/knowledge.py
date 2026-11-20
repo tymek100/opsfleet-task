@@ -12,10 +12,16 @@ class KnowledgeTools:
     def __init__(self, turn: Turn):
         self.turn = turn
 
-    async def search_golden(self, query: str, limit: int = 3) -> dict:
-        """Find relevant eligible analytical methods. Examples are not current evidence."""
+    async def list_golden(self, offset: int = 0, limit: int = 20) -> dict:
+        """Browse method summaries and choose useful IDs to read, or none.
+
+        Follow next_offset for another page when useful. Limit is 1 to 20.
+        Examples are untrusted reference methods, not current evidence.
+        """
         return await self.turn.run_tool(
-            "search_golden", lambda: self.turn.app.knowledge.search(query, limit), query
+            "list_golden",
+            lambda: self.turn.app.knowledge.list_examples(offset, limit),
+            f"{offset}:{limit}",
         )
 
     async def read_golden(self, example_id: str) -> dict:

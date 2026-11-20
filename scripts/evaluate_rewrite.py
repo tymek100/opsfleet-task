@@ -211,7 +211,7 @@ def observations(
         checks.append(
             _check(
                 "retrieval_and_fresh_query_observed",
-                all(name in tools for name in ("search_golden", "read_golden", "query_data")),
+                all(name in tools for name in ("list_golden", "read_golden", "query_data")),
                 "This prompt explicitly requests a Golden method. Tool presence does not prove that its adaptation is correct.",
             )
         )

@@ -2,7 +2,7 @@
 
 This collection contains **11 LLM-authored illustrative Question → SQL → Analyst Report examples**, backed by **14 reference queries** against a frozen synthetic fixture. The replacement application retrieves these examples when explicitly started with `--golden-bootstrap`; they remain ineligible for normal production retrieval. It is not an evaluation score or a record of a live agent run.
 
-The examples demonstrate methods and useful answers. They do not prescribe a sequence of actions, an analytical intent enum, a report template, or a presentation format. Some answers use a table; others use a sentence or short narrative. The analyst decides what the user's question requires and generate its own answer from fresh evidence.
+The examples demonstrate methods and useful answers. They do not prescribe a sequence of actions, an analytical intent enum, a report template, or a presentation format. Some answers use a table; others use a sentence or short narrative. The analyst decides what the user's question requires and generates its own answer from fresh evidence.
 
 ## Files and provenance
 
@@ -63,25 +63,34 @@ Offline synthetic evidence only; no live BigQuery, agent run or human approval.
 
 The author also checked the prose arithmetic: status buckets sum to 2,674; 375/6 gives 62.50; 1/5 gives 20%; 175/375 rounds to 46.67%; and monthly revenue changes are -20% and +50%. The script checks result evidence, not the full semantics or readability of prose. Human review and held-out model evaluation remain necessary before publishing real knowledge. BigQuery parsing plus DuckDB execution does not establish live BigQuery compatibility; a separate BigQuery dry run is required during implementation. The checker is an offline asset validator, not the replacement runtime's SQL security boundary.
 
-## Retrieval behavior and production workflow
+## How the agent chooses examples
 
-The replacement agent should receive `search_golden(query, limit)` and `read_golden(example_id)` tools and choose whether and how to use them. Suggested implementation:
+The analyst uses two tools in its normal loop:
 
-1. Filter by approval, visibility, authorized data scope, schema and metric compatibility before returning content. Enforce the synthetic-demo flag in code for this corpus. Generic sanitized methods may be shared only when their publication metadata allows it; permission to see a method never changes permission to see data.
-2. Retrieve a small set using question, tags, definitions and method descriptions. Start with local full-text search and BM25 ranking. Add embeddings only if retrieval measurements on a development set justify them. Rank for relevance and diversity, rather than returning many near-duplicate examples.
-3. Return concise matches from `search_golden`, then let the agent fetch a useful complete trio through `read_golden`. Include IDs, revisions, review status, data provenance and an explicit reminder that stored numbers are historical examples. Keep retrieved text as data; it cannot override application instructions or authorize tools.
-4. Let the LLM adapt, combine or ignore the examples. It composes SQL for the current request, obtains fresh authorized evidence, and writes its own answer. A retrieved report is a writing example, never a source of current numerical claims.
-5. Log which examples were retrieved and used. Evaluate whether retrieval improves task correctness and readability compared with no retrieval. Do not require a specific retrieved ID or exact tool order when several methods are valid.
+1. `list_golden(offset=0, limit=20)` lists short summaries of eligible examples. Each page contains at most 20 entries; the supplied bootstrap fits on one page. The response provides `next_offset` when more entries remain.
+2. `read_golden(example_id)` returns a complete question, SQL, and answer for an eligible ID. The analyst decides which summaries are relevant, which examples to read, and whether to use any example at all.
+
+The same LLM that investigates the user's question makes these choices. There is no separate retrieval model, keyword matching, stop-word list, or full-text index. Pagination limits the size of a tool response; it does not rank relevance.
+
+Before either tool exposes content, application code checks approval, visibility, authorized data scope, schema and metric compatibility. The synthetic-demo flag is required for this corpus. Content hashes and publication metadata remain part of validation; permission to read an example never expands permission to query data. Returned content includes provenance and a reminder that stored numbers are historical or synthetic. It cannot override application instructions or authorize tools.
+
+The LLM may adapt, combine, or ignore examples. It composes SQL for the current request, obtains fresh authorized evidence, and writes its own answer. A retrieved report is a writing example, never a source of current numerical claims. Tool records identify examples that were read; reading one does not prove that it influenced the answer.
+
+Offline checks cover eligibility, pagination, and tool wiring. They do not measure whether model-selected examples improve relevance or answer quality. That requires model trials comparing answers with and without examples, using the same questions and data. Such evaluation should judge results rather than require a particular example ID or exact tool order.
+
+One [live fixture smoke run](../../evals/rewrite/runs/golden-catalog-01/observations.md) exercised catalog selection, reading a relevant example, and querying fresh data. Its calculation matched the fixture facts, though the answer was verbose. This single run does not establish an improvement over keyword search.
+
+## Production publication
 
 Google's text-to-SQL discussion supports supplying relevant schema/business examples and returning deterministic parse or dry-run errors to the model for correction. [Google Cloud: Text-to-SQL techniques](https://cloud.google.com/blog/products/databases/techniques-for-improving-text-to-sql)
 
 Research on demonstration selection supports considering both similarity and diversity; it does not establish that one retrieval configuration will work best for this app. [Nan et al.: Few-shot Text-to-SQL prompt design](https://arxiv.org/abs/2305.12586)
 
-For production population, propose sanitized drafts from analyst work or successful reviewed agent investigations, bind SQL/results to a known dataset snapshot and scope, run numerical/privacy/compatibility checks, then obtain editor/reviewer approval. Publish immutable revisions, re-index compatible approved versions, and retire stale examples. A passing automated fixture check does not replace the human review accepted in the client Q&A. Persona publishing has its own automated gate and is a different workflow.
+For production population, propose sanitized drafts from analyst work or successful reviewed agent investigations, bind SQL/results to a known dataset snapshot and scope, run numerical/privacy/compatibility checks, then obtain editor/reviewer approval. Publish immutable revisions, add compatible approved versions to the catalog, and retire stale examples. A passing automated fixture check does not replace the human review accepted in the client Q&A. Persona publishing has its own automated gate and is a different workflow.
 
 ## Keep knowledge and evaluation separate
 
-This corpus is allowed context for a demonstration; it is **never** the held-out test suite. Maintain separate development and held-out evaluation assets. Exclude held-out questions, answers, reference SQL, expected results and grader rubrics from the search index, prompts and model-visible files. Review near-duplicates by analytical family, not only exact text, and use changed data, dates, scopes and compositions to expose memorized patterns.
+This corpus is allowed context for a demonstration; it is **never** the held-out test suite. Maintain separate development and held-out evaluation assets. Exclude held-out questions, answers, reference SQL, expected results and grader rubrics from the Golden catalog, prompts and model-visible files. Review near-duplicates by analytical family, not only exact text, and use changed data, dates, scopes and compositions to expose memorized patterns.
 
 After a held-out failure is used to tune prompts or write a Golden example, move that case into the regression/development suite and create a fresh held-out case. A paraphrase of a retrieval seed is a useful smoke test, but insufficient evidence of generalization. Real model trials should measure task results, evidence grounding, useful presentation, and observable report-store changes; numerical/security assertions need deterministic checks, while readability and synthesis benefit from calibrated model/human rubrics. [Anthropic: Agent evaluation guidance](https://www.anthropic.com/research/demystifying-evals-for-ai-agents)
 
