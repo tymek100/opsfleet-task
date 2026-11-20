@@ -5,6 +5,7 @@ import base64
 import json
 import time
 from collections.abc import AsyncGenerator, Callable
+from typing import cast
 
 import httpx
 from google import genai
@@ -21,6 +22,31 @@ from retail_agent.privacy import screen
 
 class ProviderUnavailable(Exception):
     pass
+
+
+def _usage_counts(
+    usage: types.GenerateContentResponseUsageMetadata | None,
+) -> tuple[int, int, int] | None:
+    """Accept a complete metering snapshot; unknown usage keeps its full reservation."""
+    if usage is None:
+        return None
+    counts = (
+        usage.prompt_token_count,
+        usage.candidates_token_count,
+        usage.thoughts_token_count if usage.thoughts_token_count is not None else 0,
+        usage.tool_use_prompt_token_count if usage.tool_use_prompt_token_count is not None else 0,
+    )
+    if any(type(count) is not int or count < 0 for count in counts):
+        return None
+    prompt, output, thinking, tool_input = cast(tuple[int, int, int, int], counts)
+    if usage.total_token_count is not None and (
+        type(usage.total_token_count) is not int
+        or usage.total_token_count != prompt + output + thinking + tool_input
+    ):
+        return None
+    # Cached tokens are already part of prompt_token_count. Use full configured
+    # input pricing until a provider-specific cache discount is configured.
+    return prompt + tool_input, output, thinking
 
 
 def request_json(request: LlmRequest) -> str:
@@ -66,6 +92,29 @@ class AccountedModel(BaseLlm):
     def capabilities(self):
         return self.delegate.capabilities
 
+    def _settle_usage(
+        self, reservation: int, usage: types.GenerateContentResponseUsageMetadata | None
+    ) -> None:
+        counts = _usage_counts(usage)
+        if counts is None:
+            return
+        input_tokens, output_tokens, thinking_tokens = counts
+        if self._budget.settle_model(
+            reservation,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            thinking_tokens=thinking_tokens,
+        ):
+            self._emit(
+                "model_usage",
+                role="reviewer" if self._reviewer else "analyst",
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                thinking_tokens=thinking_tokens,
+                spent_usd=round(self._budget.spent_usd, 6),
+                reserved_usd=round(self._budget.reserved_usd, 6),
+            )
+
     async def generate_content_async(
         self,
         llm_request: LlmRequest,
@@ -76,7 +125,9 @@ class AccountedModel(BaseLlm):
             hint = (
                 f"Remaining shared allowance: {self._budget.remaining():.0f}s; "
                 f"{self._budget.settings.max_model_calls - self._budget.model_calls} model calls "
-                "including final review. Finish with sufficient evidence rather than exhaust it."
+                f"including final review; ${self._budget.work_available_usd:.3f} available "
+                "for further work after protecting review. Finish with sufficient evidence "
+                "rather than exhaust it."
             )
             llm_request.append_instructions([hint])
         encoded = request_json(llm_request)
@@ -85,7 +136,9 @@ class AccountedModel(BaseLlm):
             llm_request.config.max_output_tokens or self._budget.settings.max_output_tokens
         )
         for attempt in range(2):
-            self._budget.model(len(encoded.encode()), output_limit, reviewer=self._reviewer)
+            reservation = self._budget.model(
+                len(encoded.encode()), output_limit, reviewer=self._reviewer
+            )
             delay = max(
                 0,
                 self._budget.settings.model_min_interval_seconds
@@ -98,16 +151,25 @@ class AccountedModel(BaseLlm):
             self._budget.last_model_at = time.monotonic()
             self._emit("model_call", role=role, attempt=attempt + 1)
             emitted = False
+            last_usage = None
+            complete_response = False
             try:
                 async with asyncio.timeout(self._budget.work_remaining(reviewer=self._reviewer)):
                     async for response in self.delegate.generate_content_async(llm_request, stream):
-                        if response.usage_metadata:
-                            usage = response.usage_metadata
-                            self._budget.input_tokens += usage.prompt_token_count or 0
-                            self._budget.output_tokens += usage.candidates_token_count or 0
-                            self._budget.thinking_tokens += usage.thoughts_token_count or 0
+                        complete_response = response.partial is not True
+                        last_usage = response.usage_metadata if complete_response else None
+                        if complete_response and (
+                            not stream or response.finish_reason or response.turn_complete
+                        ):
+                            # ADK executes tools (including the reviewer) while
+                            # suspended at yield, so refund completed usage first.
+                            self._settle_usage(reservation, last_usage)
                         emitted = True
                         yield response
+                if complete_response:
+                    # Streaming metadata is cumulative, not an increment per chunk.
+                    # Legacy streams may mark completion only through exhaustion.
+                    self._settle_usage(reservation, last_usage)
                 return
             except (errors.APIError, httpx.NetworkError, httpx.TimeoutException) as exc:
                 retryable = not isinstance(exc, errors.APIError) or exc.code in (

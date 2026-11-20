@@ -203,6 +203,7 @@ class ScriptedProvider(BaseLlm):
                 candidates_token_count=8,
                 thoughts_token_count=3,
             ),
+            partial=mode == "partial_then_network",
         )
         if mode == "partial_then_network":
             raise httpx.ConnectError("synthetic failure after a response")
@@ -241,11 +242,14 @@ async def test_provider_retry_and_reviewer_are_accounted_in_same_budget(skip_ret
     assert budget.model_calls == 2
     assert len(skip_retry_wait) == 1
     after_analyst = budget.reserved_usd
+    spent_after_analyst = budget.spent_usd
     reviewer = AccountedModel(model=provider.model, delegate=provider).bind(
         budget, emit, reviewer=True
     )
     assert len([item async for item in reviewer.generate_content_async(request())]) == 1
-    assert budget.model_calls == 3 and budget.reserved_usd > after_analyst
+    assert budget.model_calls == 3
+    assert budget.reserved_usd == after_analyst  # Only the failed first attempt remains held.
+    assert budget.spent_usd > spent_after_analyst
     assert budget.input_tokens == 24 and budget.output_tokens == 16 and budget.thinking_tokens == 6
     assert [event["role"] for event in events if event["event"] == "model_call"] == [
         "analyst",

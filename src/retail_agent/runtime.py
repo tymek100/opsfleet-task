@@ -137,7 +137,12 @@ class Analyst:
             code = exc.code if isinstance(exc, LimitReached) else "deadline"
             turn.emit("limit_reached", code=code)
             status = code
-            message = "This investigation reached its shared limit before a reviewed answer was ready. Try a narrower question; /details shows completed queries."
+            message = (
+                "This question reached its cost allowance before a reviewed answer was ready. "
+                "/details shows completed queries."
+                if code == "cost_budget"
+                else "This investigation reached its shared limit before a reviewed answer was ready. Try a narrower question; /details shows completed queries."
+            )
         except asyncio.CancelledError:
             turn.emit("cancelled")
             raise

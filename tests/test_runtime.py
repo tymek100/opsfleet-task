@@ -41,6 +41,7 @@ Step = types.Content | Callable[[dict[str, Any]], types.Content]
 class ScriptedModel(BaseLlm):
     model: str = "offline-scripted-model"
     script: list[Any] = Field(exclude=True)
+    usage: types.GenerateContentResponseUsageMetadata | None = None
     _requests: list[dict[str, Any]] = PrivateAttr(default_factory=list)
 
     @property
@@ -65,7 +66,7 @@ class ScriptedModel(BaseLlm):
         step = self.script[index]
         content = step(snapshot) if callable(step) else step
         assert isinstance(content, types.Content)
-        yield LlmResponse(content=content, partial=False)
+        yield LlmResponse(content=content, partial=False, usage_metadata=self.usage)
 
 
 def calls(*entries: tuple[str, dict[str, Any]]) -> types.Content:
@@ -165,6 +166,57 @@ def reviewer_payload(request: dict[str, Any]) -> dict[str, Any]:
                 if part.get("text", "").startswith("{"):
                     return json.loads(part["text"])
     raise AssertionError("Reviewer did not receive the evidence bundle")
+
+
+@pytest.mark.asyncio
+async def test_follow_up_receives_a_fresh_cost_budget_with_usage_settled_before_review(
+    tmp_path: Path,
+) -> None:
+    app, model, reviewer = make_app(
+        tmp_path,
+        [finish("Please specify a period.", outcome="clarification")] * 2,
+        [review()] * 2,
+    )
+    app.settings.question_budget_usd = 1
+    usage = types.GenerateContentResponseUsageMetadata(
+        prompt_token_count=500, candidates_token_count=100, thoughts_token_count=50
+    )
+    model.usage = reviewer.usage = usage
+    try:
+        first = await app.ask("Compare our performance.")
+        second = await app.ask("Use the same metrics for another period.")
+        for result in (first, second):
+            assert result.status == "approved"
+            assert result.usage["spent_usd"] == pytest.approx(0.0056)
+            assert result.usage["reserved_usd"] == 0
+            assert result.usage["model_calls"] == 2
+            analyst_usage = next(
+                i
+                for i, event in enumerate(result.trace)
+                if event["event"] == "model_usage" and event["role"] == "analyst"
+            )
+            review_start = next(
+                i for i, event in enumerate(result.trace) if event["event"] == "review_start"
+            )
+            assert analyst_usage < review_start
+    finally:
+        app.reports.close()
+        app.knowledge.close()
+
+
+@pytest.mark.asyncio
+async def test_cost_limit_message_identifies_the_per_question_allowance(tmp_path: Path) -> None:
+    app, model, _ = make_app(tmp_path, [], [])
+    app.settings.question_budget_usd = 0.01
+    try:
+        result = await app.ask("Compare quarterly revenue.")
+        assert result.status == "cost_budget"
+        assert "This question reached its cost allowance" in result.message
+        assert "shared limit" not in result.message
+        assert model.requests == []
+    finally:
+        app.reports.close()
+        app.knowledge.close()
 
 
 @pytest.mark.asyncio

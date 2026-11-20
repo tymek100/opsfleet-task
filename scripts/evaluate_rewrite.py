@@ -43,6 +43,12 @@ CASES = {
         "Which products appear in both rankings? Explain what this suggests about revenue "
         "versus customer reach in one short paragraph, without a table.",
     ],
+    "quarterly_category_followup": [
+        "Compare our Q1 2026 performance with Q4 2025. Show qualifying revenue, distinct "
+        "customers, distinct orders, and average order value, including percentage changes.",
+        "Identify the three product categories contributing most to the revenue change. "
+        "Show the remaining categories as “Other” so contributions reconcile to the total change.",
+    ],
     "skill_reference": [
         "Use the revenue-driver-analysis skill and its measurement guide to explain how you "
         "would distinguish selling-price and quantity effects in revenue changes. "
@@ -87,6 +93,17 @@ EXPECTED = {
         "interpretation": (
             "Both sold products appear in both lists. Rankings alone do not establish "
             "unit prices, unit volumes, motives or brand-wide revenue concentration."
+        ),
+    },
+    "quarterly_category_followup": {
+        "Q4_2025": {"revenue": 0.0, "customers": 0, "orders": 0, "average_order_value": None},
+        "Q1_2026": {"revenue": 375.0, "customers": 5, "orders": 6, "average_order_value": 62.5},
+        "category_revenue_changes": {"Tops": 200.0, "Jeans": 175.0},
+        "total_revenue_change": 375.0,
+        "interpretation": (
+            "The fixture has no qualifying Q4 purchases, so percentage changes from zero and "
+            "the Q4 AOV are undefined. Only two categories have qualifying sales; do not "
+            "invent a third contributing category. Category contributions sum to 375."
         ),
     },
     "skill_reference": {
@@ -305,6 +322,7 @@ def _safe_settings(settings: Settings) -> dict:
         "max_answer_reviews",
         "max_context_bytes",
         "max_review_bytes",
+        "review_overhead_bytes",
         "review_reserve_seconds",
         "input_usd_per_million",
         "output_usd_per_million",
@@ -338,8 +356,10 @@ def write_markdown(output: Path, run: dict) -> None:
         "",
         "## Observed turns",
         "",
-        "| Case / turn | Runtime status | Seconds | Model calls | Queries | Reviews |",
-        "| --- | --- | ---: | ---: | ---: | --- |",
+        "Model USD uses reported token usage at configured rates. Held USD covers outstanding or unknown model attempts and conservative query reservations. Both are per prompt, not per conversation.",
+        "",
+        "| Case / turn | Runtime status | Seconds | Model calls | Queries | Model USD | Held USD | Reviews |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for case in run["cases"]:
         for turn in case["turns"]:
@@ -356,7 +376,8 @@ def write_markdown(output: Path, run: dict) -> None:
             lines.append(
                 f"| {case['id']} / {turn['index'] + 1} | {payload['status']} | "
                 f"{payload.get('elapsed_seconds', 0):.3f} | {usage.get('model_calls', 0)} | "
-                f"{usage.get('queries', 0)} | {reviews} |"
+                f"{usage.get('queries', 0)} | {usage.get('spent_usd', 0):.6f} | "
+                f"{usage.get('reserved_usd', 0):.6f} | {reviews} |"
             )
     for case in run["cases"]:
         lines.extend(["", f"## {case['id']}", ""])
@@ -426,8 +447,11 @@ def write_markdown(output: Path, run: dict) -> None:
             [
                 "**Manual assessment**",
                 "",
-                "Pending: inspect correctness, completeness, presentation, evaluator behavior and tool adaptation. "
-                "Record failures and changes before calling this case successful.",
+                case.get(
+                    "manual_assessment",
+                    "Pending: inspect correctness, completeness, presentation, evaluator behavior and tool adaptation. "
+                    "Record failures and changes before calling this case successful.",
+                ),
                 "",
             ]
         )
@@ -438,7 +462,7 @@ def write_markdown(output: Path, run: dict) -> None:
             "- The listed prompts are smoke/regression cases, including prompts related to retrieval seeds; they do not measure held-out generalization.",
             "- Numeric-token checks can miss incorrect attribution, wrong denominators and fabricated explanations. Independent expected facts and actual query evidence are included for manual review.",
             "- Fixture trials use a real model but synthetic local data. BigQuery trials use real warehouse data and do not apply the frozen-fixture oracle.",
-            "- Reserved USD is conservative admission accounting, not an invoice estimate. Model usage is recorded separately.",
+            "- USD accounting separates reported model usage priced at configured rates from outstanding conservative reservations; neither is a verified provider invoice. Query reservations remain conservative.",
             "- Each unrelated case starts a new analyst conversation; turns within a case share its context. No real user reports are read or modified.",
             "",
         ]

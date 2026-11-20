@@ -1,0 +1,72 @@
+{
+  "index": 0,
+  "prompt": "Compare our Q1 2026 performance with Q4 2025. Show qualifying revenue, distinct customers, distinct orders, and average order value, including percentage changes.",
+  "prompt_sha256": {
+    "analyst.md": "129962c0e0776730df9aab90498808dab223f39a46ccdb2fe5ec71ad84de7acf",
+    "reviewer.md": "191b59070bd914a69599eb4a80764f8ecda3f09982233984b1e27a93ee90073d"
+  },
+  "result": {
+    "answer": null,
+    "status": "unavailable",
+    "message": "The model service could not complete this request.",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.194,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "provider_failure",
+        "elapsed": 0.208,
+        "role": "analyst",
+        "code": "ConnectError",
+        "retryable": true
+      },
+      {
+        "event": "model_call",
+        "elapsed": 1.209,
+        "role": "analyst",
+        "attempt": 2
+      },
+      {
+        "event": "provider_failure",
+        "elapsed": 1.212,
+        "role": "analyst",
+        "code": "ConnectError",
+        "retryable": true
+      },
+      {
+        "event": "failure",
+        "elapsed": 1.213,
+        "code": "ProviderUnavailable"
+      }
+    ],
+    "usage": {
+      "model_calls": 2,
+      "queries": 0,
+      "tool_calls": 0,
+      "reserved_usd": 0.162872,
+      "spent_usd": 0,
+      "accounted_usd": 0.162872,
+      "remaining_usd": 0.837128,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0
+    },
+    "evidence": [],
+    "elapsed_seconds": 1.213,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "not_matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    }
+  ],
+  "file": "quarterly_category_followup-1.json"
+}

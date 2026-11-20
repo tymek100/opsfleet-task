@@ -118,7 +118,9 @@ The explicit legacy importer reads the prior SQLite `reports.body` JSON or owner
 
 ## Resilience and budgets
 
-The defaults in `config.py` are 120 seconds, USD 1 conservative model/query admission cost, 12 model attempts, eight queries, 24 tools and three candidate reviews. Analyst output is bounded at 4,096 tokens and review output at 2,048, with low thinking effort. Existing environment settings can override defaults. Admission rates are configurable conservative inputs, not a quotation of current provider invoice prices.
+The defaults in `config.py` are 120 seconds, USD 1 conservative model/query admission cost, 12 model attempts, eight queries, 24 tools and three candidate reviews, reset for each submitted user question. Analyst output is bounded at 4,096 tokens with low thinking effort; review output is bounded at 2,048 tokens with medium thinking effort. Existing environment settings can override defaults. Admission rates are configurable conservative inputs, not a quotation of current provider invoice prices.
+
+Model attempts reserve maximum prospective cost before dispatch and replace that reservation with valid completed usage afterward. Input, candidate output and thinking tokens are accounted once, with the refund available before a returned tool invokes review. Unknown usage and query byte allowances stay conservatively reserved. The agent sees remaining work allowance after protecting review. This avoids accumulating maximum output estimates for already completed short tool calls; [regression and replay observations](budget-accounting-observations.md) document the behavior.
 
 One ledger covers analyst, reviewer and every provider retry. Before optional work, it reserves one model-call slot, one completion-tool slot, 30 seconds and review cost based on a bounded 60,000-byte payload plus 12,000 bytes of envelope overhead. Review payload/request sizes are checked against their bounds. Limits stop the run; no retry or revision resets them. The provider permits at most one transient retry and does not replay a request after emitting a response. Repeated unchanged candidate submissions are rejected.
 
