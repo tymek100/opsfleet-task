@@ -1,103 +1,132 @@
-# Retail analyst architecture
+# Retail agent architecture
 
-Updated: 20 November 2026. The **local replacement runtime is implemented** in the canonical `src/retail_agent/` package; the production deployment below remains a proposal. See [technical reasoning](technical_reasoning.md), the [from-scratch design decisions](from-scratch-agent-plan.md), and [recorded rewrite observations](rewrite-test-observations.md) for the implementation and its measured limits. The older HLD is preserved under [legacy documentation](../legacy/runtime-2026-11-20/docs/architecture.md).
+Updated: 21 November 2026.
 
-## Confirmed scope and client decisions
+## Overview
 
-The [client Q&A](task/q&a.md) defines the requirements. Analysis is on demand against existing TheLook data; transaction ingestion, scheduled retail analysis and historical access-revocation workflows are excluded. The initial design target is roughly 1,000 questions and 100 saved reports daily, with a few concurrent users. Simple answers target 10–30 seconds and reports 1–2 minutes. These are client targets, not measured service guarantees. The configurable USD 1 cap applies to variable model/query work; it excludes fixed infrastructure.
+This is a Python command-line assistant for retail analysis. It uses Google ADK and Gemini to answer questions about TheLook data in BigQuery, handle follow-ups, and save reports when asked.
 
-| Area | Required behavior and current boundary |
-|---|---|
-| Identity and scope | Managers analyze assigned brands; the CEO can analyze all brands. Purchase history is scoped before spend, acquisition, cohort or inactivity calculations. Local identities simulate authentication. |
-| Privacy | Source projections omit names, emails, addresses, postal codes and coordinates before model access. Internal customer IDs are allowed. State demographics use a separate aggregate-only service. |
-| Metrics | Document sensible defaults and permit explicit overrides. UTC half-open periods are standard; clarify materially missing years/periods. Current statuses do not reconstruct historical status changes. |
-| Reports | Generation does not imply saving. Libraries belong to their creators, including against CEO access. Exact preview and user confirmation precede permanent deletion. |
-| Golden Knowledge | No real source corpus was supplied. Synthetic examples are labelled. The user's rewrite request makes working retrieval required, superseding its optional prototype status in the original Q&A. |
-| Persona | Nontechnical changes should publish through an automatic quality gate without redeployment or manual approval. This administration capability remains a production proposal. |
-| Retention | Chats: at most 90 days; saved reports: until deletion; content-free mutation audit: one year. The prototype keeps conversation context only in process memory. |
+**The LLM decides how to investigate and explain an answer. Application code controls what data and actions it can access.** There are no predefined routes for individual business questions.
 
-## Implemented local architecture
+The sections below describe the current implementation. Unfinished production features are listed at the end. See the [client Q&A](task/q&a.md) for requirements and [Quick Start](../QUICK_START.md) for setup and commands.
+
+## How a question is answered
 
 ```mermaid
 flowchart TD
-    U[CLI with trusted demo identity] --> A[One ADK analyst tool loop]
-    A -->|Choose a capability| T[Skills, schema, SQL, results, Golden methods and reports]
-    T -->|Observations or safe errors| A
-    A -->|finish_answer with Markdown and evidence IDs| E[Tool-free evaluator]
-    E -->|Concrete revision issues| A
-    E -->|Approve exact candidate| S[Finalize candidate and explicitly authorized save]
-    S --> F[Publish model-authored Markdown and actual receipts]
-    E -->|Stop or shared allowance exhausted| X[Controlled incomplete status]
-    U -->|User-origin confirmation| D[Transactional exact report deletion]
+    U[User question] --> A[Analyst: choose the next action]
+    A -->|Call a tool| T[Tools: data, calculations, guidance, reports]
+    T -->|Return results or errors| A
+    A -->|Submit an answer| E[Evaluator: check the answer against evidence]
+    E -->|Request changes| A
+    E -->|Approve| F[Show the approved answer]
+    E -->|Stop| X[Explain why the answer is incomplete]
+    A -->|Budget or time runs out| X
 ```
 
-The analyst decides which tools to call, which SQL to write, whether another investigation is useful, and how to present its answer. The model writes ordinary Markdown and can choose prose, lists or tables. The renderer displays that Markdown; it does not append evidence tables, choose columns or replace numbers with a separate rendering language.
+1. **Start the question.** The app supplies the user's allowed brands, useful previous context, and a fresh budget.
+2. **Investigate.** One ADK analyst chooses tools, reads results, and decides what to do next. It can write SQL, calculate from previous results, consult guidance, or ask for clarification.
+3. **Submit an answer.** The analyst writes Markdown and calls `finish_answer`, identifying its supporting evidence. It chooses prose, lists, or tables to fit the request.
+4. **Review.** A separate LLM evaluator checks whether the answer addresses the question, agrees with the evidence, and avoids unsupported explanations. It can approve, request specific changes, or stop. It cannot run tools.
+5. **Respond.** Approved Markdown is displayed unchanged. Revision requests return to the same analyst loop, which can query again or rewrite its answer.
 
-The [runtime skill library](runtime-skills.md) supplies five analyst methods through metadata-first discovery and optional instruction/reference reads. A sixth skill provides the evaluator rubric on every review. Skills do not prescribe a fixed tool sequence or grant capabilities. Model-facing adapters live in `tools/`; database and storage implementations live in `services/`.
+For example, finding no overlap between two product rankings supports a statement about those rankings. It does not establish that price caused the difference. The evaluator should request more evidence or a narrower explanation.
 
-A question uses one ADK `LlmAgent` tool conversation. An isolated reviewer call sees the candidate, original request, bounded relevant conversation, trusted result artifacts and proposed save. A rejection returns issues to the same analyst conversation. The reviewer has no query, report or execution tools and does not rewrite approved text. Application code publishes the exact accepted candidate using the completion tool's skip-summarization action. Direct final prose cannot bypass the gate.
+Every published assistant answer passes this review. Failures can end earlier with an application status message. Review reduces mistakes; it does not prove correctness.
 
-Each new user turn starts a fresh ADK session with application-held approved context and result handles. Follow-ups therefore preserve useful facts without carrying an unbounded transcript of intermediate reasoning. The `read_answer` tool can fetch an exact previous approved answer when the context contains an explicitly marked excerpt.
+A follow-up starts a fresh ADK session and budget, with bounded context from approved answers and previous result handles. Conversation state lives in memory and ends when the CLI exits.
 
-| Local component | Responsibility |
+## Tools
+
+The [tool registry](../src/retail_agent/tools/registry.py) exposes these capabilities:
+
+| Purpose | Tools |
 |---|---|
-| Typer/Rich CLI | English chat, model Markdown, actual progress, library commands, trusted preview/confirmation UI |
-| Analyst runtime | ADK assembly, bounded context, result IDs, staged operations and completion gate |
-| Gemini provider adapter | Shared admission accounting, bounded transient retry, sanitized provider failures and token usage |
-| Query gateway | Logical-source validation, scoped SQL compilation, BigQuery dry run/execution and cancellation |
-| Local result worker | Isolated DuckDB calculation over explicit result snapshots; no filesystem/network access |
-| Golden store | In-memory SQLite FTS5/BM25 index of eligible, version-compatible methods |
-| Report store | Owner-scoped SQLite artifacts, idempotent saves, exact deletion snapshots and content-free audit |
-| Runtime trace | Metadata-only JSONL events; no general logging of questions, SQL rows or hidden reasoning |
+| Understand and query data | `describe_data`, `query_data`, `query_state_summary` |
+| Inspect and calculate from existing results | `read_result`, `analyze_results` |
+| Read analytical guidance | `load_skill`, `load_skill_resource` |
+| Find worked examples | `search_golden`, `read_golden` |
+| Read saved reports or previous answers | `search_reports`, `read_report`, `read_answer` |
+| Request report actions | `stage_report_save`, `preview_report_deletion`, `cancel_report_deletion` |
+| Submit an answer for review | `finish_answer` |
 
-## Data and execution boundaries
+Tools are small Python adapters in `tools/`. Their database and storage logic lives in `services/`. New questions can combine existing capabilities without adding a new workflow. New capabilities require a tool or service change.
 
-The analyst sees three logical relations: `sales`, `transactions` and `products`. `sales` excludes Cancelled/Returned statuses at both item and order level. `transactions` retains statuses for explicit analytical overrides. `products` includes unsold catalog products. The gateway resolves nested sources and applies trusted brand scope at physical leaves before the model's joins, windows, histories or aggregates.
+## Skills and Golden examples
 
-The gateway accepts composable read-only analytical SQL, including CTEs, unions, joins and windows. It rejects raw table paths, writes/scripts, unauthorized columns, unscoped relation access, external IO and unknown/custom routines. Its pure-function capability allowlist controls executable operations; it does not enumerate business questions or metric plans. Supporting a new approved pure function may require gateway work; composing a new metric from existing SQL does not require an intent route.
+These give the model reusable guidance while leaving the next action to the analyst.
 
-The fourth required source, `users`, is available only inside `query_state_summary`. That tool returns state aggregates with at least five distinct customers and never customer/state associations. Five is a chosen prototype suppression rule, not a client-mandated threshold. The fixture backend has no geography and reports that limitation explicitly.
+| Resource | What it contains | Location |
+|---|---|---|
+| Runtime skills | Instructions for rankings, comparisons, revenue changes, retention, report writing, and review | [`src/retail_agent/skills/`](../src/retail_agent/skills/README.md) |
+| Golden examples | Worked question → SQL → answer examples | [`knowledge/golden/`](../knowledge/golden/README.md) |
+| Evaluation cases | Test prompts, expected facts, and checks | [`evals/`](../evals/README.md) |
 
-BigQuery queries use local application credentials supplied by the developer/reviewer. SQL is dry-run before submission and receives a maximum-byte cap, stable job identity and bounded wait. Local fixture and result calculations run in a spawned process with DuckDB external access disabled, one thread, bounded memory and no spill space. A timed-out local worker is terminated. These controls protect execution and scope; they do not establish that a query computes the intended metric.
+The analyst sees skill summaries and can load relevant instructions on demand. The evaluator always receives the review skill. Skills do not grant permissions or execute scripts.
 
-The public TheLook dataset is publicly readable. A safe view or shared local credential does not create per-user IAM isolation over that public source. The prototype trusts the local machine owner and enforces user scope in the application gateway. Production needs restricted execution identities and private, controlled source views in addition to the same application checks. [BigQuery authorized views](https://docs.cloud.google.com/bigquery/docs/authorized-views)
+The Golden bootstrap contains 11 synthetic examples and is enabled with `--golden-bootstrap`. Search uses SQLite full-text retrieval. The analyst may adapt or ignore an example, but must query current data for current facts. Synthetic examples are not company-approved reports. Evaluation answers stay outside the retrieval index.
 
-## Golden Knowledge: publication and retrieval
+## Data access
 
-The [bootstrap corpus](../knowledge/golden/README.md) contains 11 assistant-authored synthetic Question → SQL query/queries → analyst-answer examples, with frozen fixture evidence, versions and provenance. They are not company reports, human-approved records or current numerical evidence.
+The analyst queries three allowed relations:
 
-The store filters scope, schema/metric compatibility, review state and visibility before indexing. Default production eligibility requires approved publication metadata, different editor/reviewer identities and a matching content digest. The synthetic collection is disabled by default and requires explicit bootstrap mode; it cannot silently become approved production knowledge. The loader validates trusted publication records, but no authenticated editor/reviewer administration service is implemented yet.
+- **`sales`:** purchases excluding cancelled and returned items and orders.
+- **`transactions`:** purchases across all statuses, for explicit alternative definitions.
+- **`products`:** the product catalog, including unsold products.
 
-`search_golden` returns a few summaries; `read_golden` returns the full eligible example. Retrieval is optional for each question and controlled by the analyst. The model may adapt, combine or ignore examples, then query fresh numbers. The baseline is lexical FTS5/BM25 with stemming, not semantic embedding search. Corpus and entry hashes, revisions and index version provide provenance. Invalid corpus integrity fails closed.
+The query service applies the user's brand scope before joins, histories, and aggregations. It accepts supported read-only SQL and rejects raw source-table access, writes, and prohibited columns. BigQuery queries receive a dry run and a maximum-byte limit. Calculations over local results run in a bounded DuckDB subprocess with external access disabled.
 
-Production publication remains editor draft → privacy/numerical/compatibility checks → separate reviewer approval → immutable revision → index update. Corrected agent work can propose drafts but cannot approve itself. Add embeddings or a hybrid index only if measured retrieval recall justifies the complexity. Evaluation prompts, expected results and grading rubrics stay outside the knowledge index.
+Revenue uses `sale_price`; orders and customers use distinct IDs. Dates use UTC and an inclusive start, exclusive end—for example, Q1 is `[2026-01-01, 2026-04-01)`. Current statuses cannot reconstruct past status changes.
 
-## Reports and deletion
+Customer names, contact details, and individual geography are excluded from query results. Internal customer IDs are allowed. `query_state_summary` separately returns state aggregates with at least five distinct customers. The synthetic fixture has no geography.
 
-An explicit save request can stage a new candidate or a previous approved answer. The evaluator checks the current user's authorization and target. After approval, application code saves the exact Markdown and evidence idempotently by owner and answer ID, then displays the actual storage receipt. A failed save does not become a success message. Natural-language authorization remains an LLM judgment; storage ownership and transaction rules are code-enforced.
+Managers see assigned brands; the CEO can analyze all brands. These are local demo identities, not production authentication. TheLook is public data; the app's scope checks do not create private BigQuery permissions.
 
-A deletion tool can only request a preview or cancel it. The application displays database-backed report IDs and titles and holds the confirmation token outside the model response. `/confirm TOKEN` checks owner, conversation, expiry, one-use state, report versions and content signatures in one transaction. New reports matching the old search are not added to the selection. Expired, stale, cancelled or replayed confirmations delete nothing. Successful deletion removes the stored Markdown, evidence and imported payload, keeps only content-free mutation audit, and clears active model context/result copies.
+## Reports
 
-`reports-v2.sqlite3` is separate from the old library. Explicit legacy import reads owner-tagged SQLite/JSON records without modifying their source; original answer JSON remains attached as a historical artifact and is not newly reviewed. Deleting an imported copy affects the new library. A separately preserved old database or user-created export remains outside that transaction; migration must not claim those copies were erased.
+Generating an answer does not save it. An explicit save request stages a report; after evaluation, application code writes the approved content and displays the actual receipt. Reports persist in local SQLite and belong only to their creator, including when the reader is the CEO.
 
-## Resilience, budgets and observability
+Deletion requires an exact preview followed by the user's `/confirm TOKEN`. Code checks ownership, expiry, report versions, and whether the token was already used. The model cannot confirm deletion. Stale or cancelled previews delete nothing. Deletion removes the selected stored content and clears active application copies; separately exported files are outside that operation.
 
-Each submitted user question, including a follow-up, starts a fresh ledger covering analyst calls, evaluator calls, retries, queries and tools. Its common deadline and conservative variable-cost cap cannot reset during a repair. Admission holds back 30 seconds of review time, a model-call slot, a completion-tool slot and bounded review-input/output cost. The provider can make one bounded transient retry; malformed reviewer output has a bounded schema-repair path. Large supporting evidence is rejected for narrowing rather than silently omitted from review. Repeated unchanged rejected candidates cannot spin indefinitely.
+## Budgets and failures
 
-Before a model call, admission reserves its conservative input estimate and maximum output allowance. Complete response usage replaces that call's reservation with reported input, output and thinking tokens priced at configured rates; unused allowance becomes available to the same question. The refund occurs before ADK executes the returned tool call, including nested review. Unknown, incomplete or invalid usage retains the reservation, and retries have separate holds. Cached input is included once at the full configured input rate. Query holds remain based on maximum bytes allowed. Traces separate `spent_usd` (metered model usage at configured rates), `reserved_usd` (unsettled holds), and `accounted_usd` (their sum); these are admission accounting, not provider invoices. See the [budget regression and live replay](budget-accounting-observations.md).
+**Every prompt gets its own allowance, including follow-ups.** Analyst work, evaluation, retries, and repairs share that prompt's limits.
 
-The CLI shows real stage events and elapsed time. Failure to obtain review produces a controlled incomplete status with completed artifacts available through `/details`; cost-cap stops explicitly identify the question's cost allowance. It does not publish an unreviewed draft. BigQuery cancellation remains best effort and an asyncio cancellation does not forcibly stop a Python worker thread; provider-side bounded waits and job IDs remain necessary. The local DuckDB subprocess can be terminated separately.
+Defaults in [`config.py`](../src/retail_agent/config.py) are $1, 120 seconds, 12 model calls, 8 queries, and 24 tool calls. The app reserves 30 seconds and capacity for review.
 
-General trace events contain conversation ID, timings, usage, tool/status categories, result IDs, review outcomes and approved-answer hashes. Raw questions, result bodies, provider exception text, credentials and hidden reasoning are excluded. A local file is not a managed production logging platform. Diagnostic retention/rotation, dashboards and alerts remain deployment work. SQLite mutation auditing is transactional and pruned after one year.
+Before a model call, the app temporarily reserves enough allowance for its estimated input and maximum output. When complete token usage arrives, it accounts for the reported input, output, and thinking tokens at configured rates and releases the unused amount. Unknown usage keeps its reservation. Queries keep conservative maximum-byte reservations. These are budget estimates, not provider invoices.
 
-Input and model-boundary screening detects common contact patterns, but it is not complete named-entity recognition. Arbitrary names, unusual addresses and obfuscated PII can escape the regex. Warehouse projection is the structural protection for source data. Reviewer approval is a probabilistic quality check, not a numerical proof; independent oracles, adversarial boundary tests and observed model runs remain necessary.
+Recoverable errors return to the analyst for repair within the same limits. If review cannot finish, the app explains the incomplete outcome; `/details` shows completed evidence. The CLI displays elapsed time and current activity. Diagnostic traces record timings, usage, and outcomes without raw questions, result contents, credentials, or hidden reasoning.
 
-## Production deployment proposal
+## Code layout
 
-The workload can begin with one authenticated agent service, rather than a distributed agent team. An HTTPS frontend authenticates the user, resolves scope from a server-side mapping and streams progress. The service owns the same analyst/tool loop and query gateway. Restricted Google Cloud credentials access controlled BigQuery views; secrets come from managed secret configuration. Managed PostgreSQL can replace local report/confirmation metadata storage, with owner checks in every operation; a versioned object store can hold larger evidence/corpus artifacts. Minimized structured events go to managed logging and metrics.
+| Location | Responsibility |
+|---|---|
+| `src/retail_agent/cli.py`, `terminal.py` | Chat, slash-command menu, progress, and Markdown display |
+| `runtime.py`, `turn.py` | Analyst loop, conversation context, and per-question state |
+| `reviewer.py`, `prompts/` | Evaluation and base model instructions |
+| `tools/`, `services/` | Model-facing capabilities and their implementations |
+| `skills/` | Runtime guidance and its loader |
+| `budget.py`, `provider.py` | Limits, model calls, retries, and usage accounting |
+| `config.py`, `contracts.py`, `privacy.py` | Settings, shared data types, and privacy checks |
+| `knowledge/` | Golden examples and synthetic data |
+| `tests/`, `evals/` | Automated checks and recorded model evaluations |
+| `docs/task/` | Original task material |
 
-Chats would have a 90-day TTL; saved report artifacts would remain until confirmed hard deletion; content-free mutation audit would have a one-year TTL. Backup erasure, diagnostic retention and region requirements need explicit operational decisions. The CLI currently keeps chat/result state only in memory and drops it on exit, which is shorter than the permitted retention period; it does not implement cross-process conversation recovery.
+Python module paths above are relative to `src/retail_agent/` unless otherwise shown. Coding-assistant skills in `.agents/skills/` are separate from the app's runtime skills.
 
-Long requests stay inside bounded interactive execution initially. Add durable jobs only if measured demand exceeds that model, retaining the same owner/scope/budget and exact-result rules. Any future result cache must key on scope, SQL/parameters, schema and metric versions, and a stated freshness policy; no shared application result cache is implemented now.
+## Testing
 
-Persistent preference learning and a nontechnical persona editor remain design-only. Explicit preferences in the current conversation guide the model. Future inferred preferences should be inspectable, correctable and resettable. Persona drafts should pass an automatic gate for factual preservation, privacy, required caveats and style before publication; failure keeps the previous version. Persona configuration cannot change permissions or tool capabilities, and this workflow does not replace the human approval required for Golden publication.
+Offline tests cover calculations, data scope, report ownership and deletion, budgets, the tool loop, and CLI behavior. They use controlled fixtures and fake providers. Run them with:
+
+```bash
+uv run --locked pytest
+```
+
+[Live evaluation instructions and captures](../evals/rewrite/runs/README.md) show actual model behavior. Check the answer against its SQL results and the request; evaluator approval alone is not a passing test. Small recorded runs do not establish production reliability or latency guarantees.
+
+## What is not implemented
+
+Production authentication, a hosted service, managed storage and monitoring, and cross-restart chat recovery remain future work. So do a Golden-example publishing UI, persistent preference learning, and a nontechnical persona editor with an automatic quality gate.
+
+A production deployment can reuse this loop inside an authenticated service, with private controlled data access, owner-scoped report storage, and managed logs. It would need the retention rules and operational targets in the [client Q&A](task/q&a.md). The current local CLI is not that deployment.

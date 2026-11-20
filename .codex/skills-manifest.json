@@ -18,13 +18,13 @@
     "interview-delivery"
   ],
   "files": {
-    ".agents/skills/interview-delivery/SKILL.md": "9ed35e1d24aff0f844962538410d6ca1e139db255dc248115860e639e8bd0823",
+    ".agents/skills/interview-delivery/SKILL.md": "70eeecad6aa48f2b383d9cd8c703d55226165e9683c8b463c100e41c344b1baa",
     ".agents/skills/interview-delivery/agents/openai.yaml": "82e806f1c96b7770a2aaeed3cced808f8f3e1afbc7c25648f664533e9e90c8dd",
-    ".agents/skills/retail-adk-implementation/SKILL.md": "a9f34f6a50aba080d6d39f99d7433dbe4c18c3f472d8a46291ee0d1b5e6c98ec",
+    ".agents/skills/retail-adk-implementation/SKILL.md": "74be984bebb3e10c76198f9cd1902f1697a638e6ee1eb7a7fcf084d321f14a9a",
     ".agents/skills/retail-adk-implementation/agents/openai.yaml": "65a75f0ffeabe5ecc22b66665d394e392184982679242d2e1ee65b07675eb2fe",
-    ".agents/skills/retail-agent-evaluation/SKILL.md": "6ef4f98088dbdea5231a12fade5e051bdce14d1b3f70602470190b9663661d39",
+    ".agents/skills/retail-agent-evaluation/SKILL.md": "0cc39da382b7c191f442215c2a0816444f5c95d07e9697970df49e4c9b1d13d3",
     ".agents/skills/retail-agent-evaluation/agents/openai.yaml": "eaeebecefd70607e8d2fb4ca7c451cfa0fcd417f1f0ac50ad8031204407eb931",
-    ".agents/skills/retail-analytics/SKILL.md": "618ed8ee07f2691dd7a098c07a786f06d9b853f3d67f7639765fc1f4a27a4590",
+    ".agents/skills/retail-analytics/SKILL.md": "ab88e5f1f65d42b4ed7d56cd9a85feee80ab79f86f0eec9ae7fd4d6c22ef406d",
     ".agents/skills/retail-analytics/agents/openai.yaml": "35f2fc8e6989b7be977182a5c841b731544bc6ca8f8db21dd060d5f2954f3675",
     ".agents/skills/security-best-practices/LICENSE.txt": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9",
     ".agents/skills/security-best-practices/SKILL.md": "7b3dae1ffc5434d890f3c65c8f552af52d0307fab3b35dec13013c9ca3844c4f",
@@ -45,7 +45,7 @@
     ".agents/skills/security-threat-model/references/prompt-template.md": "81a59aa3fb3ac3a739d6a26ab38e4015965f215581ee54becef21a2b121ec29b",
     ".agents/skills/security-threat-model/references/security-controls-and-assets.md": "d536cfa9acad2523dc39134bcf33b9566c29dd9a57b407cbc9901637230c6b98",
     ".agents/skills/python-testing-patterns/LICENSE.txt": "f89abb55d9f073f38f1703e4518f0613c788c6174be7f13b8dfe48a1c076c746",
-    ".agents/skills/python-testing-patterns/SKILL.md": "8f4bad44b1a101ae572b6f8dbb2af51f77d9ed656e9f87aa263ded122444c037",
+    ".agents/skills/python-testing-patterns/SKILL.md": "ea405e0a5ff5ed37820dbc8ca4347cbc09abe5663ed79ba5259f540f8e5c5354",
     ".agents/skills/python-testing-patterns/references/advanced-patterns.md": "f560ee8b3cffc0fe971e78269bed21dc74f541c2056eae58d34259d9e537176a",
     ".agents/skills/python-testing-patterns/references/details.md": "baaa88e2997d960c19f981248b9e3e850e36e2cdf4d97b50297f5d9764826349"
   },
@@ -63,5 +63,5 @@
       ]
     }
   ],
-  "updated_on": "2026-10-22"
+  "updated_on": "2026-11-21"
 }

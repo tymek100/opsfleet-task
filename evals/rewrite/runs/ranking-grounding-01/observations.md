@@ -132,7 +132,7 @@ Raw result, SQL/evidence, review events and report snapshots: [ranking_followup-
 
 **Manual assessment**
 
-The requested five rows per list and the two overlapping product IDs match the captured SQL/results. This run used revenue as a secondary customer-ranking tie-break, which explains the different overlap from the user's product-ID selection. Its preface described the tie-break incompletely, although the customer-table footnote disclosed it. **The follow-up still failed grounding:** it described higher/lower-priced products without unit-price or quantity evidence, and the evaluator falsely approved it. This failed first prompt revision is retained. The subsequent strengthened guidance and replay are documented in [the focused report](../../../../docs/ranking-grounding-observations.md).
+The requested five rows per list and the two overlapping product IDs match the captured SQL/results. This run used revenue as a secondary customer-ranking tie-break, which explains the different overlap from the user's product-ID selection. Its preface described the tie-break incompletely, although the customer-table footnote disclosed it. **The follow-up still failed grounding:** it described higher/lower-priced products without unit-price or quantity evidence, and the evaluator falsely approved it. This failed first prompt revision is retained. The subsequent replay is documented in [the follow-up capture](../ranking-grounding-02/observations.md).
 
 ## Limits of this run
 

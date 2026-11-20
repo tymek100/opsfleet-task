@@ -2,8 +2,6 @@
 
 A Python CLI that answers retail questions using one Google ADK/Gemini agent loop. The model chooses tools, writes scoped SQL, interprets results and writes the complete answer in Markdown, including any tables it considers useful. A tool-free evaluator reviews the candidate; corrections return to the same analyst conversation.
 
-The application was rebuilt from scratch. The previous implementation is preserved under `legacy/runtime-2026-11-20/` and is outside the active package and test suite.
-
 ```bash
 uv sync --locked --python 3.12
 uv run --locked retail-agent chat --user alice --golden-bootstrap
@@ -19,13 +17,11 @@ uv run --locked retail-agent chat --user alice --backend fixture --golden-bootst
 
 The application provides schema discovery, Golden search/read, warehouse queries, local result analysis, prior-answer access and private report management. Permissions, privacy, budgets and confirmed deletion are enforced by application services. Normal answers contain the model's reviewed Markdown; `/details` reveals the supporting SQL and evidence on request.
 
-Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Model-facing functions live in `src/retail_agent/tools/`, their database/storage implementations in `services/`, and skill Markdown in `skills/library/`. See [runtime skills and package layout](docs/runtime-skills.md) and [skill authoring](src/retail_agent/skills/README.md).
+Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Model-facing functions live in `src/retail_agent/tools/`, their database/storage implementations in `services/`, and skill Markdown in `skills/library/`. See [how skills and Golden examples work](docs/architecture.md#skills-and-golden-examples) and [skill authoring](src/retail_agent/skills/README.md).
 
-- [Architecture](docs/architecture.md): actual prototype and proposed production deployment.
-- [Technical reasoning](docs/technical_reasoning.md): tools, metrics, requirement coverage and limitations.
-- [Test prompt observations](docs/rewrite-test-observations.md): actual answers, timings, corrections and remaining gaps.
+- [Architecture](docs/architecture.md): the agent loop, tools, data access and implementation limits.
+- [Test prompt observations](evals/rewrite/runs/README.md): how to run examples and inspect captured answers, timings and review results.
 - [Golden examples](knowledge/golden/README.md): provenance, offline validation and publication rules.
-- [Original rewrite plan](docs/from-scratch-agent-plan.md): design decisions and research sources.
 
 ```bash
 uv run --locked pytest

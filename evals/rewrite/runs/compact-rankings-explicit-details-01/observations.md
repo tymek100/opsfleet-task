@@ -181,7 +181,7 @@ Raw result, SQL/evidence, review events and report snapshots: [rankings_with_det
 
 **Manual assessment**
 
-The explicit request for IDs and methods overrides the compact defaults: both tables retain product IDs and the answer explains sales exclusions and tie-breaking. Alpha top (ID 3) and Alpha jeans (ID 1) have the independently enumerated revenue/customer values, and the answer discloses that only two products qualify. E3 supports the three excluded item rows across returned/cancelled order/item combinations. Both loaded skill versions match the compact trial (ranking 3, reviewer 2); no report mutation occurred. See the [presentation follow-up assessment](../../../../docs/runtime-skills-test-observations.md#compact-ranking-presentation-follow-up). This is a synthetic-data control with a real model, not a live warehouse benchmark.
+The explicit request for IDs and methods overrides the compact defaults: both tables retain product IDs and the answer explains sales exclusions and tie-breaking. Alpha top (ID 3) and Alpha jeans (ID 1) have the independently enumerated revenue/customer values, and the answer discloses that only two products qualify. E3 supports the three excluded item rows across returned/cancelled order/item combinations. Both loaded skill versions match the compact trial (ranking 3, reviewer 2); no report mutation occurred. See the [compact-ranking replay](../compact-rankings-01/observations.md). This is a synthetic-data control with a real model, not a live warehouse benchmark.
 
 ## Limits of this run
 

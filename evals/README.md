@@ -1,6 +1,6 @@
 # Evaluation generations
 
-The active replacement has offline tests in `tests/` and explicit real-model runners in `scripts/evaluate_rewrite.py` and `scripts/calibrate_reviewer.py`. See [rewrite observations](../docs/rewrite-test-observations.md) and [captured runs](rewrite/runs/README.md) for actual answers, errors, timings and review results.
+The active replacement has offline tests in `tests/` and explicit real-model runners in `scripts/evaluate_rewrite.py` and `scripts/calibrate_reviewer.py`. See [testing](../docs/architecture.md#testing) for the approach and [captured runs](rewrite/runs/README.md) for actual answers, errors, timings and review results.
 
 The 18 cases in [rewrite specifications](rewrite/README.md) are proposed acceptance specifications, not 18 passing holdout trials. The live runs are development smoke/regression observations. Their prompts and grader expectations are excluded from Golden retrieval.
 

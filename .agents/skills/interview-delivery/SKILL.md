@@ -5,7 +5,7 @@ description: Prepare this assignment's HLD, technical explanation, requirement m
 
 # Deliver an interview-ready retail assistant
 
-Read the [assignment](../../../docs/technical_reasoning.md#assignment-coverage), relevant [client Q&A](../../../docs/architecture.md#confirmed-scope-and-client-decisions), and current implementation. Use [the architecture proposal](../../../docs/architecture.md) and [research plan](../../../docs/technical_reasoning.md#model-planning-workflow) as planning inputs. Distinguish confirmed client requirements, proposals, implemented behavior, and observed evidence.
+Read the relevant [client Q&A](../../../docs/task/q&a.md), [architecture overview](../../../docs/architecture.md), and current implementation. Use the [question flow](../../../docs/architecture.md#how-a-question-is-answered) to explain the design. Distinguish confirmed client requirements, proposals, implemented behavior, and observed evidence.
 
 ## Optimize for the hiring decision
 

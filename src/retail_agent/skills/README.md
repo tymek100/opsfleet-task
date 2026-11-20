@@ -37,4 +37,4 @@ The catalog uses ADK's native `load_skill_from_dir` parser after validating the 
 
 Skill text and references form an immutable snapshot when an `Analyst` instance starts. Restart the CLI to pick up edits. Bump the version for a changed method; hashes also identify exact content even if a version was not bumped. All files ship inside the Python wheel, so discovery is independent of the current working directory.
 
-See [runtime architecture and research](../../../docs/runtime-skills.md) for implementation choices and tests. ADK documents the underlying [skills format and progressive disclosure](https://adk.dev/skills/).
+See the [runtime architecture](../../../docs/architecture.md#skills-and-golden-examples) for how skills fit into the agent loop and the [testing overview](../../../docs/architecture.md#testing) for validation. ADK documents the underlying [skills format and progressive disclosure](https://adk.dev/skills/).

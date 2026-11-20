@@ -68,6 +68,13 @@ uv run --locked retail-agent ask \
 
 ## Reports and evidence
 
+In the interactive chat, type `/` to open the command menu. Keep typing to filter
+commands and highlight matching letters, then use **Up/Down** to select a command.
+**Enter** or **Tab** inserts the selected command; add any arguments and press
+**Enter** to run it. **Esc** dismisses the menu. Fully typed commands can be
+submitted directly. Suggestions cover command names; report IDs and confirmation
+tokens are entered explicitly. Piped input remains plain text.
+
 | Command | Behavior |
 | --- | --- |
 | `/details` | Inspect the latest turn's SQL and result evidence |
@@ -108,7 +115,7 @@ uv run --locked python scripts/evaluate_rewrite.py --live --golden-bootstrap \
   --output evals/rewrite/runs/my-fixture-run
 ```
 
-Use a new output directory each time. Add `--backend bigquery --case rankings` for the real warehouse ranking case. The runner writes JSON captures and Markdown observations. Its approval/number-presence checks do not establish semantic correctness; inspect the actual answers and evidence. See [recorded observations](docs/rewrite-test-observations.md).
+Use a new output directory each time. Add `--backend bigquery --case rankings` for the real warehouse ranking case. The runner writes JSON captures and Markdown observations. Its approval/number-presence checks do not establish semantic correctness; inspect the actual answers and evidence. See [how to inspect captured runs](evals/rewrite/runs/README.md#what-to-inspect).
 
 ## Configuration
 

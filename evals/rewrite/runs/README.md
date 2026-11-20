@@ -29,8 +29,6 @@ uv run --locked python scripts/evaluate_rewrite.py \
   --output evals/rewrite/runs/bigquery-smoke-01
 ```
 
-Before the replacement is installed at the canonical package location, run the same script with `PYTHONPATH=rewrite/src .venv/bin/python` in place of `uv run --locked python`. That explicitly imports the fresh runtime. Do not run it against the legacy package.
-
 `--case` may be repeated. Other options include `--user alice`, `--model MODEL`, `--timeout SECONDS` and `--max-model-calls COUNT`. Running all eight cases produces nine turns because report generation is followed by an explicit save. The `golden_method` case requires `--golden-bootstrap`; unrelated cases do not require retrieval. Output directories must be new or empty, preserving earlier captures.
 
 The script loads the normal external `.env` configuration but records only a safe settings allowlist. Model and warehouse calls share the configured per-turn allowance; running multiple turns can consume several per-turn allowances. Reserved USD in results is conservative admission accounting, not actual billing.

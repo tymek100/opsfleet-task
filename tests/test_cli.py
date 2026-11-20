@@ -202,6 +202,45 @@ async def test_question_indicator_stops_and_restores_callbacks(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("interactive", [True, False])
+async def test_chat_uses_async_command_menu_only_in_interactive_terminals(
+    monkeypatch: pytest.MonkeyPatch, terminal: StringIO, interactive: bool
+) -> None:
+    monkeypatch.setenv("TERM", "xterm-256color")
+    monkeypatch.setattr(cli.sys, "stdin", SimpleNamespace(isatty=lambda: interactive))
+    monkeypatch.setattr(
+        cli, "console", Console(file=terminal, force_terminal=interactive, color_system=None)
+    )
+    prompts = iter(["/help", "/exit"])
+    readers: list[str] = []
+    sessions: list[bool] = []
+
+    async def prompt_async() -> str:
+        readers.append("menu")
+        return next(prompts)
+
+    def plain_input(_prompt: str) -> str:
+        readers.append("plain")
+        return next(prompts)
+
+    def session():
+        sessions.append(True)
+        return SimpleNamespace(prompt_async=prompt_async)
+
+    monkeypatch.setattr(cli, "create_prompt_session", session)
+    monkeypatch.setattr(cli.console, "input", plain_input)
+    analyst = SimpleNamespace(
+        identity=DEMO_USERS["alice"],
+        conversation_id="offline-menu-check",
+        settings=SimpleNamespace(backend="fixture", golden_bootstrap=False),
+    )
+    await cli.conversation(cast(cli.Analyst, analyst))
+    assert readers == ["menu" if interactive else "plain"] * 2
+    assert sessions == ([True] if interactive else [])
+    assert "/help" in terminal.getvalue() and "/confirm TOKEN" in terminal.getvalue()
+
+
+@pytest.mark.asyncio
 async def test_new_conversation_cancels_pending_deletion_without_removing_reports(
     monkeypatch: pytest.MonkeyPatch, terminal: StringIO, tmp_path: Path
 ) -> None:

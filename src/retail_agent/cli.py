@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import signal
+import sys
 import warnings
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -20,6 +21,7 @@ from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS, TurnResult
 from retail_agent.privacy import screen
 from retail_agent.runtime import Analyst
+from retail_agent.terminal import command_help, create_prompt_session
 
 app = typer.Typer(help="Autonomous retail analysis with reviewed answers.", no_args_is_help=True)
 console = Console()
@@ -158,18 +160,7 @@ def ask(
         analyst.reports.close()
 
 
-HELP = """Commands:
-/help             Show commands
-/details          Inspect latest query evidence and metadata
-/reports          List your saved reports
-/read ID          Display an owned saved report
-/delete TEXT      Preview reports matching literal text
-/confirm TOKEN    Permanently delete the exact previewed reports
-/cancel           Cancel deletion
-/new              Clear this conversation
-/exit             Exit
-Ask naturally to analyze data, create a report, or explicitly save an answer.
-"""
+HELP = command_help()
 
 
 async def conversation(analyst: Analyst) -> None:
@@ -177,7 +168,7 @@ async def conversation(analyst: Analyst) -> None:
         f"Retail assistant - DEMO identity: {analyst.identity.user_id}; scope: {analyst.identity.scope}"
     )
     console.print(
-        f"Conversation: {analyst.conversation_id}. /help for commands. Reports save only on request."
+        f"Conversation: {analyst.conversation_id}. Type / for commands. Reports save only on request."
     )
     if analyst.settings.backend == "fixture":
         console.print("Data: frozen synthetic fixture (not live company results).")
@@ -185,9 +176,18 @@ async def conversation(analyst: Analyst) -> None:
         console.print(
             "Golden retrieval: synthetic example methods enabled; current facts still require queries."
         )
+    session = (
+        create_prompt_session()
+        if sys.stdin.isatty() and console.is_terminal and not console.is_dumb_terminal
+        else None
+    )
     while True:
         try:
-            prompt = console.input("[bold]You> [/bold]").strip()
+            prompt = (
+                await session.prompt_async()
+                if session is not None
+                else console.input("[bold]You> [/bold]")
+            ).strip()
         except (EOFError, KeyboardInterrupt):
             break
         if not prompt:

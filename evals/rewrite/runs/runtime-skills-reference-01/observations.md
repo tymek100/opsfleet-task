@@ -138,7 +138,7 @@ Raw result, SQL/evidence, review events and report snapshots: [skill_reference-1
 
 **Manual assessment**
 
-The trace confirms revenue-driver-analysis and its measurement guide were loaded through separate tools. The answer correctly distinguishes realized unit prices, quantities, customer counts and mix effects, describes an arithmetic method without inventing a business result, and honors the single-paragraph request. Zero queries and no report changes occurred. This was an explicitly requested skill, so it tests loading and application rather than autonomous skill selection. See [the focused report](../../../../docs/runtime-skills-test-observations.md).
+The trace confirms revenue-driver-analysis and its measurement guide were loaded through separate tools. The answer correctly distinguishes realized unit prices, quantities, customer counts and mix effects, describes an arithmetic method without inventing a business result, and honors the single-paragraph request. Zero queries and no report changes occurred. This was an explicitly requested skill, so it tests loading and application rather than autonomous skill selection. See [the autonomous skill-selection replay](../runtime-skills-rankings-02/observations.md).
 
 ## Limits of this run
 
