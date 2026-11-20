@@ -1,1 +1,0 @@
-"""Retail analysis assistant."""
