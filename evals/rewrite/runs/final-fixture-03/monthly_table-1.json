@@ -1,0 +1,188 @@
+{
+  "index": 0,
+  "prompt": "Show January, February and March 2026 revenue in a table, followed by one brief observation.",
+  "prompt_sha256": {
+    "analyst.md": "c32fb1dd27071341d2c04696a220fac6ff77365f261943958449fe712cf3a1f7",
+    "reviewer.md": "a6d926bb5f8422c807b39146bfa35d5e96531f298c6fb59a26355499dcdfc976"
+  },
+  "result": {
+    "answer": {
+      "id": "Afeeebc0fe6",
+      "markdown": "### Calvin Klein Revenue (Q1 2026)\n\n| Month | Revenue |\n| :--- | :--- |\n| January 2026 | 125.00 |\n| February 2026 | 100.00 |\n| March 2026 | 150.00 |\n\n*Note: Figures reflect qualifying sales (excluding cancelled and returned orders/items). Currency is not specified in the source data.*\n\n### Observation\nFollowing a 20% dip in February to 100.00, monthly revenue rebounded by 50% in March to reach a quarterly peak of 150.00.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.186,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.051,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.052,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 2.059,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.297,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 4.796,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 4.802,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 7.603,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 7.608,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_checks",
+        "elapsed": 15.492,
+        "checks": [
+          {
+            "category": "coverage",
+            "passed": true
+          },
+          {
+            "category": "grounding",
+            "passed": true
+          },
+          {
+            "category": "metrics",
+            "passed": true
+          },
+          {
+            "category": "presentation",
+            "passed": true
+          },
+          {
+            "category": "operations",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "event": "review_end",
+        "elapsed": 15.492,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 15.492,
+        "answer_id": "Afeeebc0fe6",
+        "sha256": "826b62db937399980f39a0a5d4e01001130bd18acc12a38e2c42e4382b1b1a76"
+      }
+    ],
+    "usage": {
+      "model_calls": 4,
+      "queries": 1,
+      "tool_calls": 3,
+      "reserved_usd": 0.30033,
+      "input_tokens": 10105,
+      "output_tokens": 740,
+      "thinking_tokens": 398
+    },
+    "evidence": [
+      {
+        "sql": "SELECT\n  FORMAT_TIMESTAMP('%B %Y', purchased_at) AS month_label,\n  DATE_TRUNC(DATE(purchased_at), MONTH) AS month_date,\n  ROUND(SUM(sale_price), 2) AS revenue\nFROM sales\nWHERE brand = 'Calvin Klein'\n  AND purchased_at >= '2026-01-01 00:00:00'\n  AND purchased_at < '2026-04-01 00:00:00'\nGROUP BY month_label, month_date\nORDER BY month_date ASC",
+        "columns": [
+          "month_label",
+          "month_date",
+          "revenue"
+        ],
+        "rows": [
+          {
+            "month_label": "January 2026",
+            "month_date": "2026-01-01T00:00:00",
+            "revenue": 125.0
+          },
+          {
+            "month_label": "February 2026",
+            "month_date": "2026-02-01T00:00:00",
+            "revenue": 100.0
+          },
+          {
+            "month_label": "March 2026",
+            "month_date": "2026-03-01T00:00:00",
+            "revenue": 150.0
+          }
+        ],
+        "total_rows": 3,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "70b48a9bc309902121a4bac3e5c7d7d8ecc01593e07104b056ef49c3226b5101",
+        "executed_at": "2026-11-20T09:26:38.024323+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Get January, February, and March 2026 revenue for Calvin Klein",
+        "queried_at": "2026-11-20T09:26:38.027108+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 15.493,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "markdown_table_present",
+      "observation": "matched",
+      "description": "A Markdown table is present; its content still needs numerical review."
+    },
+    {
+      "name": "fixture_number_presence_smoke",
+      "observation": "matched",
+      "description": "Expected numeric tokens [100.0, 125.0, 150.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+    }
+  ],
+  "file": "monthly_table-1.json"
+}

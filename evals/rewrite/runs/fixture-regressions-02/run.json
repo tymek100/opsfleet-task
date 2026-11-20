@@ -1,0 +1,1298 @@
+{
+  "metadata": {
+    "started_at": "2026-11-20T09:18:10.011078+00:00",
+    "backend": "fixture",
+    "user": "alice",
+    "scope": "Calvin Klein",
+    "settings": {
+      "gemini_model": "gemini-3.8-flash",
+      "thinking_level": "low",
+      "backend": "fixture",
+      "golden_bootstrap": true,
+      "turn_timeout_seconds": 120.0,
+      "question_budget_usd": 1.0,
+      "max_model_calls": 8,
+      "max_tool_calls": 24,
+      "max_queries": 8,
+      "max_query_bytes": 100000000,
+      "max_output_tokens": 4096,
+      "review_output_tokens": 2048,
+      "max_answer_reviews": 3,
+      "max_context_bytes": 150000,
+      "max_review_bytes": 60000,
+      "review_reserve_seconds": 12.0,
+      "input_usd_per_million": 2.0,
+      "output_usd_per_million": 12.0,
+      "bigquery_usd_per_tib": 6.25,
+      "model_min_interval_seconds": 0.0
+    },
+    "packages": {
+      "google-adk": "2.12.0",
+      "google-genai": "2.32.0",
+      "sqlglot": "30.24.0",
+      "duckdb": "2.0.0"
+    },
+    "fixture_sha256": "b9d69b87067b2fa0ea3332ad6775a52b435537f58af001c69f1ae4043425aa55",
+    "independent_fixture_oracle_active": true,
+    "golden_corpus_sha256": "c376f96dadf11329e0a71ac58ed3966661165e24d8fed2ca0b5075b5dd7c5720",
+    "evaluation_type": "real-model smoke observations; manual quality review pending",
+    "selected_cases": [
+      "monthly_table",
+      "false_premise",
+      "report_save"
+    ],
+    "maximum_turns": 4,
+    "storage": "TemporaryDirectory per run; no user library reads/imports/mutations",
+    "finished_at": "2026-11-20T09:19:18.751381+00:00",
+    "runtime_incomplete_or_failed_turns": 0
+  },
+  "cases": [
+    {
+      "id": "monthly_table",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Show January, February and March 2026 revenue in a table, followed by one brief observation.",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "Ac4fb8453f8",
+              "markdown": "### Calvin Klein Revenue (Q1 2026)\n\n| Month | Revenue | Orders | Customers |\n|:---|---:|---:|---:|\n| January 2026 | $125.00 | 1 | 1 |\n| February 2026 | $100.00 | 2 | 2 |\n| March 2026 | $150.00 | 3 | 3 |\n\n*Note: Figures reflect qualifying sales (excluding cancelled and returned items and orders). Currency units are not specified in the underlying data.*\n\n### Observation\nRevenue dipped 20.0% from January to February (from $125.00 to $100.00) before rebounding by 50.0% to reach a quarter high of $150.00 in March 2026, driven by a steady month-over-month increase in order and customer counts.",
+              "evidence_ids": [
+                "E1"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.228,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.907,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.908,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 1.916,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 5.087,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 5.597,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 5.603,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 9.299,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 9.304,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 11.043,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 11.043,
+                "answer_id": "Ac4fb8453f8",
+                "sha256": "298ebe9619593233e46c98b2e91552a72e738e0041a773cf93e6fc331fd19beb"
+              }
+            ],
+            "usage": {
+              "model_calls": 4,
+              "queries": 1,
+              "tool_calls": 3,
+              "reserved_usd": 0.293652,
+              "input_tokens": 9653,
+              "output_tokens": 464,
+              "thinking_tokens": 0
+            },
+            "evidence": [
+              {
+                "sql": "SELECT\n  FORMAT_TIMESTAMP('%B %Y', purchased_at) AS month,\n  DATE_TRUNC(DATE(purchased_at), MONTH) AS month_date,\n  ROUND(SUM(sale_price), 2) AS revenue,\n  COUNT(DISTINCT order_id) AS orders,\n  COUNT(DISTINCT user_id) AS customers\nFROM sales\nWHERE purchased_at >= '2026-01-01 00:00:00'\n  AND purchased_at < '2026-04-01 00:00:00'\nGROUP BY month, month_date\nORDER BY month_date",
+                "columns": [
+                  "month",
+                  "month_date",
+                  "revenue",
+                  "orders",
+                  "customers"
+                ],
+                "rows": [
+                  {
+                    "month": "January 2026",
+                    "month_date": "2026-01-01T00:00:00",
+                    "revenue": 125.0,
+                    "orders": 1,
+                    "customers": 1
+                  },
+                  {
+                    "month": "February 2026",
+                    "month_date": "2026-02-01T00:00:00",
+                    "revenue": 100.0,
+                    "orders": 2,
+                    "customers": 2
+                  },
+                  {
+                    "month": "March 2026",
+                    "month_date": "2026-03-01T00:00:00",
+                    "revenue": 150.0,
+                    "orders": 3,
+                    "customers": 3
+                  }
+                ],
+                "total_rows": 3,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "96fab12c57d9db6919792dbbf1e86157dd47ad3039be35ea60eefd1a58b9ba3c",
+                "executed_at": "2026-11-20T09:18:15.611593+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Calculate monthly revenue for Calvin Klein in January, February, and March 2026",
+                "queried_at": "2026-11-20T09:18:15.615183+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 11.044,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "markdown_table_present",
+              "observation": "matched",
+              "description": "A Markdown table is present; its content still needs numerical review."
+            },
+            {
+              "name": "fixture_number_presence_smoke",
+              "observation": "matched",
+              "description": "Expected numeric tokens [100.0, 125.0, 150.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+            }
+          ],
+          "file": "monthly_table-1.json"
+        }
+      ],
+      "independent_expected_facts": {
+        "January": 125.0,
+        "February": 100.0,
+        "March": 150.0
+      }
+    },
+    {
+      "id": "false_premise",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Why did our 90-day inactivity rate spike from May to June 2026?",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "Afc932c119d",
+              "markdown": "**The measured 90-day inactivity rate did not spike from May to June 2026.** Under standard month-end snapshot definitions, Calvin Klein's inactivity rate was **unchanged at 100.0%** (a **0.0 percentage point change**) [E1].\n\n### Measured Inactivity Snapshots\n\nA customer is eligible for a 90-day inactivity snapshot if their first qualifying purchase occurred strictly more than 90 days prior to the snapshot date. They are classified as inactive if their last qualifying purchase prior to the snapshot date was also more than 90 days ago [E1]. Qualifying sales exclude cancelled and returned items and orders [E2].\n\n| Snapshot Date | Reference Month-End | Eligible Customers | Inactive Customers | Inactivity Rate |\n| :--- | :--- | :---: | :---: | :---: |\n| **2026-06-01** | May 2026 | 5 | 5 | **100.0%** |\n| **2026-07-01** | June 2026 | 5 | 5 | **100.0%** |\n\n### Context and Underlying Customer Activity\n\n* **Snapshot Stability:** At the close of May (2026-06-01 snapshot), all 5 eligible customers (User IDs 1, 2, 4, 5, and 6) had made their last purchase on or before March 1, 2026 (>90 days prior), resulting in 5 inactive out of 5 eligible (100.0%) [E1, E2].\n* **June Activity:** No qualifying purchases occurred during June 2026 [E2]. Consequently, at the close of June (2026-07-01 snapshot), the exact same 5 customers remained eligible and inactive, keeping the inactivity rate at 100.0% [E1].\n* **Earlier Comparison (April to May):** The inactivity rate did increase between the end of April (2026-05-01 snapshot: 0.0%, 0 of 1 customer inactive) and the end of May (2026-06-01 snapshot: 100.0%, 5 of 5 customers inactive) as customers acquired in February and March crossed the 90-day threshold without repeat purchases [E1, E2]. However, between May-end and June-end, the rate remained completely flat.\n\nBecause the measured rate was identical at both boundaries, there is no spike from May to June 2026 to explain.",
+              "evidence_ids": [
+                "E1",
+                "E2"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.023,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.808,
+                "tool": "search_golden"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.809,
+                "tool": "search_golden",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 1.813,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 3.505,
+                "tool": "read_golden"
+              },
+              {
+                "event": "golden_read",
+                "elapsed": 3.505,
+                "id": "inactivity_false_spike",
+                "revision": 1
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 3.506,
+                "tool": "read_golden",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 3.512,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 8.3,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 8.82,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 8.827,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 11.209,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 11.706,
+                "tool": "query_data",
+                "status": "invalid_request"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 11.713,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 13.101,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 13.102,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 13.117,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 14.983,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 15.529,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E2"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 15.537,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 23.044,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 23.055,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 25.401,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 25.401,
+                "answer_id": "Afc932c119d",
+                "sha256": "027aa6e4922037eb4fd1e1f78148458eef5bbbc64db16a6a19389cbdbcf6200b"
+              }
+            ],
+            "usage": {
+              "model_calls": 8,
+              "queries": 3,
+              "tool_calls": 7,
+              "reserved_usd": 0.754571,
+              "input_tokens": 35616,
+              "output_tokens": 1220,
+              "thinking_tokens": 0
+            },
+            "evidence": [
+              {
+                "sql": "WITH boundaries AS (\n  SELECT DATE '2026-05-01' AS as_of\n  UNION ALL SELECT DATE '2026-06-01' AS as_of\n  UNION ALL SELECT DATE '2026-07-01' AS as_of\n), histories AS (\n  SELECT b.as_of, s.user_id,\n         MIN(DATE(s.purchased_at)) AS first_purchase,\n         MAX(DATE(s.purchased_at)) AS last_purchase\n  FROM boundaries AS b JOIN sales AS s ON DATE(s.purchased_at) < b.as_of\n  GROUP BY b.as_of, s.user_id\n), eligible AS (\n  SELECT as_of, user_id,\n         last_purchase < DATE_SUB(as_of, INTERVAL 90 DAY) AS inactive\n  FROM histories WHERE first_purchase < DATE_SUB(as_of, INTERVAL 90 DAY)\n)\nSELECT CAST(b.as_of AS STRING) AS as_of,\n       COUNT(e.user_id) AS eligible_customers,\n       COUNTIF(e.inactive) AS inactive_customers,\n       ROUND(100.0 * SAFE_DIVIDE(COUNTIF(e.inactive), COUNT(e.user_id)), 2) AS inactivity_percent\nFROM boundaries AS b LEFT JOIN eligible AS e ON e.as_of = b.as_of\nGROUP BY b.as_of ORDER BY b.as_of",
+                "columns": [
+                  "as_of",
+                  "eligible_customers",
+                  "inactive_customers",
+                  "inactivity_percent"
+                ],
+                "rows": [
+                  {
+                    "as_of": "2026-05-01",
+                    "eligible_customers": 1,
+                    "inactive_customers": 0,
+                    "inactivity_percent": 0.0
+                  },
+                  {
+                    "as_of": "2026-06-01",
+                    "eligible_customers": 5,
+                    "inactive_customers": 5,
+                    "inactivity_percent": 100.0
+                  },
+                  {
+                    "as_of": "2026-07-01",
+                    "eligible_customers": 5,
+                    "inactive_customers": 5,
+                    "inactivity_percent": 100.0
+                  }
+                ],
+                "total_rows": 3,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "d99007c832ba9ef5b257cee3a68ee5f4cd3e7cdde588faca14a750b70a76aace",
+                "executed_at": "2026-11-20T09:18:29.885145+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Check Calvin Klein 90-day inactivity snapshots as of 2026-06-01 and 2026-07-01 (and surrounding dates/months)",
+                "queried_at": "2026-11-20T09:18:29.888471+00:00",
+                "parents": []
+              },
+              {
+                "sql": "SELECT user_id, order_id, purchased_at, sale_price, item_status, order_status\nFROM sales\nORDER BY purchased_at",
+                "columns": [
+                  "user_id",
+                  "order_id",
+                  "purchased_at",
+                  "sale_price",
+                  "item_status",
+                  "order_status"
+                ],
+                "rows": [
+                  {
+                    "user_id": 1,
+                    "order_id": 10,
+                    "purchased_at": "2026-01-01T00:00:00",
+                    "sale_price": 25.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 1,
+                    "order_id": 10,
+                    "purchased_at": "2026-01-01T00:00:00",
+                    "sale_price": 100.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 1,
+                    "order_id": 11,
+                    "purchased_at": "2026-02-01T00:00:00",
+                    "sale_price": 50.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 2,
+                    "order_id": 12,
+                    "purchased_at": "2026-02-02T00:00:00",
+                    "sale_price": 50.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 6,
+                    "order_id": 17,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "sale_price": 50.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 5,
+                    "order_id": 16,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "sale_price": 50.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 4,
+                    "order_id": 15,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "sale_price": 50.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "user_id": 1,
+                    "order_id": 20,
+                    "purchased_at": "2026-07-01T00:00:00",
+                    "sale_price": 80.0,
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  }
+                ],
+                "total_rows": 8,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "051be7bb8191721831a2399b15fdadc7c520f6b1d9895123dcfd518b4c2d7f61",
+                "executed_at": "2026-11-20T09:18:36.593758+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E2",
+                "purpose": "Get customer purchase details",
+                "queried_at": "2026-11-20T09:18:36.597174+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 25.403,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "fixture_number_presence_smoke",
+              "observation": "matched",
+              "description": "Expected numeric tokens [100.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+            }
+          ],
+          "file": "false_premise-1.json"
+        }
+      ],
+      "independent_expected_facts": {
+        "May_end": {
+          "eligible": 5,
+          "inactive": 5,
+          "percent": 100.0
+        },
+        "June_end": {
+          "eligible": 5,
+          "inactive": 5,
+          "percent": 100.0
+        },
+        "percentage_point_change": 0,
+        "interpretation": "Under the documented eligible-before-90-day-cutoff definition, no spike exists."
+      }
+    },
+    {
+      "id": "report_save",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Write a short Q1 2026 performance report and suggest two measurable actions for Q2. Do not save it yet.",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "Aab89049137",
+              "markdown": "# Calvin Klein: Q1 2026 Performance Report\n\n### Scope & Metric Rules\n- **Period**: Q1 2026 (2026-01-01 to 2026-03-31 UTC). Prior historical data for Q1 2025 / Q4 2025 is not recorded in the warehouse for Calvin Klein.\n- **Status Definition**: Qualifying sales reflect non-cancelled, non-returned transactions at both the order and item level.\n- **Currency**: Unspecified in the data source.\n\n---\n\n### Key Performance Highlights\n\n| Metric | Qualifying Sales | Total Logged Demand (incl. Returns & Cancellations) |\n| :--- | :--- | :--- |\n| **Gross Revenue / Demand** | 375.00 | 2,674.00 |\n| **Items** | 7 | 10 |\n| **Orders** | 6 | 9 |\n| **Unique Customers** | 5 | 6 |\n| **Average Order Value (AOV)** | 62.50 | 297.11 |\n| **Average Item Price** | 53.57 | 267.40 |\n| **Units Per Order (UPT)** | 1.17 | 1.11 |\n\n#### Observations\n1. **Attrition & Returns Impact [E3]**: Out of 10 total item purchase attempts (totaling 2,674.00), 3 high-value items totaling 2,299.00 were lost:\n   - Order 18: 999.00 cancelled at the order level.\n   - Orders 13 & 14: 1,300.00 returned across two high-ticket items (600.00 and 700.00) by customer ID 2 and customer ID 3.\n   - Net realized qualifying revenue was 375.00 (14.0% of total attempted volume).\n2. **Category Performance [E1, E3]**:\n   - **Tops** (*Alpha top*): 4 qualifying units sold at 50.00 each across 4 unique orders (revenue: 200.00, 100% completion rate).\n   - **Jeans** (*Alpha jeans*): 3 qualifying units completed (revenue: 175.00 across 2 orders), alongside 3 cancelled/returned high-value units.\n\n---\n\n### Recommended Actions for Q2 2026\n\n1. **Implement Return & Sizing Audits on High-Ticket Denim**\n   - **Hypothesis/Finding**: The *Alpha jeans* product line experienced 1,300.00 in returns and 999.00 in cancellations, driving the net qualifying revenue down significantly.\n   - **Action**: Audit product page sizing guides, fit specifications, and customer return reasons for denim products priced above 500.00.\n   - **Target Metric**: Reduce denim return/cancellation value rate by at least 30% from the Q1 baseline by the end of Q2 2026.\n\n2. **Deploy Cross-Category Basket-Building Incentives (Tops & Jeans)**\n   - **Hypothesis/Finding**: 5 out of 6 qualifying orders were single-unit transactions, resulting in a low basket density of 1.17 items per order.\n   - **Action**: Introduce a \"Complete the Look\" bundle promotion (pairing *Alpha top* with core denim) offering a 10% discount on the second piece.\n   - **Target Metric**: Increase qualifying units per order (UPT) from 1.17 to at least 1.40 and increase qualifying AOV from 62.50 to 75.00+ during Q2 2026.",
+              "evidence_ids": [
+                "E1",
+                "E3"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.028,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.618,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.618,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 1.624,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 6.95,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 7.501,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 7.508,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 9.735,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 10.261,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E2"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 10.267,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 13.23,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 13.807,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E3"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 13.815,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 23.977,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 23.985,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 25.902,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 25.902,
+                "answer_id": "Aab89049137",
+                "sha256": "b5053ab13f69cb0683de474950cfed0ccace61261c95728082bc52cf8d436ef3"
+              }
+            ],
+            "usage": {
+              "model_calls": 6,
+              "queries": 3,
+              "tool_calls": 5,
+              "reserved_usd": 0.517527,
+              "input_tokens": 23351,
+              "output_tokens": 1654,
+              "thinking_tokens": 0
+            },
+            "evidence": [
+              {
+                "sql": "SELECT\n  CASE \n    WHEN purchased_at >= '2026-01-01' AND purchased_at < '2026-04-01' THEN '2026-Q1'\n    WHEN purchased_at >= '2025-01-01' AND purchased_at < '2025-04-01' THEN '2025-Q1'\n    WHEN purchased_at >= '2025-10-01' AND purchased_at < '2026-01-01' THEN '2025-Q4'\n  END AS period,\n  COUNT(DISTINCT item_id) AS total_items,\n  COUNT(DISTINCT order_id) AS total_orders,\n  COUNT(DISTINCT user_id) AS total_customers,\n  ROUND(SUM(sale_price), 2) AS total_revenue,\n  ROUND(SUM(sale_price) / COUNT(DISTINCT order_id), 2) AS aov,\n  ROUND(SUM(sale_price) / COUNT(DISTINCT item_id), 2) AS avg_item_price,\n  ROUND(COUNT(DISTINCT item_id) * 1.0 / COUNT(DISTINCT order_id), 2) AS items_per_order\nFROM sales\nWHERE (purchased_at >= '2025-01-01' AND purchased_at < '2025-04-01')\n   OR (purchased_at >= '2025-10-01' AND purchased_at < '2026-04-01')\nGROUP BY 1\nORDER BY 1\n",
+                "columns": [
+                  "period",
+                  "total_items",
+                  "total_orders",
+                  "total_customers",
+                  "total_revenue",
+                  "aov",
+                  "avg_item_price",
+                  "items_per_order"
+                ],
+                "rows": [
+                  {
+                    "period": "2026-Q1",
+                    "total_items": 7,
+                    "total_orders": 6,
+                    "total_customers": 5,
+                    "total_revenue": 375.0,
+                    "aov": 62.5,
+                    "avg_item_price": 53.57,
+                    "items_per_order": 1.17
+                  }
+                ],
+                "total_rows": 1,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "7e2eb584959f0f0ae400d35a54a7fdc0ace89509bf96010e5b70b0ccb2694d31",
+                "executed_at": "2026-11-20T09:18:53.977061+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Get Q1 2026 performance metrics (revenue, orders, customers, items, AOV, returns/cancellations) and compare with Q1 2025 and Q4 2025 for Calvin Klein",
+                "queried_at": "2026-11-20T09:18:53.980604+00:00",
+                "parents": []
+              },
+              {
+                "sql": "SELECT \n  MIN(purchased_at) as earliest_date,\n  MAX(purchased_at) as latest_date,\n  COUNT(*) as total_rows\nFROM transactions\n",
+                "columns": [
+                  "earliest_date",
+                  "latest_date",
+                  "total_rows"
+                ],
+                "rows": [
+                  {
+                    "earliest_date": "2026-01-01T00:00:00",
+                    "latest_date": "2026-07-01T00:00:00",
+                    "total_rows": 11
+                  }
+                ],
+                "total_rows": 1,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "663093b8f83666b14c2c9ed79d273bfd70d427ab1aba21bb04243d9b1d6957cb",
+                "executed_at": "2026-11-20T09:18:56.736359+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E2",
+                "purpose": "Examine full transactions and product breakdown in Q1 2026, plus overall Calvin Klein timeline",
+                "queried_at": "2026-11-20T09:18:56.740096+00:00",
+                "parents": []
+              },
+              {
+                "sql": "SELECT \n  t.item_id,\n  t.order_id,\n  t.user_id,\n  t.product_id,\n  t.product_name,\n  t.category,\n  t.sale_price,\n  t.purchased_at,\n  t.item_status,\n  t.order_status\nFROM transactions t\nWHERE t.purchased_at >= '2026-01-01' AND t.purchased_at < '2026-04-01'\nORDER BY t.purchased_at\n",
+                "columns": [
+                  "item_id",
+                  "order_id",
+                  "user_id",
+                  "product_id",
+                  "product_name",
+                  "category",
+                  "sale_price",
+                  "purchased_at",
+                  "item_status",
+                  "order_status"
+                ],
+                "rows": [
+                  {
+                    "item_id": 13,
+                    "order_id": 10,
+                    "user_id": 1,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 25.0,
+                    "purchased_at": "2026-01-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 1,
+                    "order_id": 10,
+                    "user_id": 1,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 100.0,
+                    "purchased_at": "2026-01-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 3,
+                    "order_id": 11,
+                    "user_id": 1,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 50.0,
+                    "purchased_at": "2026-02-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 4,
+                    "order_id": 12,
+                    "user_id": 2,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "category": "Tops",
+                    "sale_price": 50.0,
+                    "purchased_at": "2026-02-02T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 5,
+                    "order_id": 13,
+                    "user_id": 3,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 600.0,
+                    "purchased_at": "2026-02-03T00:00:00",
+                    "item_status": "Returned",
+                    "order_status": "Returned"
+                  },
+                  {
+                    "item_id": 6,
+                    "order_id": 14,
+                    "user_id": 3,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 700.0,
+                    "purchased_at": "2026-02-04T00:00:00",
+                    "item_status": "Returned",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 7,
+                    "order_id": 15,
+                    "user_id": 4,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "category": "Tops",
+                    "sale_price": 50.0,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 8,
+                    "order_id": 16,
+                    "user_id": 5,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "category": "Tops",
+                    "sale_price": 50.0,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 9,
+                    "order_id": 17,
+                    "user_id": 6,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "category": "Tops",
+                    "sale_price": 50.0,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Complete"
+                  },
+                  {
+                    "item_id": 10,
+                    "order_id": 18,
+                    "user_id": 2,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "category": "Jeans",
+                    "sale_price": 999.0,
+                    "purchased_at": "2026-03-01T00:00:00",
+                    "item_status": "Complete",
+                    "order_status": "Cancelled"
+                  }
+                ],
+                "total_rows": 10,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "c98bb02bf97605eae36e6580c7579cc3ca7d1beacdd433170d70c4b0882ba8df",
+                "executed_at": "2026-11-20T09:19:00.281968+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E3",
+                "purpose": "Inspect all transactions and sales rows across categories and statuses for Calvin Klein in Q1 2026",
+                "queried_at": "2026-11-20T09:19:00.285765+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 25.903,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "no_implicit_save",
+              "observation": "matched",
+              "description": "Actual isolated report-store state remained empty after report generation."
+            },
+            {
+              "name": "fixture_number_presence_smoke",
+              "observation": "matched",
+              "description": "Expected numeric tokens [375.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+            }
+          ],
+          "file": "report_save-1.json"
+        },
+        {
+          "index": 1,
+          "prompt": "Save that exact report as Q1 2026 Review.",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "A15d0bf9056",
+              "markdown": "The Q1 2026 performance report has been staged to be saved to your private reports library as **\"Q1 2026 Review\"** (referencing report `Aab89049137`). The application will commit the save upon review completion.",
+              "evidence_ids": [
+                "E1",
+                "E3"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": [
+                {
+                  "operation": "save",
+                  "status": "saved",
+                  "id": "88bcdbcd46bf42af",
+                  "title": "Q1 2026 Review"
+                }
+              ]
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.016,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 2.176,
+                "tool": "stage_report_save"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 2.176,
+                "tool": "stage_report_save",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 2.186,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 4.544,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 4.56,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 6.357,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 6.359,
+                "answer_id": "A15d0bf9056",
+                "sha256": "8ff4324944e7a99f0519a1ffb1b5ca350946c56cb1e26a279a50002f343eecbd"
+              }
+            ],
+            "usage": {
+              "model_calls": 3,
+              "queries": 0,
+              "tool_calls": 2,
+              "reserved_usd": 0.23719,
+              "input_tokens": 12134,
+              "output_tokens": 164,
+              "thinking_tokens": 0
+            },
+            "evidence": [],
+            "elapsed_seconds": 6.36,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [
+            {
+              "id": "88bcdbcd46bf42af",
+              "title": "Q1 2026 Review",
+              "answer_id": "Aab89049137",
+              "version": "aeed60ff4a3449959e1bf2c9ef79a2f4",
+              "created_at": 1795166358.7431629,
+              "historical_import": false
+            }
+          ],
+          "stored_reports": [
+            {
+              "id": "88bcdbcd46bf42af",
+              "title": "Q1 2026 Review",
+              "answer_id": "Aab89049137",
+              "version": "aeed60ff4a3449959e1bf2c9ef79a2f4",
+              "created_at": 1795166358.7431629,
+              "historical_import": false,
+              "markdown": "# Calvin Klein: Q1 2026 Performance Report\n\n### Scope & Metric Rules\n- **Period**: Q1 2026 (2026-01-01 to 2026-03-31 UTC). Prior historical data for Q1 2025 / Q4 2025 is not recorded in the warehouse for Calvin Klein.\n- **Status Definition**: Qualifying sales reflect non-cancelled, non-returned transactions at both the order and item level.\n- **Currency**: Unspecified in the data source.\n\n---\n\n### Key Performance Highlights\n\n| Metric | Qualifying Sales | Total Logged Demand (incl. Returns & Cancellations) |\n| :--- | :--- | :--- |\n| **Gross Revenue / Demand** | 375.00 | 2,674.00 |\n| **Items** | 7 | 10 |\n| **Orders** | 6 | 9 |\n| **Unique Customers** | 5 | 6 |\n| **Average Order Value (AOV)** | 62.50 | 297.11 |\n| **Average Item Price** | 53.57 | 267.40 |\n| **Units Per Order (UPT)** | 1.17 | 1.11 |\n\n#### Observations\n1. **Attrition & Returns Impact [E3]**: Out of 10 total item purchase attempts (totaling 2,674.00), 3 high-value items totaling 2,299.00 were lost:\n   - Order 18: 999.00 cancelled at the order level.\n   - Orders 13 & 14: 1,300.00 returned across two high-ticket items (600.00 and 700.00) by customer ID 2 and customer ID 3.\n   - Net realized qualifying revenue was 375.00 (14.0% of total attempted volume).\n2. **Category Performance [E1, E3]**:\n   - **Tops** (*Alpha top*): 4 qualifying units sold at 50.00 each across 4 unique orders (revenue: 200.00, 100% completion rate).\n   - **Jeans** (*Alpha jeans*): 3 qualifying units completed (revenue: 175.00 across 2 orders), alongside 3 cancelled/returned high-value units.\n\n---\n\n### Recommended Actions for Q2 2026\n\n1. **Implement Return & Sizing Audits on High-Ticket Denim**\n   - **Hypothesis/Finding**: The *Alpha jeans* product line experienced 1,300.00 in returns and 999.00 in cancellations, driving the net qualifying revenue down significantly.\n   - **Action**: Audit product page sizing guides, fit specifications, and customer return reasons for denim products priced above 500.00.\n   - **Target Metric**: Reduce denim return/cancellation value rate by at least 30% from the Q1 baseline by the end of Q2 2026.\n\n2. **Deploy Cross-Category Basket-Building Incentives (Tops & Jeans)**\n   - **Hypothesis/Finding**: 5 out of 6 qualifying orders were single-unit transactions, resulting in a low basket density of 1.17 items per order.\n   - **Action**: Introduce a \"Complete the Look\" bundle promotion (pairing *Alpha top* with core denim) offering a 10% discount on the second piece.\n   - **Target Metric**: Increase qualifying units per order (UPT) from 1.17 to at least 1.40 and increase qualifying AOV from 62.50 to 75.00+ during Q2 2026.",
+              "evidence": [
+                {
+                  "backend": "fixture",
+                  "bytes_processed": 0,
+                  "columns": [
+                    "period",
+                    "total_items",
+                    "total_orders",
+                    "total_customers",
+                    "total_revenue",
+                    "aov",
+                    "avg_item_price",
+                    "items_per_order"
+                  ],
+                  "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                  "executed_at": "2026-11-20T09:18:53.977061+00:00",
+                  "id": "E1",
+                  "job_id": null,
+                  "parameters": {},
+                  "parents": [],
+                  "purpose": "Get Q1 2026 performance metrics (revenue, orders, customers, items, AOV, returns/cancellations) and compare with Q1 2025 and Q4 2025 for Calvin Klein",
+                  "queried_at": "2026-11-20T09:18:53.980604+00:00",
+                  "rows": [
+                    {
+                      "aov": 62.5,
+                      "avg_item_price": 53.57,
+                      "items_per_order": 1.17,
+                      "period": "2026-Q1",
+                      "total_customers": 5,
+                      "total_items": 7,
+                      "total_orders": 6,
+                      "total_revenue": 375.0
+                    }
+                  ],
+                  "scope": "Calvin Klein",
+                  "sql": "SELECT\n  CASE \n    WHEN purchased_at >= '2026-01-01' AND purchased_at < '2026-04-01' THEN '2026-Q1'\n    WHEN purchased_at >= '2025-01-01' AND purchased_at < '2025-04-01' THEN '2025-Q1'\n    WHEN purchased_at >= '2025-10-01' AND purchased_at < '2026-01-01' THEN '2025-Q4'\n  END AS period,\n  COUNT(DISTINCT item_id) AS total_items,\n  COUNT(DISTINCT order_id) AS total_orders,\n  COUNT(DISTINCT user_id) AS total_customers,\n  ROUND(SUM(sale_price), 2) AS total_revenue,\n  ROUND(SUM(sale_price) / COUNT(DISTINCT order_id), 2) AS aov,\n  ROUND(SUM(sale_price) / COUNT(DISTINCT item_id), 2) AS avg_item_price,\n  ROUND(COUNT(DISTINCT item_id) * 1.0 / COUNT(DISTINCT order_id), 2) AS items_per_order\nFROM sales\nWHERE (purchased_at >= '2025-01-01' AND purchased_at < '2025-04-01')\n   OR (purchased_at >= '2025-10-01' AND purchased_at < '2026-04-01')\nGROUP BY 1\nORDER BY 1\n",
+                  "sql_sha256": "7e2eb584959f0f0ae400d35a54a7fdc0ace89509bf96010e5b70b0ccb2694d31",
+                  "total_rows": 1,
+                  "truncated": false
+                },
+                {
+                  "backend": "fixture",
+                  "bytes_processed": 0,
+                  "columns": [
+                    "item_id",
+                    "order_id",
+                    "user_id",
+                    "product_id",
+                    "product_name",
+                    "category",
+                    "sale_price",
+                    "purchased_at",
+                    "item_status",
+                    "order_status"
+                  ],
+                  "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                  "executed_at": "2026-11-20T09:19:00.281968+00:00",
+                  "id": "E3",
+                  "job_id": null,
+                  "parameters": {},
+                  "parents": [],
+                  "purpose": "Inspect all transactions and sales rows across categories and statuses for Calvin Klein in Q1 2026",
+                  "queried_at": "2026-11-20T09:19:00.285765+00:00",
+                  "rows": [
+                    {
+                      "category": "Jeans",
+                      "item_id": 13,
+                      "item_status": "Complete",
+                      "order_id": 10,
+                      "order_status": "Complete",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-01-01T00:00:00",
+                      "sale_price": 25.0,
+                      "user_id": 1
+                    },
+                    {
+                      "category": "Jeans",
+                      "item_id": 1,
+                      "item_status": "Complete",
+                      "order_id": 10,
+                      "order_status": "Complete",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-01-01T00:00:00",
+                      "sale_price": 100.0,
+                      "user_id": 1
+                    },
+                    {
+                      "category": "Jeans",
+                      "item_id": 3,
+                      "item_status": "Complete",
+                      "order_id": 11,
+                      "order_status": "Complete",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-02-01T00:00:00",
+                      "sale_price": 50.0,
+                      "user_id": 1
+                    },
+                    {
+                      "category": "Tops",
+                      "item_id": 4,
+                      "item_status": "Complete",
+                      "order_id": 12,
+                      "order_status": "Complete",
+                      "product_id": 3,
+                      "product_name": "Alpha top",
+                      "purchased_at": "2026-02-02T00:00:00",
+                      "sale_price": 50.0,
+                      "user_id": 2
+                    },
+                    {
+                      "category": "Jeans",
+                      "item_id": 5,
+                      "item_status": "Returned",
+                      "order_id": 13,
+                      "order_status": "Returned",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-02-03T00:00:00",
+                      "sale_price": 600.0,
+                      "user_id": 3
+                    },
+                    {
+                      "category": "Jeans",
+                      "item_id": 6,
+                      "item_status": "Returned",
+                      "order_id": 14,
+                      "order_status": "Complete",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-02-04T00:00:00",
+                      "sale_price": 700.0,
+                      "user_id": 3
+                    },
+                    {
+                      "category": "Tops",
+                      "item_id": 7,
+                      "item_status": "Complete",
+                      "order_id": 15,
+                      "order_status": "Complete",
+                      "product_id": 3,
+                      "product_name": "Alpha top",
+                      "purchased_at": "2026-03-01T00:00:00",
+                      "sale_price": 50.0,
+                      "user_id": 4
+                    },
+                    {
+                      "category": "Tops",
+                      "item_id": 8,
+                      "item_status": "Complete",
+                      "order_id": 16,
+                      "order_status": "Complete",
+                      "product_id": 3,
+                      "product_name": "Alpha top",
+                      "purchased_at": "2026-03-01T00:00:00",
+                      "sale_price": 50.0,
+                      "user_id": 5
+                    },
+                    {
+                      "category": "Tops",
+                      "item_id": 9,
+                      "item_status": "Complete",
+                      "order_id": 17,
+                      "order_status": "Complete",
+                      "product_id": 3,
+                      "product_name": "Alpha top",
+                      "purchased_at": "2026-03-01T00:00:00",
+                      "sale_price": 50.0,
+                      "user_id": 6
+                    },
+                    {
+                      "category": "Jeans",
+                      "item_id": 10,
+                      "item_status": "Complete",
+                      "order_id": 18,
+                      "order_status": "Cancelled",
+                      "product_id": 1,
+                      "product_name": "Alpha jeans",
+                      "purchased_at": "2026-03-01T00:00:00",
+                      "sale_price": 999.0,
+                      "user_id": 2
+                    }
+                  ],
+                  "scope": "Calvin Klein",
+                  "sql": "SELECT \n  t.item_id,\n  t.order_id,\n  t.user_id,\n  t.product_id,\n  t.product_name,\n  t.category,\n  t.sale_price,\n  t.purchased_at,\n  t.item_status,\n  t.order_status\nFROM transactions t\nWHERE t.purchased_at >= '2026-01-01' AND t.purchased_at < '2026-04-01'\nORDER BY t.purchased_at\n",
+                  "sql_sha256": "c98bb02bf97605eae36e6580c7579cc3ca7d1beacdd433170d70c4b0882ba8df",
+                  "total_rows": 10,
+                  "truncated": false
+                }
+              ]
+            }
+          ],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "one_report_saved",
+              "observation": "matched",
+              "description": "Actual isolated owner library contains exactly one saved report."
+            },
+            {
+              "name": "exact_original_markdown_saved",
+              "observation": "matched",
+              "description": "Stored Markdown is compared with the first turn's exact approved answer, not the save acknowledgement."
+            },
+            {
+              "name": "original_evidence_ids_saved",
+              "observation": "matched",
+              "description": "Stored evidence IDs are compared with the original approved answer's references."
+            }
+          ],
+          "file": "report_save-2.json"
+        }
+      ],
+      "independent_expected_facts": {
+        "revenue": 375.0,
+        "orders": 6,
+        "items": 7,
+        "customers": 5
+      }
+    }
+  ]
+}

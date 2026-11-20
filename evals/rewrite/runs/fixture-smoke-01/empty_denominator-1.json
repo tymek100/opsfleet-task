@@ -1,0 +1,244 @@
+{
+  "index": 0,
+  "prompt": "What fraction of customers first acquired in April 2026 bought again in May?",
+  "result": {
+    "answer": {
+      "id": "A7fe979dd42",
+      "markdown": "### Summary\n\n**No customers were first acquired in April 2026** for Calvin Klein [E1, E2]. Consequently, the repeat purchase fraction for this cohort in May 2026 is **undefined** (0 denominator) [E1].\n\n---\n\n### Detailed Findings\n\n| Metric | Value |\n| :--- | ---: |\n| **April 2026 Acquired Customers (Denominator)** | **0** |\n| **May 2026 Repeat Purchasers (Numerator)** | **0** |\n| **May Repeat Purchase Fraction** | **Undefined** (`NULL`) |\n\n* **First Acquisition Definition**: A customer's first qualifying purchase across all available Calvin Klein purchase history [E1].\n* **Historical Activity**: Across the recorded dataset for 2026, qualifying customer purchases occurred only in January (1 new customer), February (1 new, 2 active), March (3 new, 3 active), and July (0 new, 1 active) [E2]. No qualifying purchase activity was recorded in April or May 2026 [E1, E2].\n\n---\n\n### Metric Scope & Business Rules\n\n* **Status Rule**: Excludes items and orders with a status of `Cancelled` or `Returned`. Qualifying purchases reflect completed or valid non-returned orders [E1].\n* **Brand Scope**: Customer acquisition and subsequent repeat purchases are evaluated strictly within authorized Calvin Klein brand records [E1].\n* **Time Grain**: Evaluated using standard UTC calendar month boundaries:\n  * April 2026 cohort: `[2026-04-01 00:00:00 UTC, 2026-05-01 00:00:00 UTC)`\n  * May 2026 repeat activity: `[2026-05-01 00:00:00 UTC, 2026-06-01 00:00:00 UTC)`",
+      "evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.03,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 1.698,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 1.699,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 1.707,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 3.59,
+        "tool": "search_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 3.591,
+        "tool": "search_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 3.599,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.75,
+        "tool": "read_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 4.752,
+        "tool": "read_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 4.761,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 8.791,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 9.304,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 9.312,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 12.243,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 12.746,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E2"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 12.754,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 18.014,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 18.022,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_end",
+        "elapsed": 19.877,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 19.877,
+        "answer_id": "A7fe979dd42",
+        "sha256": "40b600a6a380baf49b219dda280b9edb8ce7476d50d6e391b7d7e58575ebf2b3"
+      }
+    ],
+    "usage": {
+      "model_calls": 7,
+      "queries": 2,
+      "tool_calls": 6,
+      "reserved_usd": 0.615133,
+      "input_tokens": 26306,
+      "output_tokens": 1147,
+      "thinking_tokens": 0
+    },
+    "evidence": [
+      {
+        "sql": "WITH customer_first_purchase AS (\n  SELECT\n    user_id,\n    MIN(purchased_at) AS first_purchased_at\n  FROM sales\n  GROUP BY user_id\n),\napril_cohort AS (\n  SELECT\n    user_id\n  FROM customer_first_purchase\n  WHERE first_purchased_at >= TIMESTAMP '2026-04-01 00:00:00'\n    AND first_purchased_at < TIMESTAMP '2026-05-01 00:00:00'\n),\nmay_purchasers AS (\n  SELECT DISTINCT\n    user_id\n  FROM sales\n  WHERE purchased_at >= TIMESTAMP '2026-05-01 00:00:00'\n    AND purchased_at < TIMESTAMP '2026-06-01 00:00:00'\n)\nSELECT\n  COUNT(c.user_id) AS april_cohort_size,\n  COUNT(m.user_id) AS retained_in_may,\n  SAFE_DIVIDE(COUNT(m.user_id), COUNT(c.user_id)) AS retention_rate,\n  ROUND(100.0 * SAFE_DIVIDE(COUNT(m.user_id), COUNT(c.user_id)), 2) AS retention_percentage\nFROM april_cohort c\nLEFT JOIN may_purchasers m\n  ON c.user_id = m.user_id",
+        "columns": [
+          "april_cohort_size",
+          "retained_in_may",
+          "retention_rate",
+          "retention_percentage"
+        ],
+        "rows": [
+          {
+            "april_cohort_size": 0,
+            "retained_in_may": 0,
+            "retention_rate": null,
+            "retention_percentage": null
+          }
+        ],
+        "total_rows": 1,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "44be3c9b111897c7a84fb25cdcb2fbab544a4c4b82d98996d4b6f8911b880777",
+        "executed_at": "2026-11-20T00:18:02.384190+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Calculate fraction of Calvin Klein customers acquired in April 2026 who purchased again in May 2026",
+        "queried_at": "2026-11-20T00:18:02.387567+00:00",
+        "parents": []
+      },
+      {
+        "sql": "WITH customer_first AS (\n  SELECT\n    user_id,\n    MIN(purchased_at) AS first_purchased_at\n  FROM sales\n  GROUP BY user_id\n)\nSELECT\n  DATE_TRUNC(DATE(s.purchased_at), MONTH) AS purchase_month,\n  COUNT(DISTINCT s.user_id) AS active_customers,\n  COUNT(DISTINCT f.user_id) AS new_customers\nFROM sales s\nLEFT JOIN customer_first f\n  ON s.user_id = f.user_id\n  AND DATE_TRUNC(DATE(f.first_purchased_at), MONTH) = DATE_TRUNC(DATE(s.purchased_at), MONTH)\nGROUP BY purchase_month\nORDER BY purchase_month",
+        "columns": [
+          "purchase_month",
+          "active_customers",
+          "new_customers"
+        ],
+        "rows": [
+          {
+            "purchase_month": "2026-01-01T00:00:00",
+            "active_customers": 1,
+            "new_customers": 1
+          },
+          {
+            "purchase_month": "2026-02-01T00:00:00",
+            "active_customers": 2,
+            "new_customers": 1
+          },
+          {
+            "purchase_month": "2026-03-01T00:00:00",
+            "active_customers": 3,
+            "new_customers": 3
+          },
+          {
+            "purchase_month": "2026-07-01T00:00:00",
+            "active_customers": 1,
+            "new_customers": 0
+          }
+        ],
+        "total_rows": 4,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "b7f21e41057897c967fc07c8713dd74c02eea2edecf8529a794c849104f1368e",
+        "executed_at": "2026-11-20T00:18:05.825735+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E2",
+        "purpose": "Inspect monthly qualifying customer counts and first purchase counts across 2026 to verify April/May data",
+        "queried_at": "2026-11-20T00:18:05.828893+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 19.879,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "undefined_rate_language",
+      "observation": "matched",
+      "description": "Looks for undefined/empty-cohort language; manual review must reject an unsupported zero-percent rate."
+    }
+  ],
+  "file": "empty_denominator-1.json"
+}

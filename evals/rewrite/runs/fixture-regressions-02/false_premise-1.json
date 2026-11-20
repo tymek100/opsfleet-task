@@ -1,0 +1,330 @@
+{
+  "index": 0,
+  "prompt": "Why did our 90-day inactivity rate spike from May to June 2026?",
+  "prompt_sha256": {
+    "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+    "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+  },
+  "result": {
+    "answer": {
+      "id": "Afc932c119d",
+      "markdown": "**The measured 90-day inactivity rate did not spike from May to June 2026.** Under standard month-end snapshot definitions, Calvin Klein's inactivity rate was **unchanged at 100.0%** (a **0.0 percentage point change**) [E1].\n\n### Measured Inactivity Snapshots\n\nA customer is eligible for a 90-day inactivity snapshot if their first qualifying purchase occurred strictly more than 90 days prior to the snapshot date. They are classified as inactive if their last qualifying purchase prior to the snapshot date was also more than 90 days ago [E1]. Qualifying sales exclude cancelled and returned items and orders [E2].\n\n| Snapshot Date | Reference Month-End | Eligible Customers | Inactive Customers | Inactivity Rate |\n| :--- | :--- | :---: | :---: | :---: |\n| **2026-06-01** | May 2026 | 5 | 5 | **100.0%** |\n| **2026-07-01** | June 2026 | 5 | 5 | **100.0%** |\n\n### Context and Underlying Customer Activity\n\n* **Snapshot Stability:** At the close of May (2026-06-01 snapshot), all 5 eligible customers (User IDs 1, 2, 4, 5, and 6) had made their last purchase on or before March 1, 2026 (>90 days prior), resulting in 5 inactive out of 5 eligible (100.0%) [E1, E2].\n* **June Activity:** No qualifying purchases occurred during June 2026 [E2]. Consequently, at the close of June (2026-07-01 snapshot), the exact same 5 customers remained eligible and inactive, keeping the inactivity rate at 100.0% [E1].\n* **Earlier Comparison (April to May):** The inactivity rate did increase between the end of April (2026-05-01 snapshot: 0.0%, 0 of 1 customer inactive) and the end of May (2026-06-01 snapshot: 100.0%, 5 of 5 customers inactive) as customers acquired in February and March crossed the 90-day threshold without repeat purchases [E1, E2]. However, between May-end and June-end, the rate remained completely flat.\n\nBecause the measured rate was identical at both boundaries, there is no spike from May to June 2026 to explain.",
+      "evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.023,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 1.808,
+        "tool": "search_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 1.809,
+        "tool": "search_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 1.813,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 3.505,
+        "tool": "read_golden"
+      },
+      {
+        "event": "golden_read",
+        "elapsed": 3.505,
+        "id": "inactivity_false_spike",
+        "revision": 1
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 3.506,
+        "tool": "read_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 3.512,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 8.3,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 8.82,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 8.827,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 11.209,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 11.706,
+        "tool": "query_data",
+        "status": "invalid_request"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 11.713,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 13.101,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 13.102,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 13.117,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 14.983,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 15.529,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E2"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 15.537,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 23.044,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 23.055,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_end",
+        "elapsed": 25.401,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 25.401,
+        "answer_id": "Afc932c119d",
+        "sha256": "027aa6e4922037eb4fd1e1f78148458eef5bbbc64db16a6a19389cbdbcf6200b"
+      }
+    ],
+    "usage": {
+      "model_calls": 8,
+      "queries": 3,
+      "tool_calls": 7,
+      "reserved_usd": 0.754571,
+      "input_tokens": 35616,
+      "output_tokens": 1220,
+      "thinking_tokens": 0
+    },
+    "evidence": [
+      {
+        "sql": "WITH boundaries AS (\n  SELECT DATE '2026-05-01' AS as_of\n  UNION ALL SELECT DATE '2026-06-01' AS as_of\n  UNION ALL SELECT DATE '2026-07-01' AS as_of\n), histories AS (\n  SELECT b.as_of, s.user_id,\n         MIN(DATE(s.purchased_at)) AS first_purchase,\n         MAX(DATE(s.purchased_at)) AS last_purchase\n  FROM boundaries AS b JOIN sales AS s ON DATE(s.purchased_at) < b.as_of\n  GROUP BY b.as_of, s.user_id\n), eligible AS (\n  SELECT as_of, user_id,\n         last_purchase < DATE_SUB(as_of, INTERVAL 90 DAY) AS inactive\n  FROM histories WHERE first_purchase < DATE_SUB(as_of, INTERVAL 90 DAY)\n)\nSELECT CAST(b.as_of AS STRING) AS as_of,\n       COUNT(e.user_id) AS eligible_customers,\n       COUNTIF(e.inactive) AS inactive_customers,\n       ROUND(100.0 * SAFE_DIVIDE(COUNTIF(e.inactive), COUNT(e.user_id)), 2) AS inactivity_percent\nFROM boundaries AS b LEFT JOIN eligible AS e ON e.as_of = b.as_of\nGROUP BY b.as_of ORDER BY b.as_of",
+        "columns": [
+          "as_of",
+          "eligible_customers",
+          "inactive_customers",
+          "inactivity_percent"
+        ],
+        "rows": [
+          {
+            "as_of": "2026-05-01",
+            "eligible_customers": 1,
+            "inactive_customers": 0,
+            "inactivity_percent": 0.0
+          },
+          {
+            "as_of": "2026-06-01",
+            "eligible_customers": 5,
+            "inactive_customers": 5,
+            "inactivity_percent": 100.0
+          },
+          {
+            "as_of": "2026-07-01",
+            "eligible_customers": 5,
+            "inactive_customers": 5,
+            "inactivity_percent": 100.0
+          }
+        ],
+        "total_rows": 3,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "d99007c832ba9ef5b257cee3a68ee5f4cd3e7cdde588faca14a750b70a76aace",
+        "executed_at": "2026-11-20T09:18:29.885145+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Check Calvin Klein 90-day inactivity snapshots as of 2026-06-01 and 2026-07-01 (and surrounding dates/months)",
+        "queried_at": "2026-11-20T09:18:29.888471+00:00",
+        "parents": []
+      },
+      {
+        "sql": "SELECT user_id, order_id, purchased_at, sale_price, item_status, order_status\nFROM sales\nORDER BY purchased_at",
+        "columns": [
+          "user_id",
+          "order_id",
+          "purchased_at",
+          "sale_price",
+          "item_status",
+          "order_status"
+        ],
+        "rows": [
+          {
+            "user_id": 1,
+            "order_id": 10,
+            "purchased_at": "2026-01-01T00:00:00",
+            "sale_price": 25.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 1,
+            "order_id": 10,
+            "purchased_at": "2026-01-01T00:00:00",
+            "sale_price": 100.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 1,
+            "order_id": 11,
+            "purchased_at": "2026-02-01T00:00:00",
+            "sale_price": 50.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 2,
+            "order_id": 12,
+            "purchased_at": "2026-02-02T00:00:00",
+            "sale_price": 50.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 6,
+            "order_id": 17,
+            "purchased_at": "2026-03-01T00:00:00",
+            "sale_price": 50.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 5,
+            "order_id": 16,
+            "purchased_at": "2026-03-01T00:00:00",
+            "sale_price": 50.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 4,
+            "order_id": 15,
+            "purchased_at": "2026-03-01T00:00:00",
+            "sale_price": 50.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          },
+          {
+            "user_id": 1,
+            "order_id": 20,
+            "purchased_at": "2026-07-01T00:00:00",
+            "sale_price": 80.0,
+            "item_status": "Complete",
+            "order_status": "Complete"
+          }
+        ],
+        "total_rows": 8,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "051be7bb8191721831a2399b15fdadc7c520f6b1d9895123dcfd518b4c2d7f61",
+        "executed_at": "2026-11-20T09:18:36.593758+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E2",
+        "purpose": "Get customer purchase details",
+        "queried_at": "2026-11-20T09:18:36.597174+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 25.403,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "fixture_number_presence_smoke",
+      "observation": "matched",
+      "description": "Expected numeric tokens [100.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+    }
+  ],
+  "file": "false_premise-1.json"
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic retail Golden Knowledge bootstrap",
+  "description": "Question, SQL evidence and LLM-authored analyst prose. This is a retrieval corpus, never a held-out evaluation set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["collection_id", "revision", "created_at", "purpose", "schema_version", "metric_version", "fixture", "provenance", "retrieval_policy", "definitions", "examples"],
+  "properties": {
+    "collection_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "created_at": {"type": "string", "format": "date"},
+    "purpose": {"const": "retrieval_examples"},
+    "schema_version": {"const": "scoped-retail-v1"},
+    "metric_version": {"const": "retail-defaults-v1"},
+    "fixture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "path", "sha256", "description"],
+      "properties": {
+        "id": {"const": "retail-seed-v1"},
+        "path": {"const": "knowledge/fixtures/retail_seed_v1.sql"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["author", "authoring_method", "data_origin", "live_application_model_run", "human_reviewed"],
+      "properties": {
+        "author": {"type": "string", "minLength": 1},
+        "authoring_method": {"type": "string", "minLength": 1},
+        "data_origin": {"type": "string", "minLength": 1},
+        "live_application_model_run": {"const": false},
+        "human_reviewed": {"const": false}
+      }
+    },
+    "retrieval_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["default_enabled", "requires_explicit_synthetic_demo_mode", "production_eligible", "reuse"],
+      "properties": {
+        "default_enabled": {"const": false},
+        "requires_explicit_synthetic_demo_mode": {"const": true},
+        "production_eligible": {"const": false},
+        "reuse": {"type": "string", "minLength": 1}
+      }
+    },
+    "definitions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "examples": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/example"}}
+  },
+  "$defs": {
+    "scalar": {"type": ["string", "number", "boolean", "null"]},
+    "query": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "sql", "evidence"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]+$"},
+        "sql": {"type": "string", "minLength": 1},
+        "evidence": {
+          "type": "object", "additionalProperties": false, "required": ["rows"],
+          "properties": {
+            "rows": {
+              "type": "array",
+              "items": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/scalar"}}
+            }
+          }
+        }
+      }
+    },
+    "example": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "revision", "question", "tags", "scope", "review_status", "visibility", "queries", "analyst_report_markdown", "method_notes", "checked_facts"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]+$"},
+        "revision": {"type": "integer", "minimum": 1},
+        "question": {"type": "string", "minLength": 1},
+        "tags": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "scope": {
+          "type": "object", "additionalProperties": false, "required": ["brands", "all_brands"],
+          "properties": {
+            "brands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+            "all_brands": {"const": false}
+          }
+        },
+        "review_status": {"const": "synthetic_fixture_validated_not_human_approved"},
+        "visibility": {"const": "synthetic_demo_only"},
+        "queries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/query"}},
+        "analyst_report_markdown": {"type": "string", "minLength": 1},
+        "method_notes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "checked_facts": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["query_id", "row", "column", "expected"],
+            "properties": {
+              "query_id": {"type": "string", "minLength": 1},
+              "row": {"type": "integer", "minimum": 0},
+              "column": {"type": "string", "minLength": 1},
+              "expected": {"$ref": "#/$defs/scalar"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

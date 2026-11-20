@@ -1,0 +1,116 @@
+{
+  "answer": null,
+  "status": "unavailable",
+  "message": "The model service could not complete this request.",
+  "trace": [
+    {
+      "event": "model_call",
+      "elapsed": 0.193,
+      "role": "analyst",
+      "attempt": 1
+    },
+    {
+      "event": "tool_start",
+      "elapsed": 2.044,
+      "tool": "describe_data"
+    },
+    {
+      "event": "tool_end",
+      "elapsed": 2.044,
+      "tool": "describe_data",
+      "status": "ok",
+      "evidence_id": null
+    },
+    {
+      "event": "model_call",
+      "elapsed": 2.049,
+      "role": "analyst",
+      "attempt": 1
+    },
+    {
+      "event": "tool_start",
+      "elapsed": 5.064,
+      "tool": "query_data"
+    },
+    {
+      "event": "tool_end",
+      "elapsed": 5.637,
+      "tool": "query_data",
+      "status": "ok",
+      "evidence_id": "E1"
+    },
+    {
+      "event": "model_call",
+      "elapsed": 5.642,
+      "role": "analyst",
+      "attempt": 1
+    },
+    {
+      "event": "review_start",
+      "elapsed": 8.527,
+      "attempt": 1
+    },
+    {
+      "event": "model_call",
+      "elapsed": 8.534,
+      "role": "reviewer",
+      "attempt": 1
+    },
+    {
+      "event": "provider_failure",
+      "elapsed": 8.597,
+      "role": "reviewer",
+      "code": 400,
+      "retryable": false
+    },
+    {
+      "event": "failure",
+      "elapsed": 8.599,
+      "code": "ProviderUnavailable"
+    }
+  ],
+  "usage": {
+    "model_calls": 4,
+    "queries": 1,
+    "tool_calls": 3,
+    "reserved_usd": 0.284036,
+    "input_tokens": 7364,
+    "output_tokens": 294,
+    "thinking_tokens": 0
+  },
+  "evidence": [
+    {
+      "sql": "SELECT\n  SUM(sale_price) AS total_revenue,\n  COUNT(DISTINCT order_id) AS order_count,\n  COUNT(item_id) AS item_count,\n  SUM(sale_price) / NULLIF(COUNT(DISTINCT order_id), 0) AS aov\nFROM sales\nWHERE purchased_at >= '2026-01-01 00:00:00'\n  AND purchased_at < '2026-04-01 00:00:00'\n",
+      "columns": [
+        "total_revenue",
+        "order_count",
+        "item_count",
+        "aov"
+      ],
+      "rows": [
+        {
+          "total_revenue": 375.0,
+          "order_count": 6,
+          "item_count": 7,
+          "aov": 62.5
+        }
+      ],
+      "total_rows": 1,
+      "truncated": false,
+      "backend": "fixture",
+      "job_id": null,
+      "bytes_processed": 0,
+      "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+      "sql_sha256": "0b8468f6225080183ada0d170be9304fe54d0f622c76b6f5d8a58159cc0dafea",
+      "executed_at": "2026-11-20T00:13:54.539880+00:00",
+      "parameters": {},
+      "scope": "Calvin Klein",
+      "id": "E1",
+      "purpose": "Calculate average order value (total revenue divided by distinct order IDs) for Calvin Klein in Q1 2026",
+      "queried_at": "2026-11-20T00:13:54.542699+00:00",
+      "parents": []
+    }
+  ],
+  "elapsed_seconds": 8.6,
+  "deletion_preview": null
+}

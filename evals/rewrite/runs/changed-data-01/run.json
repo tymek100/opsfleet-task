@@ -1,0 +1,417 @@
+{
+  "metadata": {
+    "started_at": "2026-11-20T09:17:51.893368+00:00",
+    "backend": "fixture",
+    "user": "alice",
+    "scope": "Calvin Klein",
+    "settings": {
+      "gemini_model": "gemini-3.8-flash",
+      "thinking_level": "low",
+      "backend": "fixture",
+      "golden_bootstrap": true,
+      "turn_timeout_seconds": 120.0,
+      "question_budget_usd": 1.0,
+      "max_model_calls": 8,
+      "max_tool_calls": 24,
+      "max_queries": 8,
+      "max_query_bytes": 100000000,
+      "max_output_tokens": 4096,
+      "review_output_tokens": 2048,
+      "max_answer_reviews": 3,
+      "max_context_bytes": 150000,
+      "max_review_bytes": 60000,
+      "review_reserve_seconds": 12.0,
+      "input_usd_per_million": 2.0,
+      "output_usd_per_million": 12.0,
+      "bigquery_usd_per_tib": 6.25,
+      "model_min_interval_seconds": 0.0
+    },
+    "packages": {
+      "google-adk": "2.12.0",
+      "google-genai": "2.32.0",
+      "sqlglot": "30.24.0",
+      "duckdb": "2.0.0"
+    },
+    "fixture_sha256": "ad080ec239342e8ce698a7f1cc3910c6bb85642ded1943291593c16b3c23902c",
+    "independent_fixture_oracle_active": false,
+    "golden_corpus_sha256": "c376f96dadf11329e0a71ac58ed3966661165e24d8fed2ca0b5075b5dd7c5720",
+    "evaluation_type": "real-model smoke observations; manual quality review pending",
+    "selected_cases": [
+      "rankings",
+      "golden_method"
+    ],
+    "maximum_turns": 2,
+    "storage": "TemporaryDirectory per run; no user library reads/imports/mutations",
+    "finished_at": "2026-11-20T09:18:27.677847+00:00",
+    "runtime_incomplete_or_failed_turns": 0
+  },
+  "cases": [
+    {
+      "id": "rankings",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Show our top five products by revenue and, separately, by distinct customers in Q1 2026.",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "A7c01461a61",
+              "markdown": "### Calvin Klein Top Products: Q1 2026 (Jan 1, 2026 – Mar 31, 2026 UTC)\n\nDuring Q1 2026, Calvin Klein recorded qualifying sales across two distinct products. Both products are ranked below by revenue and by distinct customer count [E1].\n\n*Scope & Metric Caveat: Qualifying sales exclude cancelled and returned items and orders. Revenue is calculated as the sum of `sale_price`.*\n\n---\n\n#### 1. Top Products by Revenue\n\n| Rank | Product ID | Product Name | Revenue | Distinct Customers |\n| :--- | :--- | :--- | :--- | :--- |\n| 1 | 1 | Alpha jeans | 575.00 | 1 |\n| 2 | 3 | Alpha top | 210.00 | 4 |\n\n---\n\n#### 2. Top Products by Distinct Customers\n\n| Rank | Product ID | Product Name | Distinct Customers | Revenue |\n| :--- | :--- | :--- | :--- | :--- |\n| 1 | 3 | Alpha top | 4 | 210.00 |\n| 2 | 1 | Alpha jeans | 1 | 575.00 |\n\n*(Note: Only two products had qualifying sales during this period.)*",
+              "evidence_ids": [
+                "E1"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.263,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 2.254,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 2.255,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 2.262,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 6.537,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 7.093,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 7.1,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 11.011,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 11.02,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 14.984,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 14.984,
+                "answer_id": "A7c01461a61",
+                "sha256": "5d12186a36bf244b8a20777f1232fbaf05fcf8219fe4e22dcd0d28e481cbde55"
+              }
+            ],
+            "usage": {
+              "model_calls": 4,
+              "queries": 1,
+              "tool_calls": 3,
+              "reserved_usd": 0.299968,
+              "input_tokens": 10527,
+              "output_tokens": 776,
+              "thinking_tokens": 0
+            },
+            "evidence": [
+              {
+                "sql": "WITH q1_sales AS (\n  SELECT\n    product_id,\n    product_name,\n    SUM(sale_price) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name\n),\ntop_rev AS (\n  SELECT\n    product_id,\n    product_name,\n    total_revenue,\n    distinct_customers,\n    ROW_NUMBER() OVER (ORDER BY total_revenue DESC, product_id ASC) as rank_rev\n  FROM q1_sales\n),\ntop_cust AS (\n  SELECT\n    product_id,\n    product_name,\n    total_revenue,\n    distinct_customers,\n    ROW_NUMBER() OVER (ORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC) as rank_cust\n  FROM q1_sales\n)\nSELECT 'revenue' as ranking_type, rank_rev as rank, product_id, product_name, total_revenue, distinct_customers\nFROM top_rev\nWHERE rank_rev <= 5\nUNION ALL\nSELECT 'customers' as ranking_type, rank_cust as rank, product_id, product_name, total_revenue, distinct_customers\nFROM top_cust\nWHERE rank_cust <= 5\nORDER BY ranking_type, rank",
+                "columns": [
+                  "ranking_type",
+                  "rank",
+                  "product_id",
+                  "product_name",
+                  "total_revenue",
+                  "distinct_customers"
+                ],
+                "rows": [
+                  {
+                    "ranking_type": "customers",
+                    "rank": 1,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "total_revenue": 210.0,
+                    "distinct_customers": 4
+                  },
+                  {
+                    "ranking_type": "customers",
+                    "rank": 2,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "total_revenue": 575.0,
+                    "distinct_customers": 1
+                  },
+                  {
+                    "ranking_type": "revenue",
+                    "rank": 1,
+                    "product_id": 1,
+                    "product_name": "Alpha jeans",
+                    "total_revenue": 575.0,
+                    "distinct_customers": 1
+                  },
+                  {
+                    "ranking_type": "revenue",
+                    "rank": 2,
+                    "product_id": 3,
+                    "product_name": "Alpha top",
+                    "total_revenue": 210.0,
+                    "distinct_customers": 4
+                  }
+                ],
+                "total_rows": 4,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "08b1baba7381a8becf2c2972518743393dc4b27a64256974bdc27f0be5661b80",
+                "executed_at": "2026-11-20T09:17:58.990864+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Find top 5 products by revenue and top 5 products by distinct customers in Q1 2026 for Calvin Klein",
+                "queried_at": "2026-11-20T09:17:58.994900+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 14.985,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            }
+          ],
+          "file": "rankings-1.json"
+        }
+      ],
+      "independent_expected_facts": null
+    },
+    {
+      "id": "golden_method",
+      "turns": [
+        {
+          "index": 0,
+          "prompt": "Consult a relevant Golden example, then calculate our Q1 2026 repeat-customer share from current authorized data. Explain the result briefly.",
+          "prompt_sha256": {
+            "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+            "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+          },
+          "result": {
+            "answer": {
+              "id": "A1d03518732",
+              "markdown": "Following the analytical method from the Golden example (`repeat_customer_share`), repeat-customer share is measured by evaluating distinct qualifying orders per customer within the observation window.\n\n### Calvin Klein — Q1 2026 Repeat-Customer Share\n\n* **Total Customers (Q1 2026):** 5\n* **Repeat Customers (>1 Order in Q1):** 2\n* **Repeat-Customer Share:** **40.0%** [E1]\n\n### Explanation & Scope Caveats\n* **Window & Scope:** Covers qualifying purchases between `2026-01-01 00:00:00 UTC` and `2026-04-01 00:00:00 UTC` under brand scope **Calvin Klein**.\n* **Order Definition:** Qualifying sales exclude items and orders marked as `Cancelled` or `Returned`. Multiple items within the same order ID count as a single order.\n* **Interpretation:** This metric reflects within-quarter repeat purchasing behavior (customers placing 2 or more distinct qualifying orders in Q1 2026), rather than a lifetime retention or multi-quarter cohort repeat rate.",
+              "evidence_ids": [
+                "E1"
+              ],
+              "outcome": "answer",
+              "approved": true,
+              "receipts": []
+            },
+            "status": "approved",
+            "message": "",
+            "trace": [
+              {
+                "event": "model_call",
+                "elapsed": 0.03,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.74,
+                "tool": "search_golden"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.741,
+                "tool": "search_golden",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 1.742,
+                "tool": "describe_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 1.742,
+                "tool": "describe_data",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 1.753,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 3.614,
+                "tool": "read_golden"
+              },
+              {
+                "event": "golden_read",
+                "elapsed": 3.614,
+                "id": "repeat_customer_share",
+                "revision": 1
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 3.614,
+                "tool": "read_golden",
+                "status": "ok",
+                "evidence_id": null
+              },
+              {
+                "event": "model_call",
+                "elapsed": 3.621,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "tool_start",
+                "elapsed": 6.51,
+                "tool": "query_data"
+              },
+              {
+                "event": "tool_end",
+                "elapsed": 7.013,
+                "tool": "query_data",
+                "status": "ok",
+                "evidence_id": "E1"
+              },
+              {
+                "event": "model_call",
+                "elapsed": 7.02,
+                "role": "analyst",
+                "attempt": 1
+              },
+              {
+                "event": "review_start",
+                "elapsed": 18.411,
+                "attempt": 1
+              },
+              {
+                "event": "model_call",
+                "elapsed": 18.416,
+                "role": "reviewer",
+                "attempt": 1
+              },
+              {
+                "event": "review_end",
+                "elapsed": 20.772,
+                "decision": "approve",
+                "issue_categories": []
+              },
+              {
+                "event": "answer_approved",
+                "elapsed": 20.772,
+                "answer_id": "A1d03518732",
+                "sha256": "969f6a17e961352de22682e18f8ce6a9aa14c70c76f2c891b36b7e6cacf8d14c"
+              }
+            ],
+            "usage": {
+              "model_calls": 5,
+              "queries": 1,
+              "tool_calls": 5,
+              "reserved_usd": 0.418612,
+              "input_tokens": 16973,
+              "output_tokens": 565,
+              "thinking_tokens": 0
+            },
+            "evidence": [
+              {
+                "sql": "WITH customer_orders AS (\n  SELECT user_id, COUNT(DISTINCT order_id) AS orders\n  FROM sales\n  WHERE purchased_at >= TIMESTAMP '2026-01-01 00:00:00 UTC'\n    AND purchased_at < TIMESTAMP '2026-04-01 00:00:00 UTC'\n  GROUP BY user_id\n)\nSELECT\n  COUNT(*) AS total_customers,\n  COUNTIF(orders > 1) AS repeat_customers,\n  ROUND(100.0 * SAFE_DIVIDE(COUNTIF(orders > 1), COUNT(*)), 2) AS repeat_customer_share_pct\nFROM customer_orders",
+                "columns": [
+                  "total_customers",
+                  "repeat_customers",
+                  "repeat_customer_share_pct"
+                ],
+                "rows": [
+                  {
+                    "total_customers": 5,
+                    "repeat_customers": 2,
+                    "repeat_customer_share_pct": 40.0
+                  }
+                ],
+                "total_rows": 1,
+                "truncated": false,
+                "backend": "fixture",
+                "job_id": null,
+                "bytes_processed": 0,
+                "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+                "sql_sha256": "83e34117bd4338c5fcc2e7a4e9507d1eb73ed4c75c9976b59e835c497209b0b1",
+                "executed_at": "2026-11-20T09:18:13.907143+00:00",
+                "parameters": {},
+                "scope": "Calvin Klein",
+                "id": "E1",
+                "purpose": "Calculate Q1 2026 repeat-customer share for Calvin Klein",
+                "queried_at": "2026-11-20T09:18:13.910819+00:00",
+                "parents": []
+              }
+            ],
+            "elapsed_seconds": 20.773,
+            "deletion_preview": null
+          },
+          "library_before": [],
+          "library_after": [],
+          "stored_reports": [],
+          "observations": [
+            {
+              "name": "reviewed_answer_present",
+              "observation": "matched",
+              "description": "Runtime approval observed; this alone does not establish correctness or readability."
+            },
+            {
+              "name": "retrieval_and_fresh_query_observed",
+              "observation": "matched",
+              "description": "This prompt explicitly requests a Golden method. Tool presence does not prove that its adaptation is correct."
+            }
+          ],
+          "file": "golden_method-1.json"
+        }
+      ],
+      "independent_expected_facts": null
+    }
+  ]
+}

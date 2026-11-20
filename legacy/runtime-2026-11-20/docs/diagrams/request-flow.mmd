@@ -1,0 +1,39 @@
+sequenceDiagram
+  participant U as Executive
+  participant A as API and one analyst loop
+  participant S as Owner-scoped storage
+  participant M as Gemini
+  participant G as Query gateway
+  participant B as BigQuery
+  U->>A: Question and authenticated session
+  A->>S: Resolve owner, scope, pinned persona and context
+  S-->>A: Authorized context
+  loop Until approval or shared limits
+    A->>M: Goal, history, observations and tools
+    M-->>A: Next tool call
+    alt Analytical query
+      A->>G: Proposed SQL and trusted context
+      G->>G: Resolve virtual relations and enforce scope
+      G->>B: Dry run, then admitted query with byte cap
+      B-->>G: Bounded result and usage
+      G-->>A: Evidence or safe error for next model call
+    else Inspect or select previous evidence
+      A->>A: Read bounded result, preserve population and provenance
+    else Submit candidate
+      A->>A: Check references and candidate identity
+      A->>M: Tool-free evaluation against original question and evidence
+      M-->>A: Approve, revise with issues, or stop
+      alt Revise
+        A->>A: Add feedback to the same agent conversation
+      else Approve
+        A->>A: Finalize exact approved content
+        opt Explicitly authorized save
+          A->>S: Idempotent save of final artifact
+          S-->>A: Actual receipt
+        end
+      else Stop or review failure
+        A->>A: Preserve completed evidence, mark incomplete
+      end
+    end
+  end
+  A-->>U: Approved answer or labelled partial result

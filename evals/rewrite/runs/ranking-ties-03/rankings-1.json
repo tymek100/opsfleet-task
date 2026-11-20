@@ -1,0 +1,440 @@
+{
+  "index": 0,
+  "prompt": "Show our top five products by revenue and, separately, by distinct customers in Q1 2026.",
+  "prompt_sha256": {
+    "analyst.md": "12b489f37eb90dda43e5647f913ccc2e8b9ddcd8da654a881a80c9ca3a109fc7",
+    "reviewer.md": "44687fab158b02abb349001951aabd1fa28aee08781ef2ff0cf79435b55e8788"
+  },
+  "result": {
+    "answer": {
+      "id": "Ab0834ef49d",
+      "markdown": "The top five Calvin Klein products in Q1 2026 (January 1 through March 31, 2026 UTC) ranked separately by total revenue and distinct customers are shown below [E1]. Qualifying sales exclude cancelled and returned purchases at both the item and order level; currency is unstated in the data. Ties are broken by product ID.\n\n### Top Products by Revenue\n\n| Rank | Product | Revenue | Distinct Customers |\n|:---|:---|---:|---:|\n| 1 | Calvin Klein Mens 2 Button Solid Black Wool Suit | 259.99 | 1 |\n| 2 | Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit | 259.99 | 1 |\n| 3 | Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater | 236.00 | 2 |\n| 4 | Calvin Klein Sportswear Men's Melton Wool Basic Peacoat | 228.00 | 1 |\n| 5 | Calvin Klein Men's Wool Car Coat With Bib | 216.00 | 2 |\n\n*Note: Ranks 1 and 2 tied on revenue at 259.99 and are ordered by product ID.*\n\n---\n\n### Top Products by Distinct Customers\n\n| Rank | Product | Distinct Customers | Revenue |\n|:---|:---|---:|---:|\n| 1 | Calvin Klein Women's 2 Pocket Collar Blouse | 3 | 208.50 |\n| 2 | Calvin Klein Women's Solid Skirtini | 3 | 162.00 |\n| 3 | Calvin Klein Women's MSY Crew Neck Roll Sleeve | 2 | 139.00 |\n| 4 | Calvin Klein Three Quarter Sleeve Dress | 2 | 133.20 |\n| 5 | Calvin Klein Women's Naked Glamour Bikini | 2 | 40.00 |\n\n*Note: Sixteen products tied with 2 distinct customers; product ID is used as the stable tie-breaker [E2]. If ties among those with 2 customers were instead broken by highest revenue, the 3rd through 5th positions would be Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater (236.00), Calvin Klein Men's Wool Car Coat With Bib (216.00), and Calvin Klein Sportswear Men's Pindot Bowery Pant (159.00).*",
+      "evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.231,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.579,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.58,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 2.585,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 9.375,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 12.334,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 12.351,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 15.802,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 17.969,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E2"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 17.986,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 23.1,
+        "tool": "search_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 23.102,
+        "tool": "search_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 23.121,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 24.907,
+        "tool": "read_golden"
+      },
+      {
+        "event": "golden_read",
+        "elapsed": 24.907,
+        "id": "separate_product_rankings",
+        "revision": 1
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 24.909,
+        "tool": "read_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 24.926,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 45.687,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 45.694,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_checks",
+        "elapsed": 54.827,
+        "checks": [
+          {
+            "category": "coverage",
+            "passed": true
+          },
+          {
+            "category": "grounding",
+            "passed": true
+          },
+          {
+            "category": "metrics",
+            "passed": true
+          },
+          {
+            "category": "presentation",
+            "passed": true
+          },
+          {
+            "category": "operations",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "event": "review_end",
+        "elapsed": 54.827,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 54.827,
+        "answer_id": "Ab0834ef49d",
+        "sha256": "f9081254b08f64a44692f9d9fd23bfdafe08c97b6ea57ed74362c75ae78cd79f"
+      }
+    ],
+    "usage": {
+      "model_calls": 7,
+      "queries": 2,
+      "tool_calls": 6,
+      "reserved_usd": 0.704501,
+      "input_tokens": 37387,
+      "output_tokens": 1479,
+      "thinking_tokens": 3061
+    },
+    "evidence": [
+      {
+        "sql": "WITH product_metrics AS (\n  SELECT\n    product_id,\n    product_name,\n    ROUND(SUM(sale_price), 2) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers,\n    COUNT(DISTINCT order_id) AS distinct_orders,\n    COUNT(item_id) AS units_sold\n  FROM sales\n  WHERE purchased_at >= '2026-01-01'\n    AND purchased_at < '2026-04-01'\n  GROUP BY product_id, product_name\n),\ntop_rev AS (\n  SELECT\n    'Revenue' AS ranking_type,\n    ROW_NUMBER() OVER (ORDER BY total_revenue DESC, product_id ASC) AS rank,\n    product_id,\n    product_name,\n    total_revenue,\n    distinct_customers\n  FROM product_metrics\n  QUALIFY rank <= 5\n),\ntop_cust AS (\n  SELECT\n    'Distinct Customers' AS ranking_type,\n    ROW_NUMBER() OVER (ORDER BY distinct_customers DESC, product_id ASC) AS rank,\n    product_id,\n    product_name,\n    total_revenue,\n    distinct_customers\n  FROM product_metrics\n  QUALIFY rank <= 5\n)\nSELECT * FROM top_rev\nUNION ALL\nSELECT * FROM top_cust\nORDER BY ranking_type, rank",
+        "columns": [
+          "ranking_type",
+          "rank",
+          "product_id",
+          "product_name",
+          "total_revenue",
+          "distinct_customers"
+        ],
+        "rows": [
+          {
+            "ranking_type": "Distinct Customers",
+            "rank": 1,
+            "product_id": 29,
+            "product_name": "Calvin Klein Women's 2 Pocket Collar Blouse",
+            "total_revenue": 208.5,
+            "distinct_customers": 3
+          },
+          {
+            "ranking_type": "Distinct Customers",
+            "rank": 2,
+            "product_id": 13390,
+            "product_name": "Calvin Klein Women's Solid Skirtini",
+            "total_revenue": 162.0,
+            "distinct_customers": 3
+          },
+          {
+            "ranking_type": "Distinct Customers",
+            "rank": 3,
+            "product_id": 2,
+            "product_name": "Calvin Klein Women's MSY Crew Neck Roll Sleeve",
+            "total_revenue": 139.0,
+            "distinct_customers": 2
+          },
+          {
+            "ranking_type": "Distinct Customers",
+            "rank": 4,
+            "product_id": 3927,
+            "product_name": "Calvin Klein Three Quarter Sleeve Dress",
+            "total_revenue": 133.2,
+            "distinct_customers": 2
+          },
+          {
+            "ranking_type": "Distinct Customers",
+            "rank": 5,
+            "product_id": 10809,
+            "product_name": "Calvin Klein Women's Naked Glamour Bikini",
+            "total_revenue": 40.0,
+            "distinct_customers": 2
+          },
+          {
+            "ranking_type": "Revenue",
+            "rank": 1,
+            "product_id": 20041,
+            "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+            "total_revenue": 259.99,
+            "distinct_customers": 1
+          },
+          {
+            "ranking_type": "Revenue",
+            "rank": 2,
+            "product_id": 20235,
+            "product_name": "Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit",
+            "total_revenue": 259.99,
+            "distinct_customers": 1
+          },
+          {
+            "ranking_type": "Revenue",
+            "rank": 3,
+            "product_id": 19152,
+            "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+            "total_revenue": 236.0,
+            "distinct_customers": 2
+          },
+          {
+            "ranking_type": "Revenue",
+            "rank": 4,
+            "product_id": 23837,
+            "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+            "total_revenue": 228.0,
+            "distinct_customers": 1
+          },
+          {
+            "ranking_type": "Revenue",
+            "rank": 5,
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "total_revenue": 216.0,
+            "distinct_customers": 2
+          }
+        ],
+        "total_rows": 10,
+        "truncated": false,
+        "backend": "bigquery",
+        "job_id": "retail_332535075f9541078540fce2779d7945",
+        "bytes_processed": 14442693,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "4ebe5aa0238d3e508a632e875d93a30cb51bbb556b6d1f48d2d584c56b204f58",
+        "executed_at": "2026-11-20T09:30:43.799175+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Get top 5 products by revenue and top 5 products by distinct customers for Calvin Klein in Q1 2026",
+        "queried_at": "2026-11-20T09:30:43.800838+00:00",
+        "parents": []
+      },
+      {
+        "sql": "SELECT\n  product_id,\n  product_name,\n  ROUND(SUM(sale_price), 2) AS total_revenue,\n  COUNT(DISTINCT user_id) AS distinct_customers\nFROM sales\nWHERE purchased_at >= '2026-01-01'\n  AND purchased_at < '2026-04-01'\nGROUP BY product_id, product_name\nHAVING distinct_customers >= 2\nORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC",
+        "columns": [
+          "product_id",
+          "product_name",
+          "total_revenue",
+          "distinct_customers"
+        ],
+        "rows": [
+          {
+            "product_id": 29,
+            "product_name": "Calvin Klein Women's 2 Pocket Collar Blouse",
+            "total_revenue": 208.5,
+            "distinct_customers": 3
+          },
+          {
+            "product_id": 13390,
+            "product_name": "Calvin Klein Women's Solid Skirtini",
+            "total_revenue": 162.0,
+            "distinct_customers": 3
+          },
+          {
+            "product_id": 19152,
+            "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+            "total_revenue": 236.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 23740,
+            "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+            "total_revenue": 216.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 22352,
+            "product_name": "Calvin Klein Sportswear Men's Pindot Bowery Pant",
+            "total_revenue": 159.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 22583,
+            "product_name": "Calvin Klein Sportswear Men's Bold Check Pant",
+            "total_revenue": 159.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 2,
+            "product_name": "Calvin Klein Women's MSY Crew Neck Roll Sleeve",
+            "total_revenue": 139.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 3927,
+            "product_name": "Calvin Klein Three Quarter Sleeve Dress",
+            "total_revenue": 133.2,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 21715,
+            "product_name": "Calvin Klein Sportswear Men's Soft Wash Chino Dylan Pant",
+            "total_revenue": 99.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 18937,
+            "product_name": "Calvin Klein Sportswear Men's Space Dye Hooded Sweater",
+            "total_revenue": 89.98,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 23342,
+            "product_name": "Calvin Klein Jeans Shorts plus Belt",
+            "total_revenue": 88.24,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 25719,
+            "product_name": "Calvin Klein Men's X Micro Trunk",
+            "total_revenue": 60.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 25736,
+            "product_name": "Calvin Klein Men's Bold Micro Boxer Brief",
+            "total_revenue": 60.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 26316,
+            "product_name": "Calvin Klein Men's Micro Modal Essentials Trunk",
+            "total_revenue": 56.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 26341,
+            "product_name": "ck one Men's Cotton Stretch Fashion Trunk",
+            "total_revenue": 52.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 25660,
+            "product_name": "Calvin Klein Men's Big and Tall Big 2 Pack Brief   #U3280",
+            "total_revenue": 49.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 25631,
+            "product_name": "ck one Men's Cotton Stretch Trunk",
+            "total_revenue": 48.0,
+            "distinct_customers": 2
+          },
+          {
+            "product_id": 10809,
+            "product_name": "Calvin Klein Women's Naked Glamour Bikini",
+            "total_revenue": 40.0,
+            "distinct_customers": 2
+          }
+        ],
+        "total_rows": 18,
+        "truncated": false,
+        "backend": "bigquery",
+        "job_id": "retail_fd9b3dead99f4ae7a86eeeee21aa9bac",
+        "bytes_processed": 14442693,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "e67f651be0e5b936424522738f1b4384fc5a7ef67aa4151f06cd879ae79ff527",
+        "executed_at": "2026-11-20T09:30:49.434650+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E2",
+        "purpose": "Check tie-breakers and distribution of distinct customers",
+        "queried_at": "2026-11-20T09:30:49.435898+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 54.828,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    }
+  ],
+  "file": "rankings-1.json"
+}

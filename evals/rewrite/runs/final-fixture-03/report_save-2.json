@@ -1,0 +1,445 @@
+{
+  "index": 1,
+  "prompt": "Save that exact report as Q1 2026 Review.",
+  "prompt_sha256": {
+    "analyst.md": "c32fb1dd27071341d2c04696a220fac6ff77365f261943958449fe712cf3a1f7",
+    "reviewer.md": "a6d926bb5f8422c807b39146bfa35d5e96531f298c6fb59a26355499dcdfc976"
+  },
+  "result": {
+    "answer": {
+      "id": "Af926522493",
+      "markdown": "I have staged the Q1 2026 performance report to be saved as **Q1 2026 Review**.",
+      "evidence_ids": [],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": [
+        {
+          "operation": "save",
+          "status": "saved",
+          "id": "ad87f779b12341ad",
+          "title": "Q1 2026 Review"
+        }
+      ]
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.022,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.032,
+        "tool": "stage_report_save"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.032,
+        "tool": "stage_report_save",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 2.04,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 5.102,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 5.115,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_checks",
+        "elapsed": 17.437,
+        "checks": [
+          {
+            "category": "coverage",
+            "passed": true
+          },
+          {
+            "category": "grounding",
+            "passed": true
+          },
+          {
+            "category": "metrics",
+            "passed": true
+          },
+          {
+            "category": "presentation",
+            "passed": true
+          },
+          {
+            "category": "operations",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "event": "review_end",
+        "elapsed": 17.437,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 17.438,
+        "answer_id": "Af926522493",
+        "sha256": "6838ddf1bfa9435fd57f8d8a77f9bc7f126f07245a36b6ed2bcff66f3d735b7e"
+      }
+    ],
+    "usage": {
+      "model_calls": 3,
+      "queries": 0,
+      "tool_calls": 2,
+      "reserved_usd": 0.23032,
+      "input_tokens": 10013,
+      "output_tokens": 375,
+      "thinking_tokens": 316
+    },
+    "evidence": [],
+    "elapsed_seconds": 17.439,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [
+    {
+      "id": "ad87f779b12341ad",
+      "title": "Q1 2026 Review",
+      "answer_id": "A7daa580c8c",
+      "version": "d7bf90dc19cb499dab087472fca9e044",
+      "created_at": 1795166873.6575549,
+      "historical_import": false
+    }
+  ],
+  "stored_reports": [
+    {
+      "id": "ad87f779b12341ad",
+      "title": "Q1 2026 Review",
+      "answer_id": "A7daa580c8c",
+      "version": "d7bf90dc19cb499dab087472fca9e044",
+      "created_at": 1795166873.6575549,
+      "historical_import": false,
+      "markdown": "## Calvin Klein Q1 2026 Performance Report\n\n### Executive Summary\nIn Q1 2026 (2026-01-01 to 2026-04-01 UTC), Calvin Klein generated **375.00** in qualifying sales across **6 orders**, **5 distinct customers**, and **7 items sold** [E1]. The average order value (AOV) was **62.50**, with an average qualifying item sale price of **53.57** [E1]. \n\n*Note: Qualifying sales exclude cancelled and returned merchandise at both the item and order level [E4]. Currency is not specified in the warehouse.*\n\n---\n\n### Category Performance\n\n| Category | Qualifying Revenue | Items Sold | Orders | Distinct Customers | Avg Item Price |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| **Tops** | 200.00 | 4 | 4 | 4 | 50.00 |\n| **Jeans** | 175.00 | 3 | 2 | 1 | 58.33 |\n| **Total** | **375.00** | **7** | **6** | **5** | **53.57** |\n\n*Tops* accounted for 53.3% of net qualifying revenue, supported by consistent single-item purchases across 4 distinct customers [E3, E4]. *Jeans* delivered 175.00 in qualifying revenue, but this was driven entirely by a single customer (User 1) across 2 orders [E4].\n\n---\n\n### Order Attrition & Returns\nGross demand recorded in transactions during Q1 totaled 10 items worth 2,674.00, but 3 high-value items totaling 2,299.00 failed to qualify [E3]:\n- **Returns:** 2 items (1,300.00) in the Jeans category were returned by User 3 (items priced at 600.00 and 700.00) [E3].\n- **Cancellations:** 1 high-value Jeans order (item price 999.00) was cancelled for User 2 [E3].\n\nBecause gross jeans transactions experienced an 86.0% revenue loss to returns and cancellations (2,299.00 lost out of 2,674.00 gross), high-ticket denim sizing, listing accuracy, and inventory fulfillment represent immediate operational risks.\n\n---\n\n### Suggested Measurable Actions for Q2 2026\n\n1. **Targeted Premium Jeans Fit & Sizing Optimization**\n   - **Action:** Audit product pages for premium denim lines (items >500.00) to introduce detailed size guides, fit reviews, and pre-purchase support to address the 1,300.00 in denim returns.\n   - **Target Metric:** Reduce the Jeans category return rate from its Q1 rate to below 15% of gross category transactions in Q2.\n\n2. **Cross-Sell & Tops Repurchase Campaign**\n   - **Action:** Launch an automated post-purchase email sequence targeted at Q1 Tops buyers (Users 2, 4, 5, and 6) featuring denim and seasonal layering pieces.\n   - **Target Metric:** Achieve at least a 25% repeat purchase rate among Q1 single-purchase customers and increase overall brand AOV from 62.50 to 75.00 in Q2.",
+      "evidence": [
+        {
+          "backend": "fixture",
+          "bytes_processed": 0,
+          "columns": [
+            "qtr",
+            "total_revenue",
+            "orders",
+            "customers",
+            "items_sold",
+            "aov",
+            "avg_item_price"
+          ],
+          "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+          "executed_at": "2026-11-20T09:26:53.928905+00:00",
+          "id": "E1",
+          "job_id": null,
+          "parameters": {},
+          "parents": [],
+          "purpose": "Analyze Calvin Klein performance in Q1 2026 vs Q1 2025 and Q4 2025",
+          "queried_at": "2026-11-20T09:26:53.932144+00:00",
+          "rows": [
+            {
+              "aov": 62.5,
+              "avg_item_price": 53.57,
+              "customers": 5,
+              "items_sold": 7,
+              "orders": 6,
+              "qtr": "2026-01-01T00:00:00",
+              "total_revenue": 375.0
+            }
+          ],
+          "scope": "Calvin Klein",
+          "sql": "SELECT\n  DATE_TRUNC(DATE(purchased_at), QUARTER) AS qtr,\n  ROUND(SUM(sale_price), 2) AS total_revenue,\n  COUNT(DISTINCT order_id) AS orders,\n  COUNT(DISTINCT user_id) AS customers,\n  COUNT(item_id) AS items_sold,\n  ROUND(SUM(sale_price) / COUNT(DISTINCT order_id), 2) AS aov,\n  ROUND(SUM(sale_price) / COUNT(item_id), 2) AS avg_item_price\nFROM sales\nWHERE brand = 'Calvin Klein'\n  AND purchased_at >= '2025-01-01'\n  AND purchased_at < '2026-04-01'\nGROUP BY 1\nORDER BY 1\n",
+          "sql_sha256": "5f048c22b9ed8c1d30006bebf071d99f4324bebd49f655034f6b087a7903af15",
+          "total_rows": 1,
+          "truncated": false
+        },
+        {
+          "backend": "fixture",
+          "bytes_processed": 0,
+          "columns": [
+            "item_id",
+            "order_id",
+            "user_id",
+            "sale_price",
+            "purchased_at",
+            "category",
+            "product_name",
+            "item_status",
+            "order_status"
+          ],
+          "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+          "executed_at": "2026-11-20T09:27:00.462107+00:00",
+          "id": "E3",
+          "job_id": null,
+          "parameters": {},
+          "parents": [],
+          "purpose": "Inspect all transactions and sales for Calvin Klein in Q1 2026 including categories and status",
+          "queried_at": "2026-11-20T09:27:00.465515+00:00",
+          "rows": [
+            {
+              "category": "Jeans",
+              "item_id": 13,
+              "item_status": "Complete",
+              "order_id": 10,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-01-01T00:00:00",
+              "sale_price": 25.0,
+              "user_id": 1
+            },
+            {
+              "category": "Jeans",
+              "item_id": 1,
+              "item_status": "Complete",
+              "order_id": 10,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-01-01T00:00:00",
+              "sale_price": 100.0,
+              "user_id": 1
+            },
+            {
+              "category": "Jeans",
+              "item_id": 3,
+              "item_status": "Complete",
+              "order_id": 11,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-02-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 1
+            },
+            {
+              "category": "Tops",
+              "item_id": 4,
+              "item_status": "Complete",
+              "order_id": 12,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-02-02T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 2
+            },
+            {
+              "category": "Jeans",
+              "item_id": 5,
+              "item_status": "Returned",
+              "order_id": 13,
+              "order_status": "Returned",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-02-03T00:00:00",
+              "sale_price": 600.0,
+              "user_id": 3
+            },
+            {
+              "category": "Jeans",
+              "item_id": 6,
+              "item_status": "Returned",
+              "order_id": 14,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-02-04T00:00:00",
+              "sale_price": 700.0,
+              "user_id": 3
+            },
+            {
+              "category": "Tops",
+              "item_id": 7,
+              "item_status": "Complete",
+              "order_id": 15,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 4
+            },
+            {
+              "category": "Tops",
+              "item_id": 8,
+              "item_status": "Complete",
+              "order_id": 16,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 5
+            },
+            {
+              "category": "Tops",
+              "item_id": 9,
+              "item_status": "Complete",
+              "order_id": 17,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 6
+            },
+            {
+              "category": "Jeans",
+              "item_id": 10,
+              "item_status": "Complete",
+              "order_id": 18,
+              "order_status": "Cancelled",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 999.0,
+              "user_id": 2
+            }
+          ],
+          "scope": "Calvin Klein",
+          "sql": "SELECT\n  t.item_id,\n  t.order_id,\n  t.user_id,\n  t.sale_price,\n  t.purchased_at,\n  t.category,\n  t.product_name,\n  t.item_status,\n  t.order_status\nFROM transactions t\nWHERE t.brand = 'Calvin Klein'\n  AND t.purchased_at >= '2026-01-01'\n  AND t.purchased_at < '2026-04-01'\nORDER BY t.purchased_at\n",
+          "sql_sha256": "decc680b17c026a7829f875bfb917da91f39082c9da764347fe3d68b5b24908f",
+          "total_rows": 10,
+          "truncated": false
+        },
+        {
+          "backend": "fixture",
+          "bytes_processed": 0,
+          "columns": [
+            "item_id",
+            "order_id",
+            "user_id",
+            "sale_price",
+            "purchased_at",
+            "category",
+            "product_name",
+            "item_status",
+            "order_status"
+          ],
+          "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+          "executed_at": "2026-11-20T09:27:04.073324+00:00",
+          "id": "E4",
+          "job_id": null,
+          "parameters": {},
+          "parents": [],
+          "purpose": "Inspect sales rows in Q1 2026 to see exactly what qualifies",
+          "queried_at": "2026-11-20T09:27:04.077440+00:00",
+          "rows": [
+            {
+              "category": "Jeans",
+              "item_id": 13,
+              "item_status": "Complete",
+              "order_id": 10,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-01-01T00:00:00",
+              "sale_price": 25.0,
+              "user_id": 1
+            },
+            {
+              "category": "Jeans",
+              "item_id": 1,
+              "item_status": "Complete",
+              "order_id": 10,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-01-01T00:00:00",
+              "sale_price": 100.0,
+              "user_id": 1
+            },
+            {
+              "category": "Jeans",
+              "item_id": 3,
+              "item_status": "Complete",
+              "order_id": 11,
+              "order_status": "Complete",
+              "product_name": "Alpha jeans",
+              "purchased_at": "2026-02-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 1
+            },
+            {
+              "category": "Tops",
+              "item_id": 4,
+              "item_status": "Complete",
+              "order_id": 12,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-02-02T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 2
+            },
+            {
+              "category": "Tops",
+              "item_id": 9,
+              "item_status": "Complete",
+              "order_id": 17,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 6
+            },
+            {
+              "category": "Tops",
+              "item_id": 8,
+              "item_status": "Complete",
+              "order_id": 16,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 5
+            },
+            {
+              "category": "Tops",
+              "item_id": 7,
+              "item_status": "Complete",
+              "order_id": 15,
+              "order_status": "Complete",
+              "product_name": "Alpha top",
+              "purchased_at": "2026-03-01T00:00:00",
+              "sale_price": 50.0,
+              "user_id": 4
+            }
+          ],
+          "scope": "Calvin Klein",
+          "sql": "SELECT\n  s.item_id,\n  s.order_id,\n  s.user_id,\n  s.sale_price,\n  s.purchased_at,\n  s.category,\n  s.product_name,\n  s.item_status,\n  s.order_status\nFROM sales s\nWHERE s.brand = 'Calvin Klein'\n  AND s.purchased_at >= '2026-01-01'\n  AND s.purchased_at < '2026-04-01'\nORDER BY s.purchased_at\n",
+          "sql_sha256": "4a70105a0b3860ce976df4d6290b971ab3a70391b40b166126cddfa2d49d3d46",
+          "total_rows": 7,
+          "truncated": false
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "one_report_saved",
+      "observation": "matched",
+      "description": "Actual isolated owner library contains exactly one saved report."
+    },
+    {
+      "name": "exact_original_markdown_saved",
+      "observation": "matched",
+      "description": "Stored Markdown is compared with the first turn's exact approved answer, not the save acknowledgement."
+    },
+    {
+      "name": "original_evidence_ids_saved",
+      "observation": "matched",
+      "description": "Stored evidence IDs are compared with the original approved answer's references."
+    }
+  ],
+  "file": "report_save-2.json"
+}

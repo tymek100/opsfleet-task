@@ -1,0 +1,183 @@
+{
+  "index": 0,
+  "prompt": "Consult a relevant Golden example, then calculate our Q1 2026 repeat-customer share from current authorized data. Explain the result briefly.",
+  "prompt_sha256": {
+    "analyst.md": "68508d464d41d90cce3535cbaec4b527c6428ed73f94580dcf5a4202a27539d0",
+    "reviewer.md": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340"
+  },
+  "result": {
+    "answer": {
+      "id": "A1d03518732",
+      "markdown": "Following the analytical method from the Golden example (`repeat_customer_share`), repeat-customer share is measured by evaluating distinct qualifying orders per customer within the observation window.\n\n### Calvin Klein — Q1 2026 Repeat-Customer Share\n\n* **Total Customers (Q1 2026):** 5\n* **Repeat Customers (>1 Order in Q1):** 2\n* **Repeat-Customer Share:** **40.0%** [E1]\n\n### Explanation & Scope Caveats\n* **Window & Scope:** Covers qualifying purchases between `2026-01-01 00:00:00 UTC` and `2026-04-01 00:00:00 UTC` under brand scope **Calvin Klein**.\n* **Order Definition:** Qualifying sales exclude items and orders marked as `Cancelled` or `Returned`. Multiple items within the same order ID count as a single order.\n* **Interpretation:** This metric reflects within-quarter repeat purchasing behavior (customers placing 2 or more distinct qualifying orders in Q1 2026), rather than a lifetime retention or multi-quarter cohort repeat rate.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.03,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 1.74,
+        "tool": "search_golden"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 1.741,
+        "tool": "search_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 1.742,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 1.742,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 1.753,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 3.614,
+        "tool": "read_golden"
+      },
+      {
+        "event": "golden_read",
+        "elapsed": 3.614,
+        "id": "repeat_customer_share",
+        "revision": 1
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 3.614,
+        "tool": "read_golden",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 3.621,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 6.51,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 7.013,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 7.02,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 18.411,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 18.416,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_end",
+        "elapsed": 20.772,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 20.772,
+        "answer_id": "A1d03518732",
+        "sha256": "969f6a17e961352de22682e18f8ce6a9aa14c70c76f2c891b36b7e6cacf8d14c"
+      }
+    ],
+    "usage": {
+      "model_calls": 5,
+      "queries": 1,
+      "tool_calls": 5,
+      "reserved_usd": 0.418612,
+      "input_tokens": 16973,
+      "output_tokens": 565,
+      "thinking_tokens": 0
+    },
+    "evidence": [
+      {
+        "sql": "WITH customer_orders AS (\n  SELECT user_id, COUNT(DISTINCT order_id) AS orders\n  FROM sales\n  WHERE purchased_at >= TIMESTAMP '2026-01-01 00:00:00 UTC'\n    AND purchased_at < TIMESTAMP '2026-04-01 00:00:00 UTC'\n  GROUP BY user_id\n)\nSELECT\n  COUNT(*) AS total_customers,\n  COUNTIF(orders > 1) AS repeat_customers,\n  ROUND(100.0 * SAFE_DIVIDE(COUNTIF(orders > 1), COUNT(*)), 2) AS repeat_customer_share_pct\nFROM customer_orders",
+        "columns": [
+          "total_customers",
+          "repeat_customers",
+          "repeat_customer_share_pct"
+        ],
+        "rows": [
+          {
+            "total_customers": 5,
+            "repeat_customers": 2,
+            "repeat_customer_share_pct": 40.0
+          }
+        ],
+        "total_rows": 1,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "83e34117bd4338c5fcc2e7a4e9507d1eb73ed4c75c9976b59e835c497209b0b1",
+        "executed_at": "2026-11-20T09:18:13.907143+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Calculate Q1 2026 repeat-customer share for Calvin Klein",
+        "queried_at": "2026-11-20T09:18:13.910819+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 20.773,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "retrieval_and_fresh_query_observed",
+      "observation": "matched",
+      "description": "This prompt explicitly requests a Golden method. Tool presence does not prove that its adaptation is correct."
+    }
+  ],
+  "file": "golden_method-1.json"
+}

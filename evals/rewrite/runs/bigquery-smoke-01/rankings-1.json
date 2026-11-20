@@ -1,0 +1,345 @@
+{
+  "index": 0,
+  "prompt": "Show our top five products by revenue and, separately, by distinct customers in Q1 2026.",
+  "prompt_sha256": {
+    "analyst.md": "e68a135ad09bb708b3142393afb6253458956b1bafee59d9a10a4d120df07e17",
+    "reviewer.md": "8ef173b48c5349885625aee4898e13afbe506b8d6abfdefebba307738117dfa6"
+  },
+  "result": {
+    "answer": {
+      "id": "Ac8b17dc4a5",
+      "markdown": "Here are the top five Calvin Klein products in Q1 2026 (January 1, 2026 to March 31, 2026 UTC), ranked separately by revenue and by distinct customers.\n\n### Top 5 Products by Revenue (Q1 2026)\n\n| Rank | Product ID | Product Name | Category | Revenue | Distinct Customers | Distinct Orders | Units Sold |\n|:---|:---|:---|:---|---:|---:|---:|---:|\n| 1 | 24019 | Calvin Klein Men's Fashion Coat | Outerwear & Coats | 398.00 | 2 | 2 | 2 |\n| 2 | 8253 | Calvin Klein Women's Faux Fur Trim Down Walker | Outerwear & Coats | 389.97 | 3 | 3 | 3 |\n| 3 | 8583 | Calvin Klein Women's Lux Patent Trim Coat | Outerwear & Coats | 375.00 | 3 | 3 | 3 |\n| 4 | 23826 | Calvin Klein Men's Slim Fit Coat | Outerwear & Coats | 350.00 | 2 | 2 | 2 |\n| 5 | 3284 | Calvin Klein Women's Chiffon Dress | Dresses | 256.00 | 2 | 2 | 2 |\n\n---\n\n### Top 5 Products by Distinct Customers (Q1 2026)\n\n| Rank | Product ID | Product Name | Category | Distinct Customers | Revenue | Distinct Orders | Units Sold |\n|:---|:---|:---|:---|---:|---:|---:|---:|\n| 1 | 25376 | Calvin Klein Men's Basic Brief 3-Pack | Underwear | 6 | 217.98 | 6 | 6 |\n| 2 | 8253 | Calvin Klein Women's Faux Fur Trim Down Walker | Outerwear & Coats | 3 | 389.97 | 3 | 3 |\n| 3 | 8583 | Calvin Klein Women's Lux Patent Trim Coat | Outerwear & Coats | 3 | 375.00 | 3 | 3 |\n| 4 | 25440 | Calvin Klein Men's Steel Micro Boxer Brief | Underwear | 3 | 84.00 | 3 | 3 |\n| 5 | 26316 | Calvin Klein Men's Micro Modal Essentials Trunk | Underwear | 3 | 84.00 | 3 | 3 |\n\n*Note: There are exactly five products with 3 or more distinct customers in Q1 2026; products tied at 3 customers are ordered by revenue. Figures reflect qualifying purchases (excluding cancelled and returned orders/items).*",
+      "evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.228,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.211,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 4.212,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 4.219,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 9.114,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 12.302,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 12.312,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 15.264,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 17.053,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E2"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 17.067,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 23.046,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 23.059,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_end",
+        "elapsed": 24.999,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 24.999,
+        "answer_id": "Ac8b17dc4a5",
+        "sha256": "8f040bf8bd3f0a4af98f89fff143d24cd36ca2d5c61720c0b3cec60d143bc4ef"
+      }
+    ],
+    "usage": {
+      "model_calls": 5,
+      "queries": 2,
+      "tool_calls": 4,
+      "reserved_usd": 0.421941,
+      "input_tokens": 19014,
+      "output_tokens": 1405,
+      "thinking_tokens": 0
+    },
+    "evidence": [
+      {
+        "sql": "WITH product_stats AS (\n  SELECT\n    product_id,\n    product_name,\n    category,\n    ROUND(SUM(sale_price), 2) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers,\n    COUNT(DISTINCT order_id) AS distinct_orders,\n    COUNT(item_id) AS items_sold\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name, category\n),\nranked_rev AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY total_revenue DESC, distinct_customers DESC, product_id ASC) as rank_rev\n  FROM product_stats\n),\nranked_cust AS (\n  SELECT\n    *,\n    ROW_NUMBER() OVER (ORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC) as rank_cust\n  FROM product_stats\n)\nSELECT\n  'By Revenue' AS ranking_type,\n  rank_rev AS rank,\n  product_id,\n  product_name,\n  category,\n  total_revenue,\n  distinct_customers,\n  distinct_orders,\n  items_sold\nFROM ranked_rev\nWHERE rank_rev <= 5\nUNION ALL\nSELECT\n  'By Distinct Customers' AS ranking_type,\n  rank_cust AS rank,\n  product_id,\n  product_name,\n  category,\n  total_revenue,\n  distinct_customers,\n  distinct_orders,\n  items_sold\nFROM ranked_cust\nWHERE rank_cust <= 5\nORDER BY ranking_type, rank\n",
+        "columns": [
+          "ranking_type",
+          "rank",
+          "product_id",
+          "product_name",
+          "category",
+          "total_revenue",
+          "distinct_customers",
+          "distinct_orders",
+          "items_sold"
+        ],
+        "rows": [
+          {
+            "ranking_type": "By Distinct Customers",
+            "rank": 1,
+            "product_id": 25376,
+            "product_name": "Calvin Klein Men's Basic Brief 3-Pack",
+            "category": "Underwear",
+            "total_revenue": 217.98,
+            "distinct_customers": 6,
+            "distinct_orders": 6,
+            "items_sold": 6
+          },
+          {
+            "ranking_type": "By Distinct Customers",
+            "rank": 2,
+            "product_id": 8253,
+            "product_name": "Calvin Klein Women's Faux Fur Trim Down Walker",
+            "category": "Outerwear & Coats",
+            "total_revenue": 389.97,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Distinct Customers",
+            "rank": 3,
+            "product_id": 8583,
+            "product_name": "Calvin Klein Women's Lux Patent Trim Coat",
+            "category": "Outerwear & Coats",
+            "total_revenue": 375.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Distinct Customers",
+            "rank": 4,
+            "product_id": 25440,
+            "product_name": "Calvin Klein Men's Steel Micro Boxer Brief",
+            "category": "Underwear",
+            "total_revenue": 84.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Distinct Customers",
+            "rank": 5,
+            "product_id": 26316,
+            "product_name": "Calvin Klein Men's Micro Modal Essentials Trunk",
+            "category": "Underwear",
+            "total_revenue": 84.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Revenue",
+            "rank": 1,
+            "product_id": 24019,
+            "product_name": "Calvin Klein Men's Fashion Coat",
+            "category": "Outerwear & Coats",
+            "total_revenue": 398.0,
+            "distinct_customers": 2,
+            "distinct_orders": 2,
+            "items_sold": 2
+          },
+          {
+            "ranking_type": "By Revenue",
+            "rank": 2,
+            "product_id": 8253,
+            "product_name": "Calvin Klein Women's Faux Fur Trim Down Walker",
+            "category": "Outerwear & Coats",
+            "total_revenue": 389.97,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Revenue",
+            "rank": 3,
+            "product_id": 8583,
+            "product_name": "Calvin Klein Women's Lux Patent Trim Coat",
+            "category": "Outerwear & Coats",
+            "total_revenue": 375.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "ranking_type": "By Revenue",
+            "rank": 4,
+            "product_id": 23826,
+            "product_name": "Calvin Klein Men's Slim Fit Coat",
+            "category": "Outerwear & Coats",
+            "total_revenue": 350.0,
+            "distinct_customers": 2,
+            "distinct_orders": 2,
+            "items_sold": 2
+          },
+          {
+            "ranking_type": "By Revenue",
+            "rank": 5,
+            "product_id": 3284,
+            "product_name": "Calvin Klein Women's Chiffon Dress",
+            "category": "Dresses",
+            "total_revenue": 256.0,
+            "distinct_customers": 2,
+            "distinct_orders": 2,
+            "items_sold": 2
+          }
+        ],
+        "total_rows": 10,
+        "truncated": false,
+        "backend": "bigquery",
+        "job_id": "retail_99cbc71300954daf8672b014e628c071",
+        "bytes_processed": 16307408,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "aa726b6143590d095473fedd2307a7a775649f4ddab7319e50f902d752abdfdd",
+        "executed_at": "2026-11-20T00:22:13.377263+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Get top 5 Calvin Klein products by revenue and top 5 by distinct customers in Q1 2026",
+        "queried_at": "2026-11-20T00:22:13.378809+00:00",
+        "parents": []
+      },
+      {
+        "sql": "WITH product_stats AS (\n  SELECT\n    product_id,\n    product_name,\n    category,\n    ROUND(SUM(sale_price), 2) AS total_revenue,\n    COUNT(DISTINCT user_id) AS distinct_customers,\n    COUNT(DISTINCT order_id) AS distinct_orders,\n    COUNT(item_id) AS items_sold\n  FROM sales\n  WHERE purchased_at >= '2026-01-01 00:00:00'\n    AND purchased_at < '2026-04-01 00:00:00'\n  GROUP BY product_id, product_name, category\n)\nSELECT *\nFROM product_stats\nWHERE distinct_customers >= 3\nORDER BY distinct_customers DESC, total_revenue DESC, product_id ASC\n",
+        "columns": [
+          "product_id",
+          "product_name",
+          "category",
+          "total_revenue",
+          "distinct_customers",
+          "distinct_orders",
+          "items_sold"
+        ],
+        "rows": [
+          {
+            "product_id": 25376,
+            "product_name": "Calvin Klein Men's Basic Brief 3-Pack",
+            "category": "Underwear",
+            "total_revenue": 217.98,
+            "distinct_customers": 6,
+            "distinct_orders": 6,
+            "items_sold": 6
+          },
+          {
+            "product_id": 8253,
+            "product_name": "Calvin Klein Women's Faux Fur Trim Down Walker",
+            "category": "Outerwear & Coats",
+            "total_revenue": 389.97,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "product_id": 8583,
+            "product_name": "Calvin Klein Women's Lux Patent Trim Coat",
+            "category": "Outerwear & Coats",
+            "total_revenue": 375.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "product_id": 25440,
+            "product_name": "Calvin Klein Men's Steel Micro Boxer Brief",
+            "category": "Underwear",
+            "total_revenue": 84.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          },
+          {
+            "product_id": 26316,
+            "product_name": "Calvin Klein Men's Micro Modal Essentials Trunk",
+            "category": "Underwear",
+            "total_revenue": 84.0,
+            "distinct_customers": 3,
+            "distinct_orders": 3,
+            "items_sold": 3
+          }
+        ],
+        "total_rows": 5,
+        "truncated": false,
+        "backend": "bigquery",
+        "job_id": "retail_255a1e838c5342229ad609c0d9cfa85a",
+        "bytes_processed": 16307408,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "6b4f3d2f0b0c4592bb1fbccc3161dea508380cd3982ee7bd9d5f5c2e219ae9d7",
+        "executed_at": "2026-11-20T00:22:18.128618+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E2",
+        "purpose": "Check ties around rank 5 for distinct customers in Q1 2026",
+        "queried_at": "2026-11-20T00:22:18.129960+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 25.0,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    }
+  ],
+  "file": "rankings-1.json"
+}

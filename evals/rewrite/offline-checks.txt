@@ -1,0 +1,49 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/tymoteuszilczyszyn/CODING/opsfleet-task
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0, socket-0.8.1, asyncio-1.4.0, hypothesis-6.170.5, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 132 items
+
+tests/test_budget.py ..............                                      [ 10%]
+tests/test_cli.py ......                                                 [ 15%]
+tests/test_data.py ..........................................            [ 46%]
+tests/test_knowledge.py ..............                                   [ 57%]
+tests/test_provider.py .                                                 [ 58%]
+tests/test_reports.py .......................                            [ 75%]
+tests/test_reviewer_contract.py ............                             [ 84%]
+tests/test_runtime.py ..............                                     [ 95%]
+tests/test_runtime_regressions.py ......                                 [100%]
+
+=============================== warnings summary ===============================
+tests/test_data.py::test_byte_cap_prevents_real_submission
+  /Users/tymoteuszilczyszyn/CODING/opsfleet-task/.venv/lib/python3.12/site-packages/pytest_socket/__init__.py:138: UserWarning: A test tried to use socket.socket.
+    raise SocketBlockedError()
+
+tests/test_runtime.py::test_native_loop_revises_using_new_evidence_and_publishes_exact_markdown
+  /Users/tymoteuszilczyszyn/CODING/opsfleet-task/.venv/lib/python3.12/site-packages/google/adk/models/llm_request.py:306: UserWarning: [EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled.
+    declaration = tool._get_declaration()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.12.12-final-0 _______________
+
+Name                            Stmts   Miss  Cover   Missing
+-------------------------------------------------------------
+src/retail_agent/__init__.py        1      0   100%
+src/retail_agent/budget.py         63      0   100%
+src/retail_agent/cli.py           158     65    59%   27-40, 47-48, 62, 75-88, 117-118, 149, 155-156, 158, 165, 171-173, 175-177, 179-183, 185, 192-209, 215-219, 225-232, 236
+src/retail_agent/config.py         43      3    93%   15, 54-55
+src/retail_agent/contracts.py      62      0   100%
+src/retail_agent/data.py          335    105    69%   247, 272, 281, 303, 313, 319, 321, 323-325, 378, 380, 382, 384, 386, 388, 405, 420, 427-438, 444-470, 478-522, 537-538, 542, 549-550, 558, 565, 594, 596, 640, 644, 651-652, 681, 686, 740-759, 781-782, 799, 808, 813-834
+src/retail_agent/knowledge.py     208     28    87%   105, 111, 117, 126, 168, 174, 176, 179, 181, 211, 219, 251, 256, 258, 269, 272, 275, 278, 292, 308, 310, 313, 315, 318, 324, 327, 335, 404
+src/retail_agent/privacy.py         8      0   100%
+src/retail_agent/provider.py       75      7    91%   32, 40-50, 67, 95
+src/retail_agent/reports.py       227     16    93%   45, 47, 70, 113-114, 180, 188, 246, 274, 287, 328, 402, 427, 434-435, 473
+src/retail_agent/reviewer.py       43      1    98%   66
+src/retail_agent/runtime.py       329     83    75%   73, 87, 136-139, 143-154, 160-161, 186-187, 234-237, 240-243, 302, 305, 322, 368, 375-384, 392, 404-421, 426-433, 440-447, 451, 460-476, 481-492, 500, 519, 537-538, 540, 546-547, 554, 559, 582, 631-632
+-------------------------------------------------------------
+TOTAL                            1552    308    80%
+======================= 132 passed, 2 warnings in 7.50s ========================

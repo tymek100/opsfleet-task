@@ -1,16 +1,37 @@
 # Retail Analysis Assistant
 
-A CLI for brand-scoped analysis of BigQuery's TheLook dataset, with Gemini planning and conversational answers, evidence-backed tables and reports, and explicit deletion confirmation.
+A Python CLI that answers retail questions using one Google ADK/Gemini agent loop. The model chooses tools, writes scoped SQL, interprets results and writes the complete answer in Markdown, including any tables it considers useful. A tool-free evaluator reviews the candidate; corrections return to the same analyst conversation.
 
-The submission consists of two documents:
+The application was rebuilt from scratch. The previous implementation is preserved under `legacy/runtime-2026-11-20/` and is outside the active package and test suite.
 
-- [Architecture](docs/architecture.md): production HLD, diagrams, client constraints, services and data flows.
-- [Technical reasoning](docs/technical_reasoning.md): implementation choices, requirement coverage, metrics and evaluation.
+```bash
+uv sync --locked --python 3.12
+uv run --locked retail-agent chat --user alice --golden-bootstrap
+```
 
-Start with the separate [Quick Start Guide](QUICK_START.md) for setup, configuration and runnable examples. Use your own Gemini and Google Cloud credentials. The production HLD is a proposal; the delivered prototype runs locally.
+Supply your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). `--golden-bootstrap` explicitly enables the 11 synthetic reference methods supplied with the repository. They guide analysis; current answers require fresh evidence. Omit it to use only eligible approved knowledge from your configured corpus.
 
-**Golden Knowledge status: designed and seeded, not connected to the running agent.** The repository includes a Trio schema, three illustrative examples and a production indexing/retrieval design. Working retrieval is optional under the [client Q&A](docs/task/q&a.md#6-golden-knowledge-prototype-scope) and is not implemented in this prototype.
+For real Gemini calls against a frozen synthetic dataset, without BigQuery credentials:
 
-Try the [quick-start conversations](QUICK_START.md#example-conversations) for rankings, customer value, monthly trends and an explicit report save.
+```bash
+uv run --locked retail-agent chat --user alice --backend fixture --golden-bootstrap
+```
 
-The model interprets questions and writes conversational replies; application code controls permissions, SQL, calculations and report mutations. Source details remain available through `/details`.
+The application provides schema discovery, Golden search/read, warehouse queries, local result analysis, prior-answer access and private report management. Permissions, privacy, budgets and confirmed deletion are enforced by application services. Normal answers contain the model's reviewed Markdown; `/details` reveals the supporting SQL and evidence on request.
+
+- [Architecture](docs/architecture.md): actual prototype and proposed production deployment.
+- [Technical reasoning](docs/technical_reasoning.md): tools, metrics, requirement coverage and limitations.
+- [Test prompt observations](docs/rewrite-test-observations.md): actual answers, timings, corrections and remaining gaps.
+- [Golden examples](knowledge/golden/README.md): provenance, offline validation and publication rules.
+- [Original rewrite plan](docs/from-scratch-agent-plan.md): design decisions and research sources.
+
+```bash
+uv run --locked pytest
+uv run --locked python scripts/validate_golden_bootstrap.py
+uv run --locked ruff check .
+uv run --locked pyright
+```
+
+Generating a report does not save it. Ask explicitly to save. Deletion requires an exact preview and confirmation in the same interactive chat. Libraries are private to their owners, including from the CEO. Existing user data is preserved; migration of owned legacy reports is explicit and leaves the source unchanged.
+
+The local CLI uses simulated identities, in-memory conversation context and local SQLite reports. Nontechnical persona administration, inferred preference learning and production identity/infrastructure remain design-only. Evaluator approval is a quality check, not proof that every answer is correct.

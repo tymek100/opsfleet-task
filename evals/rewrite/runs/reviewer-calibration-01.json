@@ -1,0 +1,130 @@
+{
+  "started_at": "2026-11-20T09:19:03.412717+00:00",
+  "evaluation_type": "known-regression reviewer calibration; not a held-out benchmark",
+  "data": "Previously captured synthetic fixture evidence; no SQL is executed.",
+  "model": "gemini-3.8-flash",
+  "thinking_level": "low",
+  "reviewer_prompt_sha256": "7288daa8c2a542c57913d703efab63704fc83b90e897695ab2aa29e548ef2340",
+  "reviewer_source_sha256": "a2ee7e2b7d9cb8e7f85c10a8b1483a4b02ce60109c8589b006c2678609db5b31",
+  "packages": {
+    "google-adk": "2.12.0",
+    "google-genai": "2.32.0"
+  },
+  "limits": {
+    "shared_deadline_seconds": 90,
+    "shared_budget_usd": 1.0,
+    "maximum_provider_calls_including_retries": 3,
+    "maximum_candidate_reviews": 3
+  },
+  "label_policy": "Expected decisions and known defects are output-only annotations; they are never included in reviewer inputs.",
+  "cases": [
+    {
+      "id": "monthly_distinct_total",
+      "capture": "monthly_table-1.json",
+      "expected_decisions": [
+        "revise",
+        "stop"
+      ],
+      "known_issue": "The candidate adds monthly distinct customers (1+2+3) and labels 6 as an overall unique-customer total. The fixture has 5 distinct customers; monthly aggregate evidence does not establish a distinct union total.",
+      "source_path": "/Users/tymoteuszilczyszyn/CODING/opsfleet-task/evals/rewrite/runs/fixture-smoke-01/monthly_table-1.json",
+      "source_sha256": "9c2f5eb0f0b9526139984bf0bf9c8b30ccd62a4f1232acc719c1a208a6e0558a",
+      "candidate_sha256": "6696d2a3c87f4ef6260eca2db60e0b80659a57298db91ee93a342cf9f2c09d30",
+      "events": [
+        {
+          "event": "model_call",
+          "elapsed_seconds": 0.182,
+          "role": "reviewer",
+          "attempt": 1
+        }
+      ],
+      "candidate_markdown": "### Calvin Klein Revenue (Q1 2026)\n\nThe table below displays monthly qualifying revenue for Calvin Klein across January, February, and March 2026. Qualifying sales exclude transactions that were cancelled or returned at either the item or order level.\n\n| Month | Revenue | Orders | Unique Customers | Items Sold |\n| :--- | :--- | :--- | :--- | :--- |\n| **January 2026** | 125.00 | 1 | 1 | 2 |\n| **February 2026** | 100.00 | 2 | 2 | 2 |\n| **March 2026** | 150.00 | 3 | 3 | 3 |\n| **Total** | **375.00** | **6** | **6** | **7** |\n\n*(Note: Currency is unspecified in the source catalog.)*\n\n#### Observation\n* Revenue dipped by 20.0% from January (125.00) to February (100.00), but rebounded strongly in March to 150.00 (+50.0% month-over-month), driven by a steady monthly increase in distinct purchasing customers and orders.",
+      "question": "Show January, February and March 2026 revenue in a table, followed by one brief observation.",
+      "status": "reviewed",
+      "review": {
+        "decision": "revise",
+        "issues": [
+          {
+            "category": "arithmetic",
+            "message": "The table sums distinct customers across months to report a total of 6 unique customers, but distinct entities cannot be summed across time periods without union-level evidence.",
+            "evidence_ids": [
+              "E1"
+            ]
+          }
+        ],
+        "save_authorized": false
+      },
+      "expected_decision_matched": true,
+      "elapsed_seconds": 3.995
+    },
+    {
+      "id": "inactivity_eligibility_without_purchases",
+      "capture": "false_premise-1.json",
+      "expected_decisions": [
+        "revise",
+        "stop"
+      ],
+      "known_issue": "The requested month-end comparison is correct, but the added narrative claims that no purchases in May/June means no new customers became eligible. Eligibility changes with age: E1 rises from 1 eligible on May 1 to 5 on June 1. The prose also contains the malformed label 'cutoff February 0'.",
+      "source_path": "/Users/tymoteuszilczyszyn/CODING/opsfleet-task/evals/rewrite/runs/fixture-smoke-01/false_premise-1.json",
+      "source_sha256": "0685c59749ae0d679ee283ea8ee8381b010faf470692939367f9bf2010c9b407",
+      "candidate_sha256": "08d1fa1fee29efde927a12746aecc705e441373397cf54e76b9329896fa2fef7",
+      "events": [
+        {
+          "event": "model_call",
+          "elapsed_seconds": 0.006,
+          "role": "reviewer",
+          "attempt": 1
+        }
+      ],
+      "candidate_markdown": "### Summary of Findings\n\n**The data does not show an inactivity rate spike from May to June 2026.** Calvin Klein’s 90-day inactivity rate remained unchanged at **100%** between the end of May and the end of June 2026 [E1].\n\n---\n\n### Inactivity Rate Snapshots\n\nUsing the standard 90-day inactivity definition:\n- **Eligibility:** A customer is eligible if their first qualifying purchase occurred strictly prior to the 90-day cutoff date (`as_of - 90 days`).\n- **Inactivity:** An eligible customer is considered inactive if their most recent qualifying purchase prior to the snapshot boundary occurred strictly prior to the 90-day cutoff date.\n- **Snapshot Boundaries:** \n  - May-end snapshot boundary: `2026-06-01 00:00:00 UTC` (90-day cutoff: `2026-03-03`)\n  - June-end snapshot boundary: `2026-07-01 00:00:00 UTC` (90-day cutoff: `2026-04-02`)\n\n| Snapshot Date (`as_of`) | Month Represented | Eligible Customers | Inactive Customers | Inactivity Rate |\n| :--- | :--- | :---: | :---: | :---: |\n| **2026-06-01** | May 2026 (Month-End) | 5 | 5 | **100.0%** |\n| **2026-07-01** | June 2026 (Month-End) | 5 | 5 | **100.0%** |\n\n*Note: As of May 1, 2026 (representing April-end, cutoff February 0: `2026-01-31`), only 1 customer was eligible (User 1), and that customer had purchased on 2026-01-01 and 2026-02-01, yielding a 0% inactivity rate (0/1) [E1, E2]. Between April-end (0%) and May-end (100%), 4 new customers (Users 2, 4, 5, 6) crossed their 90-day post-first-purchase milestone without repeat purchases, but between May-end and June-end, the rate did not spike—it stayed flat at 100% [E1, E2].*\n\n---\n\n### Qualifying Customer Detail\n\nAcross all qualifying purchases prior to July 2026:\n- **User 1:** Purchased on 2026-01-01 and 2026-02-01 [E2]. As of both 2026-06-01 and 2026-07-01, their last purchase was >90 days prior (inactive at both dates).\n- **User 2:** Purchased on 2026-02-02 [E2]. As of both dates, last purchase was >90 days prior (inactive at both dates).\n- **Users 4, 5, 6:** Each purchased on 2026-03-01 [E2]. As of 2026-06-01 (92 days later) and 2026-07-01 (122 days later), all were >90 days post-purchase (inactive at both dates).\n\nNo qualifying purchases occurred during May or June 2026 [E2], meaning no new customers became eligible and no existing inactive customers reactivated.\n\n---\n\n### Scope & Method Notes\n- **Status Definition:** Qualifying sales exclude records where either the item or the order status is `Cancelled` or `Returned`.\n- **Measurement Boundary:** Snapshots use half-open UTC boundaries (`purchased_at < as_of`). Future purchases (such as User 1’s subsequent order on `2026-07-01`) are excluded from earlier snapshot evaluations.\n- **Premise Verification:** Because the inactivity rate was 100% at both month-ends (a change of 0.0 percentage points), the premise of a May-to-June spike is unverified under this standard snapshot metric.",
+      "question": "Why did our 90-day inactivity rate spike from May to June 2026?",
+      "status": "reviewed",
+      "review": {
+        "decision": "approve",
+        "issues": [],
+        "save_authorized": false
+      },
+      "expected_decision_matched": false,
+      "elapsed_seconds": 3.736
+    },
+    {
+      "id": "correct_concise_aov_control",
+      "capture": "prose_aov-1.json",
+      "expected_decisions": [
+        "approve"
+      ],
+      "known_issue": null,
+      "source_path": "/Users/tymoteuszilczyszyn/CODING/opsfleet-task/evals/rewrite/runs/fixture-smoke-01/prose_aov-1.json",
+      "source_sha256": "a8f062b53e1585647f6318b4faf595ad9de55e978a83afa6b39f55e4401d7528",
+      "candidate_sha256": "1fb350c386c257dba07ced66b052463fe11370bdcda470bbef0d748202dac210",
+      "events": [
+        {
+          "event": "model_call",
+          "elapsed_seconds": 0.007,
+          "role": "reviewer",
+          "attempt": 1
+        }
+      ],
+      "candidate_markdown": "In Q1 2026 (January 1, 2026 to March 31, 2026 UTC), Calvin Klein's average order value was 62.50 across 6 qualifying orders (generating a total revenue of 375.00 across 7 purchased items, excluding cancelled and returned items; note that currency is not specified in the database).",
+      "question": "What was our average order value in Q1 2026? Answer in one short paragraph without a table.",
+      "status": "reviewed",
+      "review": {
+        "decision": "approve",
+        "issues": [],
+        "save_authorized": false
+      },
+      "expected_decision_matched": true,
+      "elapsed_seconds": 2.045
+    }
+  ],
+  "shared_usage": {
+    "model_calls": 3,
+    "queries": 0,
+    "tool_calls": 0,
+    "reserved_usd": 0.14495,
+    "input_tokens": 6962,
+    "output_tokens": 142,
+    "thinking_tokens": 0
+  },
+  "finished_at": "2026-11-20T09:19:13.222383+00:00",
+  "limits_of_evidence": "Three selected calibration cases cannot estimate reliability. Inspect the issues: rejecting a flawed candidate for an unrelated stylistic reason does not establish that the reviewer detected its known analytical defect. No claim is made that a stop decision is the most helpful recovery for a fixable answer."
+}

@@ -1,0 +1,166 @@
+{
+  "index": 0,
+  "prompt": "Show January, February and March 2026 revenue in a table, followed by one brief observation.",
+  "result": {
+    "answer": {
+      "id": "A4054d3a016",
+      "markdown": "### Calvin Klein Revenue (Q1 2026)\n\nThe table below displays monthly qualifying revenue for Calvin Klein across January, February, and March 2026. Qualifying sales exclude transactions that were cancelled or returned at either the item or order level.\n\n| Month | Revenue | Orders | Unique Customers | Items Sold |\n| :--- | :--- | :--- | :--- | :--- |\n| **January 2026** | 125.00 | 1 | 1 | 2 |\n| **February 2026** | 100.00 | 2 | 2 | 2 |\n| **March 2026** | 150.00 | 3 | 3 | 3 |\n| **Total** | **375.00** | **6** | **6** | **7** |\n\n*(Note: Currency is unspecified in the source catalog.)*\n\n#### Observation\n* Revenue dipped by 20.0% from January (125.00) to February (100.00), but rebounded strongly in March to 150.00 (+50.0% month-over-month), driven by a steady monthly increase in distinct purchasing customers and orders.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "outcome": "answer",
+      "approved": true,
+      "receipts": []
+    },
+    "status": "approved",
+    "message": "",
+    "trace": [
+      {
+        "event": "model_call",
+        "elapsed": 0.027,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 2.066,
+        "tool": "describe_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 2.066,
+        "tool": "describe_data",
+        "status": "ok",
+        "evidence_id": null
+      },
+      {
+        "event": "model_call",
+        "elapsed": 2.071,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "tool_start",
+        "elapsed": 4.934,
+        "tool": "query_data"
+      },
+      {
+        "event": "tool_end",
+        "elapsed": 5.468,
+        "tool": "query_data",
+        "status": "ok",
+        "evidence_id": "E1"
+      },
+      {
+        "event": "model_call",
+        "elapsed": 5.474,
+        "role": "analyst",
+        "attempt": 1
+      },
+      {
+        "event": "review_start",
+        "elapsed": 9.697,
+        "attempt": 1
+      },
+      {
+        "event": "model_call",
+        "elapsed": 9.704,
+        "role": "reviewer",
+        "attempt": 1
+      },
+      {
+        "event": "review_end",
+        "elapsed": 11.829,
+        "decision": "approve",
+        "issue_categories": []
+      },
+      {
+        "event": "answer_approved",
+        "elapsed": 11.829,
+        "answer_id": "A4054d3a016",
+        "sha256": "6696d2a3c87f4ef6260eca2db60e0b80659a57298db91ee93a342cf9f2c09d30"
+      }
+    ],
+    "usage": {
+      "model_calls": 4,
+      "queries": 1,
+      "tool_calls": 3,
+      "reserved_usd": 0.287152,
+      "input_tokens": 9025,
+      "output_tokens": 526,
+      "thinking_tokens": 0
+    },
+    "evidence": [
+      {
+        "sql": "SELECT\n  FORMAT_TIMESTAMP('%Y-%m', purchased_at) AS month,\n  ROUND(SUM(sale_price), 2) AS revenue,\n  COUNT(DISTINCT order_id) AS orders,\n  COUNT(DISTINCT user_id) AS customers,\n  COUNT(item_id) AS items_sold\nFROM sales\nWHERE purchased_at >= '2026-01-01 00:00:00'\n  AND purchased_at < '2026-04-01 00:00:00'\nGROUP BY 1\nORDER BY 1\n",
+        "columns": [
+          "month",
+          "revenue",
+          "orders",
+          "customers",
+          "items_sold"
+        ],
+        "rows": [
+          {
+            "month": "2026-01",
+            "revenue": 125.0,
+            "orders": 1,
+            "customers": 1,
+            "items_sold": 2
+          },
+          {
+            "month": "2026-02",
+            "revenue": 100.0,
+            "orders": 2,
+            "customers": 2,
+            "items_sold": 2
+          },
+          {
+            "month": "2026-03",
+            "revenue": 150.0,
+            "orders": 3,
+            "customers": 3,
+            "items_sold": 3
+          }
+        ],
+        "total_rows": 3,
+        "truncated": false,
+        "backend": "fixture",
+        "job_id": null,
+        "bytes_processed": 0,
+        "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+        "sql_sha256": "0dd73f12f4a4ecc7d0405f6bf0f3bbe5395ad25c92a22b5b67ee99ad8a384038",
+        "executed_at": "2026-11-20T00:17:06.118201+00:00",
+        "parameters": {},
+        "scope": "Calvin Klein",
+        "id": "E1",
+        "purpose": "Calculate monthly qualifying revenue for Calvin Klein in January, February, and March 2026",
+        "queried_at": "2026-11-20T00:17:06.121915+00:00",
+        "parents": []
+      }
+    ],
+    "elapsed_seconds": 11.83,
+    "deletion_preview": null
+  },
+  "library_before": [],
+  "library_after": [],
+  "stored_reports": [],
+  "observations": [
+    {
+      "name": "reviewed_answer_present",
+      "observation": "matched",
+      "description": "Runtime approval observed; this alone does not establish correctness or readability."
+    },
+    {
+      "name": "markdown_table_present",
+      "observation": "matched",
+      "description": "A Markdown table is present; its content still needs numerical review."
+    },
+    {
+      "name": "fixture_number_presence_smoke",
+      "observation": "matched",
+      "description": "Expected numeric tokens [100.0, 125.0, 150.0] occur in the answer. This is a weak smoke check, not a semantic numerical grade; inspect the independently enumerated facts and evidence."
+    }
+  ],
+  "file": "monthly_table-1.json"
+}

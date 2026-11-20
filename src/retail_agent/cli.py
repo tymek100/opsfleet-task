@@ -1,210 +1,235 @@
-"""Local CLI; explicit save and confirmation remain outside the model."""
+"""Terminal client: model-authored Markdown plus trusted operation controls."""
 
 import asyncio
+import json
 import logging
-import sqlite3
-import sys
+import signal
 import warnings
-from contextlib import suppress
-from uuid import uuid4
+from dataclasses import asdict
+from pathlib import Path
+from typing import Annotated
 
 import typer
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import InMemoryHistory
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.table import Table
 
-from retail_agent.agent import Analyst
-from retail_agent.bigquery import BigQueryExecutor
 from retail_agent.config import Settings
-from retail_agent.models import DEMO_USERS, AppError
-from retail_agent.observability import quiet_controlled_adk_errors
-from retail_agent.render import display_answer, render_answer, render_preview
-from retail_agent.reports import ReportStore
+from retail_agent.contracts import DEMO_USERS, TurnResult
+from retail_agent.privacy import screen
+from retail_agent.runtime import Analyst
 
-app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
-console = Console(markup=False)
-HELP = """/help                         Show commands
-/clear                        Clear the screen; keep conversation context
-/save TITLE                   Explicitly save the latest successful analysis
-/reports                      List your private reports
-/read ID                      Read your report
-/details [ID]                 Show source tables and diagnostics for latest analysis or report
-/delete TEXT                  Preview literal matching reports (/delete * = all)
-/delete-conversation          Preview this conversation's reports
-/confirm TOKEN                Permanently delete the previewed set
-/cancel                       Cancel pending deletion
-/new                          Clear context and start a new conversation
-/quit                         Exit
-Use Up/Down arrows to recall prompts and commands from this CLI session.
-Natural-language analysis and deletion previews also supported. Demo identity is fixed at startup."""
+app = typer.Typer(help="Autonomous retail analysis with reviewed answers.", no_args_is_help=True)
+console = Console()
 
 
-@app.command()
-def users() -> None:
-    """List the explicitly simulated local identities."""
-    for identity in DEMO_USERS.values():
-        console.print(f"{identity.user_id}: {identity.scope}")
-
-
-@app.command()
-def doctor() -> None:
-    """Check configuration presence without exposing secrets or making provider calls."""
-    settings = Settings.load()
-    console.print(f"Project configured: {bool(settings.google_cloud_project)}")
-    console.print(f"Gemini key configured: {bool(settings.gemini_api_key.get_secret_value())}")
-    console.print(f"Model: {settings.gemini_model}")
-    console.print("This checks presence only. Live checks require credentials and internet access.")
-
-
-def command(text: str, analyst: Analyst) -> str | None:
-    """Deterministic command dispatch; no provider is needed for report confirmation."""
-    user, conversation, store = analyst.identity.user_id, analyst.conversation, analyst.store
-    verb, _, arg = text.partition(" ")
-    arg = arg.strip()
-    if verb == "/help":
-        return HELP
-    if verb == "/clear":
-        if arg:
-            raise AppError("Use /clear without arguments.")
-        console.clear()
-        return ""
-    if verb == "/reports":
-        return "\n".join(f"{r.id} | {r.title}" for r in store.list(user)) or "No saved reports."
-    if verb == "/save":
-        if not arg or analyst.last_answer is None:
-            raise AppError("Use /save TITLE after a successful analysis.")
-        rid = store.save(user, conversation, arg, analyst.last_answer)
-        return f"Saved report {rid}."
-    if verb == "/details":
-        answer = store.read(user, arg) if arg else analyst.last_answer
-        if answer is None:
-            raise AppError("No analysis is available yet.")
-        return render_answer(answer, details=True)
-    if verb == "/read":
-        return render_answer(store.read(user, arg))
-    if verb in ("/delete", "/delete-conversation"):
-        if verb == "/delete" and not arg:
-            raise AppError("Use /delete TEXT or /delete * for all your reports.")
-        analyst.preview = store.preview(
-            user,
-            conversation,
-            "" if arg == "*" else arg,
-            conversation_only=verb == "/delete-conversation",
-        )
-        return render_preview(analyst.preview)
-    if verb == "/cancel":
-        store.cancel(user, conversation)
-        analyst.preview = None
-        return "Cancelled. Nothing deleted."
-    if verb == "/confirm":
-        count = store.confirm(user, conversation, arg)
-        analyst.reset_context()
-        return f"Permanently deleted {count} reports. Conversation context cleared."
-    if verb == "/new":
-        store.cancel(user, conversation)
-        analyst.reset_context()
-        analyst.conversation = uuid4().hex[:12]
-        return f"New conversation: {analyst.conversation}"
-    if text.startswith("/"):
-        raise AppError("Unknown command. Use /help.")
-    return None
-
-
-@app.command()
-def chat(user: str = typer.Option("alice", help="Simulated identity: alice, bob, ceo")) -> None:
-    """Start a local chat using Gemini and read-only BigQuery queries."""
+def build(user: str, backend: str | None, bootstrap: bool) -> Analyst:
     if user not in DEMO_USERS:
-        raise typer.BadParameter("Choose alice, bob, or ceo.")
+        raise typer.BadParameter("Choose alice, bob or ceo; these are simulated demo identities.")
     settings = Settings.load()
-    logging.getLogger("google").setLevel(logging.CRITICAL)
-    logging.getLogger("httpx").setLevel(logging.CRITICAL)
+    if backend:
+        if backend not in ("bigquery", "fixture"):
+            raise typer.BadParameter("Backend must be bigquery or fixture.")
+        settings.backend = backend
+    if bootstrap:
+        settings.golden_bootstrap = True
+    # SDK logs can contain arbitrary generated arguments; the app records metadata itself.
+    for name in ("google.adk", "google_genai", "httpx", "httpcore"):
+        logging.getLogger(name).setLevel(logging.CRITICAL)
+    warnings.filterwarnings("ignore", message=r".*FeatureName.JSON_SCHEMA_FOR_FUNC_DECL.*")
+    return Analyst(settings, DEMO_USERS[user])
+
+
+def show_preview(preview: dict) -> None:
+    reports = preview.get("reports", [])
+    screen(json.dumps(reports, default=str))
+    if not reports:
+        console.print("No matching reports in your library.")
+        return
+    table = Table("Report ID", "Title")
+    for report in reports:
+        table.add_row(str(report["id"]), str(report["title"]))
+    console.print(table)
+    console.print("This exact selection will be permanently deleted.")
+    console.print(f"Confirm: /confirm {preview['token']}    Cancel: /cancel", markup=False)
+
+
+def display(result: TurnResult) -> None:
+    if result.answer:
+        console.print(Markdown(result.answer.markdown))
+        for receipt in result.answer.receipts:
+            if receipt.get("status") == "saved":
+                console.print(f"Saved: {receipt['title']} ({receipt['id']})", markup=False)
+            else:
+                console.print(receipt.get("message", "Operation did not complete."), markup=False)
+    else:
+        console.print(result.message, markup=False)
+    if result.deletion_preview:
+        show_preview(result.deletion_preview)
+
+
+async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
+    with console.status("Analyst is considering your question...", spinner="dots") as status:
+
+        def progress(event: dict) -> None:
+            name = event["event"]
+            if name == "tool_start":
+                detail = f"Using {event['tool']}"
+            elif name == "review_start":
+                detail = "Reviewing the proposed answer"
+            elif name == "model_call":
+                detail = (
+                    "Reviewer is checking evidence"
+                    if event.get("role") == "reviewer"
+                    else "Analyst is choosing the next action"
+                )
+            else:
+                return
+            status.update(f"{detail} ({event['elapsed']:.0f}s)")
+
+        analyst.progress = progress
+        task = asyncio.create_task(analyst.ask(prompt))
+        loop = asyncio.get_running_loop()
+        previous_handler = signal.getsignal(signal.SIGINT)
+        loop.add_signal_handler(signal.SIGINT, task.cancel)
+        try:
+            result = await task
+        finally:
+            loop.remove_signal_handler(signal.SIGINT)
+            signal.signal(signal.SIGINT, previous_handler)
+    return result
+
+
+@app.command()
+def ask(
+    prompt: Annotated[str, typer.Argument(help="Question in English.")],
+    user: str = "alice",
+    backend: str | None = None,
+    golden_bootstrap: bool = False,
+    output_json: Path | None = None,
+) -> None:
+    """Answer one question; optionally capture its answer, evidence and metadata."""
+    analyst = build(user, backend, golden_bootstrap)
     try:
-        executor = BigQueryExecutor(settings.google_cloud_project)
-    except Exception:
-        console.print(
-            "BigQuery credentials unavailable. Run gcloud auth application-default login."
-        )
-        raise typer.Exit(1) from None
-    try:
-        store = ReportStore(settings.data_dir / "reports.sqlite3")
-    except (sqlite3.Error, OSError):
-        console.print("Cannot open local report storage. Check disk space and permissions.")
-        raise typer.Exit(1) from None
-    analyst = Analyst(settings, DEMO_USERS[user], executor, store, uuid4().hex[:12])
-    console.print(f"Retail assistant — DEMO identity: {user}; scope: {analyst.identity.scope}")
-    console.print(
-        f"Conversation: {analyst.conversation}. /help for commands. Reports save only on request."
-    )
-    try:
-        with quiet_controlled_adk_errors(), warnings.catch_warnings():
-            # Keep this known ADK notice out of interactive output only. Other
-            # warnings and direct runtime/test usage retain their usual behavior.
-            warnings.filterwarnings(
-                "ignore",
-                message=r"^\[EXPERIMENTAL\] feature FeatureName\.JSON_SCHEMA_FOR_FUNC_DECL is enabled\.$",
-                category=UserWarning,
-                module=r"^google\.adk\.",
-            )
-            asyncio.run(chat_loop(analyst))
+        result = asyncio.run(run_question(analyst, prompt))
+        display(result)
+        if output_json:
+            output_json.parent.mkdir(parents=True, exist_ok=True)
+            output_json.write_text(json.dumps(asdict(result), indent=2, default=str) + "\n")
+        if result.answer is None:
+            raise typer.Exit(1)
     finally:
-        with suppress(sqlite3.Error, OSError):
-            store.close()
+        analyst.reports.close()
 
 
-async def chat_loop(analyst: Analyst) -> None:
-    # Keep input history local to this CLI process; piped input needs no terminal editor.
-    session = (
-        PromptSession[str](history=InMemoryHistory())
-        if sys.stdin.isatty() and console.is_terminal
-        else None
+HELP = """Commands:
+/help             Show commands
+/details          Inspect latest query evidence and metadata
+/reports          List your saved reports
+/read ID          Display an owned saved report
+/delete TEXT      Preview reports matching literal text
+/confirm TOKEN    Permanently delete the exact previewed reports
+/cancel           Cancel deletion
+/new              Clear this conversation
+/exit             Exit
+Ask naturally to analyze data, create a report, or explicitly save an answer.
+"""
+
+
+async def conversation(analyst: Analyst) -> None:
+    console.print(
+        f"Retail assistant - DEMO identity: {analyst.identity.user_id}; scope: {analyst.identity.scope}"
     )
+    console.print(
+        f"Conversation: {analyst.conversation_id}. /help for commands. Reports save only on request."
+    )
+    if analyst.settings.backend == "fixture":
+        console.print("Data: frozen synthetic fixture (not live company results).")
+    if analyst.settings.golden_bootstrap:
+        console.print(
+            "Golden retrieval: synthetic example methods enabled; current facts still require queries."
+        )
     while True:
         try:
-            text = (
-                await session.prompt_async("\nYou> ")
-                if session is not None
-                else console.input("\nYou> ")
-            ).strip()
-            if text in ("/quit", "/exit"):
-                break
-            if not text:
-                continue
-            verb, _, arg = text.partition(" ")
-            if verb in ("/details", "/read"):
-                answer = (
-                    analyst.store.read(analyst.identity.user_id, arg.strip())
-                    if arg.strip()
-                    else analyst.last_answer
-                    if verb == "/details"
-                    else None
-                )
-                if answer is None:
-                    raise AppError("Provide a report ID or run an analysis first.")
-                display_answer(console, answer, details=verb == "/details")
-                continue
-            response = command(text, analyst)
-            if response is not None:
-                console.print(response)
-                continue
-            with console.status("Generating answer…"):
-                answer = await analyst.ask(text)
-            display_answer(console, answer)
-            if analyst.preview is not None:
-                console.print(render_preview(analyst.preview))
+            prompt = console.input("\n[bold]You> [/bold]").strip()
         except (EOFError, KeyboardInterrupt):
             break
-        except AppError as exc:
-            console.print(
-                f"Unable to complete: {exc}", style="bold red", markup=False, highlight=False
-            )
-        except OSError:
-            console.print(
-                "Local files are unavailable. Check disk access; you can continue chatting."
-            )
-        except sqlite3.Error:
-            console.print(
-                "Local storage failed. The operation was not confirmed; check disk access."
-            )
+        if not prompt:
+            continue
+        command, _, argument = prompt.partition(" ")
+        try:
+            match command:
+                case "/exit" | "/quit":
+                    break
+                case "/help":
+                    console.print(HELP, markup=False)
+                case "/new":
+                    analyst.reports.cancel_delete(analyst.identity.user_id, analyst.conversation_id)
+                    analyst.clear_context()
+                    console.print("Conversation cleared.")
+                case "/details":
+                    evidence = analyst.last_result.evidence if analyst.last_result else []
+                    screen(json.dumps(evidence, default=str))
+                    console.print_json(data=evidence)
+                case "/reports":
+                    reports = analyst.reports.search(analyst.identity.user_id)
+                    screen(json.dumps(reports, default=str))
+                    console.print_json(data=reports)
+                case "/read":
+                    report = analyst.reports.read(analyst.identity.user_id, argument)
+                    if report:
+                        console.print(Markdown(screen(report["markdown"])))
+                    else:
+                        console.print("Report not found in your library.")
+                case "/delete":
+                    show_preview(
+                        analyst.reports.preview_delete(
+                            analyst.identity.user_id, analyst.conversation_id, argument
+                        )
+                    )
+                case "/confirm":
+                    console.print_json(data=analyst.confirm_delete(argument))
+                case "/cancel":
+                    console.print_json(
+                        data=analyst.reports.cancel_delete(
+                            analyst.identity.user_id, analyst.conversation_id
+                        )
+                    )
+                case _:
+                    if prompt.startswith("/"):
+                        console.print("Unknown command. Use /help.")
+                    else:
+                        display(await run_question(analyst, prompt))
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            console.print("Investigation cancelled.")
+        except Exception as exc:
+            if hasattr(exc, "code"):
+                console.print(str(exc), markup=False)
+            else:
+                console.print("The operation could not complete. Your library remains available.")
+
+
+@app.command()
+def chat(user: str = "alice", backend: str | None = None, golden_bootstrap: bool = False) -> None:
+    """Start an interactive conversation with ephemeral history and persistent reports."""
+    analyst = build(user, backend, golden_bootstrap)
+    try:
+        asyncio.run(conversation(analyst))
+    finally:
+        analyst.reports.close()
+
+
+@app.command()
+def import_legacy(path: Path, user: str = "alice") -> None:
+    """Copy your legacy reports into the new library; the source remains unchanged."""
+    analyst = build(user, "fixture", False)
+    try:
+        console.print_json(data=analyst.reports.import_legacy(path, analyst.identity.user_id))
+        console.print(
+            "Imported copies belong to the new library. The original source is unchanged."
+        )
+    finally:
+        analyst.reports.close()
 
 
 if __name__ == "__main__":

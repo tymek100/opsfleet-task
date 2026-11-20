@@ -1,0 +1,96 @@
+{
+  "SUM(sale_price)": {
+    "sql": "SELECT product_id, product_name, SUM(sale_price) AS value FROM sales WHERE purchased_at >= TIMESTAMP '2026-01-01' AND purchased_at < TIMESTAMP '2026-04-01' GROUP BY product_id, product_name ORDER BY value DESC, product_id LIMIT 5",
+    "columns": [
+      "product_id",
+      "product_name",
+      "value"
+    ],
+    "rows": [
+      {
+        "product_id": 20041,
+        "product_name": "Calvin Klein Mens 2 Button Solid Black Wool Suit",
+        "value": 259.989990234375
+      },
+      {
+        "product_id": 20235,
+        "product_name": "Calvin Klein Mens Navy Blue Pindot Slim Fit Wool Suit",
+        "value": 259.989990234375
+      },
+      {
+        "product_id": 19152,
+        "product_name": "Calvin Klein Sportswear Men's Double Breasted Cardigan Sweater",
+        "value": 236.0
+      },
+      {
+        "product_id": 23837,
+        "product_name": "Calvin Klein Sportswear Men's Melton Wool Basic Peacoat",
+        "value": 228.0
+      },
+      {
+        "product_id": 23740,
+        "product_name": "Calvin Klein Men's Wool Car Coat With Bib",
+        "value": 216.0
+      }
+    ],
+    "total_rows": 5,
+    "truncated": false,
+    "backend": "bigquery",
+    "job_id": "retail_89e9e7dfa5a24ee194449131b24b2279",
+    "bytes_processed": 14442693,
+    "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+    "sql_sha256": "5dba8985787cbbf36b7309c8fb3cbda9fadcb3b8594868f060b771f22e3df1ed",
+    "executed_at": "2026-11-20T09:29:21.573649+00:00",
+    "parameters": {},
+    "scope": [
+      "Calvin Klein"
+    ]
+  },
+  "COUNT(DISTINCT user_id)": {
+    "sql": "SELECT product_id, product_name, COUNT(DISTINCT user_id) AS value FROM sales WHERE purchased_at >= TIMESTAMP '2026-01-01' AND purchased_at < TIMESTAMP '2026-04-01' GROUP BY product_id, product_name ORDER BY value DESC, product_id LIMIT 5",
+    "columns": [
+      "product_id",
+      "product_name",
+      "value"
+    ],
+    "rows": [
+      {
+        "product_id": 29,
+        "product_name": "Calvin Klein Women's 2 Pocket Collar Blouse",
+        "value": 3
+      },
+      {
+        "product_id": 13390,
+        "product_name": "Calvin Klein Women's Solid Skirtini",
+        "value": 3
+      },
+      {
+        "product_id": 2,
+        "product_name": "Calvin Klein Women's MSY Crew Neck Roll Sleeve",
+        "value": 2
+      },
+      {
+        "product_id": 3927,
+        "product_name": "Calvin Klein Three Quarter Sleeve Dress",
+        "value": 2
+      },
+      {
+        "product_id": 10809,
+        "product_name": "Calvin Klein Women's Naked Glamour Bikini",
+        "value": 2
+      }
+    ],
+    "total_rows": 5,
+    "truncated": false,
+    "backend": "bigquery",
+    "job_id": "retail_d24edb138bf04b33998a973dbd876537",
+    "bytes_processed": 12993053,
+    "definitions": "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned at both item and order level. transactions contains all current statuses. Revenue uses sale_price; orders and customers require distinct IDs. Brand scope applies before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current statuses cannot reconstruct historical status changes. Currency is not specified. Customer geography is available only through query_state_summary.",
+    "sql_sha256": "c2fa1de1252dce99cfa0fbd1ef955a908e3ad6e0b9809ff9d76dd09be7718ed7",
+    "executed_at": "2026-11-20T09:29:23.378865+00:00",
+    "parameters": {},
+    "scope": [
+      "Calvin Klein"
+    ]
+  }
+}
