@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from rich.text import Text
 from typer.testing import CliRunner
 
 from evaluation.cli import app as cli
@@ -109,5 +110,5 @@ def test_cli_requires_explicit_live_limits_and_pilot_acknowledgment():
     assert runner.invoke(cli, ["run"]).exit_code != 0
     result = runner.invoke(cli, ["run", "--max-cost-usd", "1", "--deadline-seconds", "60"])
     assert result.exit_code != 0
-    assert "--allow-unreviewed" in result.output
+    assert "--allow-unreviewed" in Text.from_ansi(result.output).plain
     assert runner.invoke(cli, ["validate"]).exit_code == 0
