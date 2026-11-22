@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from evaluation.graders import trajectory
 from evaluation.graders.checks import (
     combined,
     deterministic_turn,
@@ -79,7 +80,9 @@ async def grade_turn(
     )
 
 
-async def grade_trial(case: Case, trial: Trial, judge, *, grade_candidates=True) -> TrialGrade:
+async def grade_trial(
+    case: Case, trial: Trial, judge, *, grade_candidates=True, grade_trajectory=False
+) -> TrialGrade:
     if trial.status == "NOT_EXECUTED":
         return TrialGrade(
             trial_id=trial.id,
@@ -90,7 +93,12 @@ async def grade_trial(case: Case, trial: Trial, judge, *, grade_candidates=True)
             scores=[
                 Score(
                     name="execution", status="UNJUDGEABLE", finding="Run limits prevented execution"
-                )
+                ),
+                *(
+                    [trajectory.unavailable_score("The trajectory was not executed")]
+                    if grade_trajectory
+                    else []
+                ),
             ],
         )
     if [turn.step_id for turn in trial.turns] != [step.id for step in case.steps]:
@@ -105,7 +113,12 @@ async def grade_trial(case: Case, trial: Trial, judge, *, grade_candidates=True)
                     name="turn_coverage",
                     status="ERROR",
                     finding="Missing, duplicate, reordered, or unexpected steps",
-                )
+                ),
+                *(
+                    [trajectory.unavailable_score("Execution step coverage is incomplete")]
+                    if grade_trajectory
+                    else []
+                ),
             ],
         )
     grades = []
@@ -146,6 +159,41 @@ async def grade_trial(case: Case, trial: Trial, judge, *, grade_candidates=True)
     scores = final_state_scores(case, trial)
     if trial.error:
         scores.append(Score(name="harness", status="ERROR", finding=trial.error))
+    trajectory_result = None
+    if grade_trajectory:
+        problem = trajectory.capture_problem(trial)
+        if problem or judge is None or not hasattr(judge, "evaluate_trajectory"):
+            scores.append(
+                trajectory.unavailable_score(
+                    problem or "No independent trajectory judge is available"
+                )
+            )
+        else:
+            try:
+                assessment = await judge.evaluate_trajectory(trial)
+                trajectory.validate_judgment(assessment, trial)
+                scores.extend(trajectory.scores(assessment))
+                by_step = {turn.step_id: turn for turn in trial.turns}
+                trajectory_result = {
+                    **assessment.model_dump(mode="json"),
+                    "event_sources": {
+                        key: {
+                            "step_id": event["step_id"],
+                            "trace_id": by_step[event["step_id"]].trace_id or trial.trace_id,
+                            "span_id": by_step[event["step_id"]].span_id or trial.span_id,
+                        }
+                        for key, event in trajectory.event_catalog(trial).items()
+                    },
+                }
+            except (JudgeUnavailable, ValueError) as exc:
+                scores.append(
+                    trajectory.unavailable_score(
+                        str(exc)
+                        if isinstance(exc, JudgeUnavailable)
+                        else "Invalid trajectory judgment schema or event attribution",
+                        error=True,
+                    )
+                )
     every_turn = [Score(name="turn", status=g.status, finding=g.step_id) for g in grades]
     return TrialGrade(
         trial_id=trial.id,
@@ -154,19 +202,28 @@ async def grade_trial(case: Case, trial: Trial, judge, *, grade_candidates=True)
         status=combined([*scores, *every_turn]),
         turns=grades,
         scores=scores,
+        trajectory=trajectory_result,
     )
 
 
-async def grade_run(directory: Path, judge=None, *, grade_candidates=True, progress=print) -> Path:
-    cases = {c.id: c for c in frozen_cases(directory)}
-    grade_dir = directory / "grades" / identifier("grade")
-    grade_dir.mkdir(parents=True, exist_ok=False)
+def _verified_trials(directory: Path) -> tuple[dict, list[Path], dict[str, str]]:
+    frozen_cases(directory)
     paths = sorted((directory / "trials").glob("*.json"))
     execution = read_json(directory / "manifest.json")
     expected_hashes = execution.get("trials_sha256", {})
     actual_hashes = {path.name: digest(path) for path in paths}
     if actual_hashes != expected_hashes:
         raise ValueError("Execution artifacts are missing or were modified after capture")
+    return execution, paths, actual_hashes
+
+
+def prepare_grade(
+    directory: Path, judge=None, *, grade_candidates=True, grade_trajectory=True
+) -> Path:
+    """Pin grader configuration before execution, permitting append-only trial capture."""
+    execution, _, actual_hashes = _verified_trials(directory)
+    grade_dir = directory / "grades" / identifier("grade")
+    grade_dir.mkdir(parents=True, exist_ok=False)
     code_root = Path(__file__).parents[1]
     code_paths = [
         *Path(__file__).parent.glob("*.py"),
@@ -184,26 +241,86 @@ async def grade_run(directory: Path, judge=None, *, grade_candidates=True, progr
         "trials_sha256": actual_hashes,
         "dataset_sha256": execution["dataset_sha256"],
         "grade_candidates": grade_candidates,
+        "grade_trajectory": grade_trajectory,
+        "trajectory_evaluator": trajectory.version() if grade_trajectory else None,
         "human_calibrated": False,
         "grader_code_sha256": hashlib.sha256(
             json.dumps(code_hashes, sort_keys=True).encode()
         ).hexdigest(),
         "artifact_schema_version": "1",
-        "report_schema_version": "2",
+        "report_schema_version": "3",
     }
     write_json(grade_dir / "manifest.json", manifest)
+    return grade_dir
+
+
+def record_grade(
+    directory: Path,
+    grade_dir: Path,
+    grade: TrialGrade | None,
+    judge=None,
+    *,
+    complete=False,
+) -> None:
+    """Persist a grade without accepting changed or unrelated captured execution."""
+    execution, _, actual_hashes = _verified_trials(directory)
+    manifest = read_json(grade_dir / "manifest.json")
+    if (
+        manifest["run_id"] != directory.name
+        or manifest["dataset_sha256"] != execution["dataset_sha256"]
+        or any(
+            actual_hashes.get(name) != expected
+            for name, expected in manifest["trials_sha256"].items()
+        )
+    ):
+        raise ValueError("Grading execution inputs changed during capture")
+    if grade is not None:
+        source = directory / "trials" / f"{grade.trial_id}.json"
+        if source.name not in actual_hashes:
+            raise ValueError("Cannot grade an uncaptured trial")
+        trial = Trial.model_validate(read_json(source))
+        if (trial.id, trial.case_id, trial.repetition) != (
+            grade.trial_id,
+            grade.case_id,
+            grade.repetition,
+        ):
+            raise ValueError("Grade does not belong to the captured trial")
+        target = grade_dir / "trials" / source.name
+        if target.exists() and read_json(target) != grade.model_dump(mode="json"):
+            raise ValueError("A saved grade cannot be overwritten; create a new grading version")
+        write_json(target, grade)
+    if judge:
+        write_json(grade_dir / "judge_calls.json", judge.calls)
+    manifest.update(
+        status="completed" if complete else "running",
+        trials_sha256=actual_hashes,
+        accounted_judge_usd=judge.accounted_usd if judge else 0,
+    )
+    write_json(grade_dir / "manifest.json", manifest)
+    if complete:
+        from evaluation.reporting.summary import write_summary
+
+        write_summary(directory, grade_dir)
+
+
+async def grade_run(
+    directory: Path, judge=None, *, grade_candidates=True, grade_trajectory=True, progress=print
+) -> Path:
+    cases = {c.id: c for c in frozen_cases(directory)}
+    grade_dir = prepare_grade(
+        directory, judge, grade_candidates=grade_candidates, grade_trajectory=grade_trajectory
+    )
+    _, paths, _ = _verified_trials(directory)
     for path in paths:
         trial = Trial.model_validate(read_json(path))
         grade = await grade_trial(
-            cases[trial.case_id], trial, judge, grade_candidates=grade_candidates
+            cases[trial.case_id],
+            trial,
+            judge,
+            grade_candidates=grade_candidates,
+            grade_trajectory=grade_trajectory,
         )
-        write_json(grade_dir / "trials" / path.name, grade)
-        if judge:
-            write_json(grade_dir / "judge_calls.json", judge.calls)
+        record_grade(directory, grade_dir, grade, judge)
         progress(f"{trial.id}: {grade.status}")
-    manifest.update(status="completed", accounted_judge_usd=judge.accounted_usd if judge else 0)
-    write_json(grade_dir / "manifest.json", manifest)
-    from evaluation.reporting.summary import write_summary
-
-    write_summary(directory, grade_dir)
+    record_grade(directory, grade_dir, None, judge, complete=True)
     return grade_dir

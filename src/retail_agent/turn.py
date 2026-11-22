@@ -34,6 +34,7 @@ class Turn:
         self.active = 0
         self.failed_actions: dict[str, int] = {}
         self.candidates: set[str] = set()
+        self._observed_tools: str | None = None
 
     def emit(self, event: str, **fields) -> None:
         record = {
@@ -45,12 +46,27 @@ class Turn:
         self.app.progress(record)
         self.app.observe(event, **{key: value for key, value in record.items() if key != "event"})
 
+    def observe_request(self, callback_context, llm_request):
+        if self.app.observation_mode == "synthetic":
+            tools = [
+                declaration.model_dump(mode="json", exclude_none=True)
+                for tool in (llm_request.config.tools or [])
+                for declaration in (tool.function_declarations or [])
+            ]
+            fingerprint = hashlib.sha256(json.dumps(tools, sort_keys=True).encode()).hexdigest()
+            if fingerprint != self._observed_tools:
+                self.app.observe("available_tools", available_tools=tools)
+                self._observed_tools = fingerprint
+        return None
+
     def observe_model(self, callback_context, llm_response):
         calls = (
             [p.function_call for p in (llm_response.content.parts or []) if p.function_call]
             if llm_response.content
             else []
         )
+        for call in calls:
+            self.app.observe("tool_call", name=call.name, args=call.args or {}, call_id=call.id)
         self.finish_conflict = len(calls) > 1 and any(c.name == "finish_answer" for c in calls)
         return None
 

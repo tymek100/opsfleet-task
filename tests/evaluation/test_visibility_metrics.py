@@ -4,7 +4,8 @@ import json
 
 from evaluation.graders.calibration import calibration_metrics, score_saved_controls
 from evaluation.graders.checks import grounding_scores
-from evaluation.graders.judge import observed_context
+from evaluation.graders.judge import judge_input, observed_context
+from evaluation.graders.trajectory import event_catalog
 from evaluation.models import Case, TurnReference
 from evaluation.reporting.summary import summarize
 from evaluation.results import Claim, Judgment, Score, Trial, TrialGrade, TurnGrade, TurnRecord
@@ -57,6 +58,44 @@ def test_reread_prior_result_is_visible_in_current_tool_observation():
     turn = TurnRecord(step_id="followup", status="approved", observations=[reread])
     assert observed_context(turn, [])["visible_tool_observations"] == [reread]
     assert grounding_scores(turn, judgment(), [])[0].status == "PASS"
+
+
+def test_answer_judge_omits_trajectory_coordinates_without_changing_captured_evidence():
+    observations = [
+        {
+            "event": "tool_observation",
+            "event_id": "ask:e1",
+            "name": "describe_data",
+            "result": {"definition": "Revenue uses qualifying sales."},
+        },
+        {
+            "event": "tool_observation",
+            "event_id": "ask:e2",
+            "name": "query_data",
+            "result": {"id": "E1", "rows": [{"revenue": 9, "event_id": "business-value"}]},
+        },
+    ]
+    turn = TurnRecord(
+        step_id="ask",
+        status="approved",
+        markdown="Revenue was 9.",
+        observations=observations,
+        timeline=observations,
+    )
+    before = turn.model_dump(mode="json")
+    payload = judge_input(turn, TurnReference(reference_answer="Revenue was 9."), [])
+    visible = payload["untrusted"]["visible_tool_observations"]
+    assert all("event_id" not in event for event in visible)
+    assert visible[1]["result"] == observations[1]["result"]
+    assert "ask:e1" not in json.dumps(payload) and "ask:e2" not in json.dumps(payload)
+    assert turn.model_dump(mode="json") == before
+
+    trial = Trial(id="control", case_id="control", repetition=1, status="completed", turns=[turn])
+    assert list(event_catalog(trial)) == ["ask:e1", "ask:e2"]
+    result = judgment()
+    assert grounding_scores(turn, result, [])[0].status == "PASS"
+    result.claims[0].evidence_ids = ["ask:e1"]
+    assert grounding_scores(turn, result, [])[0].status == "ERROR"
 
 
 def test_summary_keeps_missing_judgments_and_unreviewed_candidates_out_of_success_rates():

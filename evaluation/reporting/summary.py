@@ -31,6 +31,44 @@ def distribution(values: list[float]) -> dict:
     }
 
 
+def trajectory_metrics(trials: list[Trial], grades: list[TrialGrade], *, enabled: bool) -> dict:
+    attempted = {trial.id for trial in trials if trial.status != "NOT_EXECUTED"}
+    statuses = Counter()
+    criteria = defaultdict(Counter)
+    unresolved = 0
+    assessed = 0
+    for grade in grades:
+        if grade.trial_id not in attempted:
+            continue
+        scores = [score for score in grade.scores if score.name.startswith("trajectory/")]
+        if not scores:
+            continue
+        assessed += 1
+        labels = {score.status for score in scores}
+        status = next(
+            (label for label in ("FAIL", "ERROR", "UNJUDGEABLE") if label in labels),
+            "PASS" if "PASS" in labels else "NOT_APPLICABLE",
+        )
+        statuses[status] += 1
+        unresolved += bool(labels & {"ERROR", "UNJUDGEABLE"})
+        for score in scores:
+            criteria[score.name][score.status] += 1
+    missing = max(0, len(attempted) - assessed) if enabled else 0
+    return {
+        "enabled": enabled,
+        "diagnostic_only": True,
+        "expected": len(attempted) if enabled else 0,
+        "assessed": assessed,
+        "missing": missing,
+        "unresolved": unresolved,
+        "statuses": dict(statuses),
+        "criteria": {name: dict(counts) for name, counts in criteria.items()},
+        "resolved_coverage": fraction(assessed - unresolved, len(attempted))
+        if enabled
+        else fraction(0, 0),
+    }
+
+
 def summarize(
     manifest: dict,
     trials: list[Trial],
@@ -123,6 +161,24 @@ def summarize(
         )
     ]
     candidates = [c for g in grades for t in g.turns for c in t.candidate_grades]
+    unresolved_checks = sum(
+        score.blocks_success and score.status in {"ERROR", "UNJUDGEABLE"}
+        for grade in grades
+        for score in [*grade.scores, *(score for turn in grade.turns for score in turn.scores)]
+    )
+    expected_candidates = (
+        sum(len(turn.candidates) for trial in trials for turn in trial.turns)
+        if judge_manifest.get("grade_candidates", False)
+        else 0
+    )
+    unresolved_candidates = sum(
+        candidate["status"] in {"ERROR", "UNJUDGEABLE"}
+        or any(
+            score.get("blocks_success", True) and score["status"] in {"ERROR", "UNJUDGEABLE"}
+            for score in candidate.get("scores", [])
+        )
+        for candidate in candidates
+    )
     reviewed = [c for c in candidates if c.get("review_decision") in {"approve", "revise", "stop"}]
     invalid = [c for c in reviewed if c["status"] == "FAIL"]
     valid = [c for c in reviewed if c["status"] == "PASS"]
@@ -158,6 +214,13 @@ def summarize(
         "statuses": dict(statuses),
         "not_executed": sum(t.status == "NOT_EXECUTED" for t in trials),
         "unresolved_or_missing": expected - passed - statuses["FAIL"],
+        "unresolved_required_checks": unresolved_checks,
+        "candidate_grading": {
+            "expected": expected_candidates,
+            "graded": len(candidates),
+            "missing": max(0, expected_candidates - len(candidates)),
+            "unresolved": unresolved_candidates,
+        },
         "task_success_over_planned": fraction(passed, expected),
         "factual_claim_precision": fraction(support, judgeable),
         "numeric_fact_accuracy": fraction(sum(s.status == "PASS" for s in numeric), len(numeric)),
@@ -191,6 +254,11 @@ def summarize(
         ),
         "accounted_agent_usd": manifest["accounted_usd"],
         "accounted_judge_usd": judge_manifest.get("accounted_judge_usd", 0),
+        "accounted_total_usd": manifest["accounted_usd"]
+        + judge_manifest.get("accounted_judge_usd", 0),
+        "trajectory": trajectory_metrics(
+            trials, grades, enabled=judge_manifest.get("grade_trajectory", False)
+        ),
         "agent_cost_per_success": manifest["accounted_usd"] / passed if passed else None,
         "provider_usage_by_role": dict(usage),
     }
@@ -317,14 +385,18 @@ def write_summary(run: Path, grade: Path) -> dict:
         "",
         f"Planned: {result['planned']}; attempted: {result['attempted']}; completed: {result['completed']}; graded: {result['graded']}.",
         f"Statuses: {result['statuses']}. Unresolved or missing: {result['unresolved_or_missing']}.",
+        f"Unresolved required checks: {result['unresolved_required_checks']}. Candidate grading: {result['candidate_grading']}.",
         "",
         f"Agent accounted cost: ${result['accounted_agent_usd']:.4f}; judge: ${result['accounted_judge_usd']:.4f}.",
+        f"Combined accounted cost: ${result['accounted_total_usd']:.4f}.",
         "Unknown provider usage retains its reservation. Missing judgments do not count as passes.",
         f"Factual claim precision: {result['factual_claim_precision']}; judgment coverage: {result['factual_claim_judgment_coverage']}.",
         f"Numerical accuracy: {result['numeric_fact_accuracy']}; grading coverage: {result['numeric_fact_grading_coverage']}.",
         f"Affected answers: {result['affected_answer_rate']}; material defects: {result['materially_affected_answer_rate']}.",
         f"Answerability and abstention: {result['answerability']}.",
         f"Reviewer rates exclude {result['reviewer_candidates_without_decision']} candidates without a decision and {result['reviewer_candidates_with_unresolved_grade']} reviewed candidates without a resolved independent grade.",
+        f"Trajectory diagnostics: {result['trajectory']['statuses']}; resolved coverage: {result['trajectory']['resolved_coverage']}; missing: {result['trajectory']['missing']}.",
+        "Trajectory findings are diagnostic and do not change the answer task-success metric.",
         "",
         "| Trial | Result | Blocking findings |",
         "|---|---|---|",

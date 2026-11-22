@@ -25,6 +25,9 @@ class TurnRecord(Record):
     observations: list[dict[str, Any]] = Field(default_factory=list)
     candidates: list[dict[str, Any]] = Field(default_factory=list)
     context: dict[str, Any] = Field(default_factory=dict)
+    timeline: list[dict[str, Any]] = Field(default_factory=list)
+    trace_id: str | None = None
+    span_id: str | None = None
     trace: list[dict[str, Any]] = Field(default_factory=list)
     usage: dict[str, Any] = Field(default_factory=dict)
     elapsed_seconds: float = 0
@@ -42,6 +45,7 @@ class Trial(Record):
     started_at: str = ""
     ended_at: str = ""
     trace_id: str | None = None
+    span_id: str | None = None
     status: str
     turns: list[TurnRecord] = Field(default_factory=list)
     elapsed_seconds: float = 0
@@ -106,6 +110,7 @@ class TrialGrade(Record):
     status: ScoreStatus
     turns: list[TurnGrade]
     scores: list[Score] = Field(default_factory=list)
+    trajectory: dict[str, Any] | None = None
 
 
 class RunManifest(Record):
@@ -144,3 +149,4 @@ class RunManifest(Record):
     planned_trials: int
     accounted_usd: float = 0
     publication: dict[str, Any] = Field(default_factory=dict)
+    pipeline: dict[str, Any] = Field(default_factory=dict)

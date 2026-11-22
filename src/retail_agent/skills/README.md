@@ -8,6 +8,7 @@ This library contains runtime guidance for the retail analyst and reviewer.
 | [revenue-driver-analysis](library/revenue-driver-analysis/SKILL.md) | Analyst | Prices, quantities, revenue per customer and supported explanations |
 | [customer-retention](library/customer-retention/SKILL.md) | Analyst | Acquisition, repeat purchases, inactivity eligibility and denominators |
 | [period-comparison](library/period-comparison/SKILL.md) | Analyst | Comparable periods, changes, zero bases and nonadditive counts |
+| [sales-status-analysis](library/sales-status-analysis/SKILL.md) | Analyst | Status-value shares, exclusions, and limits of refund/fulfillment interpretations |
 | [business-report-writing](library/business-report-writing/SKILL.md) | Analyst | Proportionate synthesis, useful presentation and proposed actions |
 | [analytical-review](library/analytical-review/SKILL.md) | Reviewer | Coverage, grounding, metrics, presentation and operation checks |
 

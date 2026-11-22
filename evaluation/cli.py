@@ -53,59 +53,80 @@ def sync(suite: str = "pilot", phoenix_url: str = "http://127.0.0.1:6006") -> No
 @app.command()
 def run(
     suite: str = "smoke",
-    repetitions: int = typer.Option(3, min=1, max=20),
+    repetitions: int = typer.Option(1, min=1, max=20),
     max_cost_usd: float = typer.Option(..., min=0.01),
     deadline_seconds: float = typer.Option(..., min=1),
     allow_unreviewed: bool = False,
-    phoenix: bool = False,
+    phoenix: bool = typer.Option(True, hidden=True),
     phoenix_url: str = "http://127.0.0.1:6006",
     model: str | None = None,
+    judge_model: str | None = None,
+    candidates: bool = True,
     artifact_root: Path = Path(".artifacts/evaluation"),
 ) -> None:
-    """Run real models on isolated frozen fixtures. Each prompt has a fresh budget."""
-    from evaluation.data import load_cases
-    from evaluation.runners.conversation import run_cases
-    from retail_agent.config import Settings
-    from retail_agent.observability import configure_tracing
+    """Run, grade, and publish an experiment in Phoenix under one shared limit."""
+    from pydantic import ValidationError
 
-    selected = load_cases(suite)
-    if any(not c.provenance.human_reviewed for c in selected) and not allow_unreviewed:
+    from evaluation.data import load_cases
+    from evaluation.graders.judge import GeminiJudge
+    from evaluation.reporting.phoenix_service import PhoenixUnavailable
+    from evaluation.runners.pipeline import run_pipeline
+    from retail_agent.config import Settings
+
+    if not phoenix:
         raise typer.BadParameter(
-            "Pilot references await human review; use --allow-unreviewed for diagnostic runs."
+            "run now includes Phoenix and grading. Use pytest for offline checks; "
+            "grade can reassess saved runs without Phoenix."
         )
-    settings = Settings.load()
-    if model:
-        settings = settings.model_copy(update={"gemini_model": model})
-    if not settings.gemini_api_key.get_secret_value():
-        raise typer.BadParameter("GEMINI_API_KEY is required for a live agent run.")
-    config = EvaluationSettings(artifact_root=artifact_root, phoenix_url=phoenix_url)
-    tracing = (
-        configure_tracing(
-            config.phoenix_url + "/v1/traces", project="retail-evaluation", mode="synthetic"
-        )
-        if phoenix
-        else None
-    )
     try:
-        directory = asyncio.run(
-            run_cases(
+        selected = load_cases(suite)
+        if any(not c.provenance.human_reviewed for c in selected) and not allow_unreviewed:
+            raise typer.BadParameter(
+                "Pilot references await human review; use --allow-unreviewed for diagnostic runs."
+            )
+        settings = Settings.load()
+        if model:
+            settings = settings.model_copy(update={"gemini_model": model})
+        if not settings.gemini_api_key.get_secret_value():
+            raise typer.BadParameter("GEMINI_API_KEY is required for a live agent run.")
+        config = EvaluationSettings(
+            artifact_root=artifact_root,
+            phoenix_url=phoenix_url,
+            judge_model=judge_model or settings.gemini_model,
+        )
+        judge = GeminiJudge(
+            settings.gemini_api_key.get_secret_value(),
+            config,
+            max_cost_usd=max_cost_usd,
+            deadline_seconds=deadline_seconds,
+        )
+        result = asyncio.run(
+            run_pipeline(
                 selected,
                 settings,
-                artifact_root=artifact_root,
+                config,
                 suite=suite,
                 repetitions=repetitions,
                 max_cost_usd=max_cost_usd,
                 deadline_seconds=deadline_seconds,
+                judge=judge,
+                grade_candidates=candidates,
+                progress=typer.echo,
             )
         )
-    finally:
-        if tracing and not tracing.close():
-            typer.echo("Phoenix trace flush was incomplete; local artifacts remain available.")
-    typer.echo(str(directory))
-    if phoenix:
-        from evaluation.reporting.phoenix import publish
-
-        echo(publish(directory, config))
+    except ValidationError:
+        typer.echo(
+            "Invalid evaluation configuration; check the settings and Phoenix URL.", err=True
+        )
+        raise typer.Exit(2) from None
+    except OSError:
+        typer.echo("Evaluation could not access a required file or local service.", err=True)
+        raise typer.Exit(2) from None
+    except (PhoenixUnavailable, ValueError) as exc:
+        typer.echo(f"Evaluation could not complete: {exc}", err=True)
+        raise typer.Exit(2) from None
+    if result.exit_code:
+        raise typer.Exit(result.exit_code)
 
 
 def _judge(model: str | None, max_cost_usd: float, deadline_seconds: float):
@@ -131,6 +152,7 @@ def grade(
     deadline_seconds: float = typer.Option(..., min=1),
     code_only: bool = False,
     candidates: bool = True,
+    trajectory: bool = True,
     judge_model: str | None = None,
     phoenix: bool = False,
     phoenix_url: str = "http://127.0.0.1:6006",
@@ -141,7 +163,13 @@ def grade(
     async def execute():
         judge = None if code_only else _judge(judge_model, max_cost_usd, deadline_seconds)
         try:
-            return await grade_run(run_directory, judge, grade_candidates=candidates)
+            return await grade_run(
+                run_directory,
+                judge,
+                grade_candidates=candidates,
+                grade_trajectory=trajectory,
+                progress=typer.echo,
+            )
         finally:
             if judge:
                 await judge.close()

@@ -6,14 +6,16 @@ import json
 import math
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
+from typing import TypeVar
 
 from google import genai
 from google.genai import errors, types
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from evaluation.models import TurnReference
-from evaluation.results import Judgment, TurnRecord
+from evaluation.results import Judgment, Trial, TurnRecord
 from evaluation.settings import EvaluationSettings
 from retail_agent.observability import sanitize_capture
 from retail_agent.provider import _usage_counts
@@ -21,6 +23,7 @@ from retail_agent.provider import _usage_counts
 PROMPT_PATH = Path(__file__).parents[1] / "prompts/judge.md"
 MAX_VISIBLE_RESPONSE_BYTES = 64_000
 EXCERPT_POLICY = "exact-source-ids-v2"
+Structured = TypeVar("Structured", bound=BaseModel)
 
 
 class JudgeUnavailable(Exception):
@@ -52,7 +55,11 @@ def observed_context(turn: TurnRecord, prior_observations: list[dict]) -> dict:
     # retained implicitly: only the captured context and reread payloads count.
     return {
         "initial_context": turn.context,
-        "visible_tool_observations": turn.observations,
+        # Timeline coordinates are for trajectory attribution, not business evidence IDs.
+        "visible_tool_observations": [
+            {key: value for key, value in event.items() if key != "event_id"}
+            for event in turn.observations
+        ],
     }
 
 
@@ -212,11 +219,62 @@ class GeminiJudge:
     async def evaluate(
         self, turn: TurnRecord, reference: TurnReference, prior_observations: list[dict]
     ) -> Judgment:
-        payload = json.dumps(judge_input(turn, reference, prior_observations), ensure_ascii=False)
-        prompt = PROMPT_PATH.read_text()
-        schema = response_schema(turn, reference)
+        def parse(decoded: dict) -> Judgment:
+            result = resolve_source_ids(Judgment.model_validate(decoded), turn)
+            validate_judgment(
+                result, turn, reference, allowed_excerpts=set(source_excerpts(turn.markdown or ""))
+            )
+            return result
+
+        return await self._request(
+            payload=judge_input(turn, reference, prior_observations),
+            prompt=PROMPT_PATH.read_text(),
+            schema=response_schema(turn, reference),
+            step_id=turn.step_id,
+            parse=parse,
+        )
+
+    async def evaluate_trajectory(self, trial: Trial):
+        from evaluation.graders import trajectory
+
+        problem = trajectory.capture_problem(trial)
+        if problem:
+            raise JudgeUnavailable(problem)
+
+        def parse(decoded: dict) -> trajectory.TrajectoryJudgment:
+            result = trajectory.TrajectoryJudgment.model_validate(decoded)
+            try:
+                trajectory.validate_judgment(result, trial)
+            except ValueError as exc:
+                raise JudgmentValidationError(str(exc)) from None
+            return result
+
+        return await self._request(
+            payload=trajectory.trajectory_input(trial),
+            prompt=trajectory.PROMPT_PATH.read_text(),
+            schema=trajectory.response_schema(trial),
+            step_id=trial.id,
+            parse=parse,
+            kind="trajectory",
+            excerpt_policy=trajectory.POLICY,
+        )
+
+    async def _request(
+        self,
+        *,
+        payload: dict,
+        prompt: str,
+        schema: dict,
+        step_id: str,
+        parse: Callable[[dict], Structured],
+        kind: str = "answer",
+        excerpt_policy: str = EXCERPT_POLICY,
+    ) -> Structured:
+        payload_text = json.dumps(
+            sanitize_capture(payload, self._redaction_secrets), ensure_ascii=False
+        )
         schema_json = json.dumps(schema, ensure_ascii=False)
-        input_bound = len((payload + prompt + schema_json).encode()) + 1024
+        input_bound = len((payload_text + prompt + schema_json).encode()) + 1024
         if input_bound > 250_000:
             raise JudgeUnavailable(
                 "Judge context and response schema exceed 250 KB; no evidence was silently truncated"
@@ -231,7 +289,8 @@ class GeminiJudge:
             raise JudgeUnavailable("Judge budget exhausted")
         self.accounted_usd += reservation
         call = {
-            "step_id": turn.step_id,
+            "step_id": step_id,
+            "kind": kind,
             "status": "unknown",
             "accounted_usd": reservation,
             "input_tokens": None,
@@ -239,7 +298,7 @@ class GeminiJudge:
             "thinking_tokens": None,
             "response_schema_sha256": hashlib.sha256(schema_json.encode()).hexdigest(),
             "admitted_input_bytes": input_bound,
-            "source_excerpt_policy": EXCERPT_POLICY,
+            "source_excerpt_policy": excerpt_policy,
         }
         self.calls.append(call)
         started = time.monotonic()
@@ -247,7 +306,7 @@ class GeminiJudge:
             async with asyncio.timeout(remaining):
                 response = await self.client.aio.models.generate_content(
                     model=self.settings.judge_model,
-                    contents=payload,
+                    contents=payload_text,
                     config=types.GenerateContentConfig(
                         system_instruction=prompt,
                         temperature=0,
@@ -283,10 +342,7 @@ class GeminiJudge:
             visible = "".join(parts)
             call.update(visible_response_record(visible, self._redaction_secrets))
             decoded = json.loads(visible)
-            result = resolve_source_ids(Judgment.model_validate(decoded), turn)
-            validate_judgment(
-                result, turn, reference, allowed_excerpts=set(source_excerpts(turn.markdown or ""))
-            )
+            result = parse(decoded)
             call["resolved_judgment"] = sanitize_capture(
                 result.model_dump(mode="json"), self._redaction_secrets
             )

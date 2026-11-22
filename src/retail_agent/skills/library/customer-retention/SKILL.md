@@ -3,7 +3,7 @@ name: customer-retention
 description: Analyze acquisition cohorts, repeat purchasing, retention, churn or inactivity. Use when customer history, time eligibility or cohort denominators determine the answer.
 metadata:
   audience: analyst
-  version: "1"
+  version: "2"
 ---
 
 # Customer retention
@@ -16,6 +16,8 @@ Apply authorized brand scope to the full history used for acquisition, repeat-pu
 
 Acquisition normally refers to the first qualifying purchase in scoped history, not the first purchase visible after filtering to the requested reporting period. Define whether repeat means multiple orders, separate purchase dates or purchases in a later period; multiple items in one order are not automatically repeat purchases.
 
+Preserve an explicit definition such as multiple orders within the quarter on follow-ups. An empty within-period repeat cohort does not justify adding a historical/lifetime repeat cohort or looking for subsequent activity. Report the requested zero count/revenue and undefined average; a second definition answers a different question. Do not let an unsolicited observation from an earlier answer override the user's cohort.
+
 ## Inactivity and eligibility
 
 For a rolling inactivity threshold, specify the observation date, qualifying purchase rule, eligible population and denominator. Distinguish inactive customers at month end from customers who newly crossed the threshold during that month. Purchases after the observation boundary cannot affect historical status.
@@ -27,5 +29,7 @@ Current order/item status fields cannot reconstruct historical status changes. E
 ## Compare and report
 
 Use distinct customer IDs at the requested grain. Customer counts across overlapping cohorts or groups are not additive; obtain a distinct union count for an overall total. A zero eligible denominator produces an undefined rate, not zero percent. Show a useful numerator and denominator when the rate's interpretation depends on them.
+
+Use the source's qualifying-sales terminology: excluding Cancelled/Returned still allows Processing/Shipped and does not establish completed delivery. Keep full numerical precision for differences and rates, rounding only for presentation. A simple cohort count/share or comparison needs the requested figures and a brief limitation, without a repeated definitions appendix.
 
 Check a claimed churn or inactivity spike before explaining it. Compare compatible populations and complete time windows, distinguish percentage-point change from percentage change, and label causal explanations as unverified unless supported by appropriate evidence.

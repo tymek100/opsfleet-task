@@ -3,13 +3,13 @@
 import asyncio
 import math
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from evaluation.models import Case
-from evaluation.results import Trial, TurnRecord
+from evaluation.results import RunManifest, Trial, TurnRecord
 from evaluation.runners.artifacts import digest, prepare_run, write_json
 from evaluation.runners.faults import FaultGateway, FaultModel, FaultReports, Schedule
 from retail_agent.config import Settings
@@ -36,6 +36,9 @@ def _capture_turn(
     *,
     capture_errors=0,
 ) -> TurnRecord:
+    events = [
+        {**event, "event_id": f"{step.id}:e{index + 1}"} for index, event in enumerate(events)
+    ]
     candidates = []
     visible = []
     for event in events:
@@ -46,6 +49,11 @@ def _capture_turn(
         elif event["event"] == "review_result" and candidates:
             candidates[-1]["review"] = event.get("review", {})
     context = next((e.get("context", {}) for e in events if e["event"] == "initial_context"), {})
+    available_tools = next(
+        (e.get("available_tools") for e in events if e["event"] == "available_tools"), None
+    )
+    if available_tools is not None:
+        context = {**context, "available_tools": available_tools}
     capture_errors = max(
         capture_errors,
         max(
@@ -64,6 +72,9 @@ def _capture_turn(
         observations=[e for e in events if e["event"] == "tool_observation"],
         candidates=candidates,
         context=context,
+        timeline=events,
+        trace_id=next((e.get("trace_id") for e in events if e.get("trace_id")), None),
+        span_id=next((e.get("span_id") for e in events if e.get("span_id")), None),
         trace=result.trace,
         usage=result.usage,
         elapsed_seconds=result.elapsed_seconds,
@@ -268,6 +279,10 @@ async def run_cases(
     deadline_seconds: float,
     app_factory: Callable = Analyst,
     progress: Callable[[str], None] = print,
+    on_start: Callable[[Path, RunManifest], Awaitable[None]] | None = None,
+    on_trial: Callable[[Path, Trial, RunManifest], Awaitable[None]] | None = None,
+    external_cost: Callable[[], float] | None = None,
+    deadline: float | None = None,
 ) -> Path:
     if (
         not cases
@@ -289,14 +304,16 @@ async def run_cases(
         max_cost_usd=max_cost_usd,
         deadline_seconds=deadline_seconds,
     )
-    deadline = time.monotonic() + deadline_seconds
+    deadline = deadline if deadline is not None else time.monotonic() + deadline_seconds
+    if on_start is not None:
+        await on_start(directory, manifest)
     progress(
         f"Run {manifest.id}: {len(cases)} cases x {repetitions}; model={manifest.model}; "
         f"synthetic capture; cap=${max_cost_usd:g}; deadline={deadline_seconds:g}s"
     )
     for repetition in range(1, repetitions + 1):
         for case in cases:
-            left = max_cost_usd - manifest.accounted_usd
+            left = max_cost_usd - manifest.accounted_usd - (external_cost() if external_cost else 0)
             if left <= 0 or time.monotonic() >= deadline:
                 trial = Trial(
                     id=f"{case.id}-r{repetition}",
@@ -308,6 +325,7 @@ async def run_cases(
             else:
                 from evaluation.data import fixture_path
 
+                progress(f"{case.id}-r{repetition}: running {len(case.steps)} steps")
                 fixture = directory / "fixtures" / fixture_path(case).name
                 with span(
                     "retail.evaluation_trial",
@@ -317,7 +335,7 @@ async def run_cases(
                         "retail.repetition": repetition,
                         "retail.run_id": manifest.id,
                     },
-                ):
+                ) as current:
                     trial = await run_trial(
                         case,
                         repetition,
@@ -327,6 +345,10 @@ async def run_cases(
                         deadline=deadline,
                         app_factory=app_factory,
                     )
+                    context = current.get_span_context()
+                    if context.is_valid:
+                        trial.trace_id = format(context.trace_id, "032x")
+                        trial.span_id = format(context.span_id, "016x")
             trial_path = directory / "trials" / f"{trial.id}.json"
             write_json(trial_path, trial)
             manifest.trials_sha256[trial_path.name] = digest(trial_path)
@@ -336,6 +358,8 @@ async def run_cases(
             progress(
                 f"{trial.id}: {trial.status}; {trial.elapsed_seconds:.1f}s; ${trial.accounted_usd:.4f}"
             )
+            if on_trial is not None:
+                await on_trial(directory, trial, manifest)
     manifest.status = (
         "completed" if manifest.completed_trials == manifest.planned_trials else "incomplete"
     )

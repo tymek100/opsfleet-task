@@ -65,9 +65,12 @@ class CompletionTools:
             if self.turn.pending_save
             else None
         )
+        now = self.turn.app.now()
         payload = {
             "question": self.turn.question,
             "scope": self.turn.app.identity.scope,
+            "now_utc": now.isoformat(),
+            "today_utc": now.date().isoformat(),
             "conversation": self.turn.app.context_history(),
             "candidate": {"markdown": markdown, "outcome": outcome},
             "evidence": evidence,

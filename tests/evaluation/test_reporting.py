@@ -4,7 +4,7 @@ import pytest
 
 from evaluation.reporting.compare import compare
 from evaluation.reporting.summary import summarize
-from evaluation.results import Trial, TrialGrade
+from evaluation.results import Score, Trial, TrialGrade, TurnGrade
 from evaluation.runners.artifacts import write_json
 
 
@@ -51,3 +51,48 @@ def test_compare_rejects_changed_judge_and_preserves_uncertainty(tmp_path):
     write_json(candidate / "manifest.json", {**metadata, "judge": {"model": "different"}})
     with pytest.raises(ValueError, match="judge"):
         compare(baseline, candidate)
+    write_json(candidate / "manifest.json", {**metadata, "trajectory_evaluator": {"policy": "new"}})
+    with pytest.raises(ValueError, match="trajectory_evaluator"):
+        compare(baseline, candidate)
+
+
+def test_known_failure_does_not_hide_unresolved_checks_or_draft_grades():
+    trial = Trial(id="task-r1", case_id="task", repetition=1, status="completed")
+    grade = TrialGrade(
+        trial_id=trial.id,
+        case_id=trial.case_id,
+        repetition=1,
+        status="FAIL",
+        turns=[
+            TurnGrade(
+                step_id="ask",
+                status="FAIL",
+                scores=[
+                    Score(name="format", status="FAIL", finding="Known failure"),
+                    Score(name="independent_judgment", status="ERROR", finding="Missing judge"),
+                ],
+                candidate_grades=[
+                    {
+                        "status": "FAIL",
+                        "scores": [{"name": "independent_judgment", "status": "ERROR"}],
+                    }
+                ],
+            )
+        ],
+    )
+    result = summarize(
+        {
+            "id": "run",
+            "planned_trials": 1,
+            "repetitions": 1,
+            "case_ids": ["task"],
+            "completed_trials": 1,
+            "accounted_usd": 0,
+        },
+        [trial],
+        [grade],
+        {"id": "grade", "grade_candidates": True},
+    )
+    assert result["statuses"] == {"FAIL": 1}
+    assert result["unresolved_required_checks"] == 1
+    assert result["candidate_grading"]["unresolved"] == 1

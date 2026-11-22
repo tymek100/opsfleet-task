@@ -20,6 +20,7 @@ The application provides schema discovery, a Golden example catalog, warehouse q
 Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Model-facing functions live in `src/retail_agent/tools/`, their database/storage implementations in `services/`, and skill Markdown in `skills/library/`. See [how skills and Golden examples work](docs/architecture.md#knowledge-and-evaluation-assets) and [skill authoring](src/retail_agent/skills/README.md).
 
 - [Architecture](docs/architecture.md): the agent loop, tools, data access and implementation limits.
+- [Testing and evaluation](docs/evaluation.md): how tests, datasets, grading, and Phoenix work, with runnable commands.
 - [Evaluation design](docs/plans/EVALUATION_REBUILD_PLAN.md): independent references, grading contracts, and remaining validation work.
 - [Implementation results](docs/plans/EVALUATION_IMPLEMENTATION_RESULTS.md): verified checks, live trials, grader repairs and limitations.
 - [Golden examples](knowledge/golden/README.md): provenance, offline validation and publication rules.
@@ -40,36 +41,42 @@ The local CLI uses simulated identities, in-memory conversation context and SQLi
 `knowledge/golden/` contains optional runtime examples. `evaluation/datasets/golden/` contains
 independent evaluation tasks and references; the analyst receives only the user steps and
 its authorized environment. The pilot has 43 synthetic cases across nine fixtures, with
-independent Decimal/set calculations and 40 paired judge controls. References are code-verified;
+independent Decimal/set calculations and 40 judge controls (20 valid/flawed pairs). References are code-verified;
 human review and judge calibration are still pending. There is no sealed holdout yet.
 
-Install the evaluation dependencies and start local Phoenix:
+Run the complete evaluation with `GEMINI_API_KEY` configured and Docker running:
 
 ```bash
-uv sync --locked --group evaluation
-uv run --locked --group evaluation retail-eval validate
-docker compose -f infra/phoenix/compose.yaml up -d
-uv run --locked --group evaluation retail-eval sync --suite pilot
+uv run --locked --group evaluation retail-eval run \
+  --suite smoke --repetitions 1 \
+  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 ```
 
-Open [Phoenix](http://127.0.0.1:6006). It stores traces, datasets, experiments and scores locally.
-Agent and judge inference still uses Gemini. The pinned server and privacy controls are
-explained in [the Phoenix setup](infra/phoenix/README.md).
+The runner validates the cases, connects to Phoenix or starts its pinned local container, and
+prints experiment and trace links before the first model call. Each trial is executed, published,
+and independently graded as the suite progresses. Enable trace streaming for completed spans;
+refresh the experiment view for new outputs and scores. There are no separate
+`sync`, `grade`, or `publish` steps for a normal run. The shared cost ceiling and deadline cover
+agent execution and independent judges. No BigQuery credentials are required: evaluation uses
+isolated synthetic fixtures. Agent and judge inference still calls Gemini.
 
-A bounded live experiment with three repetitions per case:
+For a focused reliability experiment with three repetitions per case:
 
 ```bash
 uv run --locked --group evaluation retail-eval run \
   --suite totals-q1,unsupported-cause --repetitions 3 \
-  --max-cost-usd 3 --deadline-seconds 900 --allow-unreviewed --phoenix
+  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 ```
 
 Each repetition gets an isolated report store and frozen clock. Follow-ups retain conversation
 context, while each prompt receives a fresh runtime budget. The experiment also has a total
-cost ceiling and deadline. Missing usage retains its reservation; remaining trials are marked
-`NOT_EXECUTED` when a limit prevents execution. No failed trial is automatically rerun.
+cost ceiling and deadline, including grading. One repetition is the default. Missing usage retains
+its reservation; remaining trials are marked `NOT_EXECUTED` when a limit prevents execution.
+No failed trial is automatically rerun.
 
-Use the run directory printed by that command:
+Answers, evidence, and versioned grades are saved under `.artifacts/evaluation/run-.../` as well
+as in Phoenix. The command prints the final `summary.md` path. To regrade an existing execution
+with a new judge configuration, use the printed run directory:
 
 ```bash
 EVAL_RUN=.artifacts/evaluation/run-REPLACE-WITH-PRINTED-ID
@@ -77,7 +84,7 @@ uv run --locked --group evaluation retail-eval grade --run "$EVAL_RUN" \
   --max-cost-usd 3 --deadline-seconds 900 --phoenix
 ```
 
-Grading creates a new `grades/grade-.../` directory with `summary.md`, `summary.json`, individual
+Regrading creates a new `grades/grade-.../` directory with `summary.md`, `summary.json`, individual
 findings and judge usage. It never reruns the agent. The default also grades first drafts and
 revisions against the evidence available at that moment. `--code-only` skips LLM judgment and
 marks unassessed semantic requirements as unresolved, rather than passing them.
@@ -88,6 +95,7 @@ marks unassessed semantic requirements as unresolved, rather than passing them.
 | Grounding | Judge atomic claims against observed evidence; separate unsupported, contradicted and unjudgeable claims |
 | Task completion | Check every published turn, permitted outcome and frozen acceptance criteria |
 | Report operations | Verify exact saved content, ownership, confirmation receipts and final state |
+| Trajectory quality | Judge tool selection, argument use, evidence use, recovery, and progress; diagnostic scores are separate from task success |
 | Reliability | Preserve all repetitions, failures, incomplete groups, latency and accounted cost |
 
 Other commands:
@@ -105,7 +113,9 @@ uv run --locked --group evaluation retail-eval compare \
 Comparisons require matching references, grader versions and repetition coverage. Synthetic
 control agreement is diagnostic; it does not establish human-calibrated accuracy or a release
 gate. Phoenix publication failures preserve local artifacts and can be retried with `publish`.
-Normal chat tracing is opt-in with `--phoenix` and captures metadata only.
+Normal chat tracing is opt-in with `--phoenix` and captures metadata only. Evaluation includes
+sanitized synthetic content. See [Testing and evaluation](docs/evaluation.md) for the complete
+workflow and [Phoenix setup](infra/phoenix/README.md) for service management.
 
 The CLI workflow expects a source checkout: runtime knowledge assets, Git metadata and `uv.lock`
 are resolved from the repository. The wheel includes evaluation cases/fixtures and supports

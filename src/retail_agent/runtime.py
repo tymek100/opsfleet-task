@@ -159,6 +159,7 @@ class Analyst:
                     ),
                     instruction=(Path(__file__).parent / "prompts/analyst.md").read_text(),
                     tools=build_tools(turn),
+                    before_model_callback=turn.observe_request,
                     after_model_callback=turn.observe_model,
                     generate_content_config=types.GenerateContentConfig(
                         temperature=0.2,
@@ -173,9 +174,11 @@ class Analyst:
                     app_name="retail", user_id=self.identity.user_id
                 )
                 runner = Runner(app_name="retail", agent=agent, session_service=sessions)
+                now = self.now()
                 context = {
                     "trusted_scope": self.identity.scope,
-                    "today_utc": self.now().date().isoformat(),
+                    "now_utc": now.isoformat(),
+                    "today_utc": now.date().isoformat(),
                     "prior_approved_conversation": self.context_history(),
                     "available_results": self.result_manifest(),
                     "available_skills": self.skills.list(role="analyst"),

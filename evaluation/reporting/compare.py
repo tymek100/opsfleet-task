@@ -20,6 +20,10 @@ def compare(baseline: Path, candidate: Path) -> dict:
     ):
         if left_meta[key] != right_meta[key]:
             raise ValueError(f"Incompatible comparison: {key} changed")
+    if left_meta.get("grade_trajectory", False) != right_meta.get("grade_trajectory", False):
+        raise ValueError("Incompatible comparison: grade_trajectory changed")
+    if left_meta.get("trajectory_evaluator") != right_meta.get("trajectory_evaluator"):
+        raise ValueError("Incompatible comparison: trajectory_evaluator changed")
 
     def scores(directory):
         return {

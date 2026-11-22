@@ -78,3 +78,55 @@ The observed live runs predate the added harness-source hashes and shared trial 
 Use [the README commands](../../README.md#independent-evaluation) for new runs and grading. Existing experiments can be inspected in [local Phoenix](http://127.0.0.1:6006). Versioned artifacts preserve earlier errors and exact judge/model settings.
 
 Remaining work before release-quality conclusions: independent human reference review, adjudicated judge calibration, a sealed held-out family split, controlled BigQuery execution, and predeclared product-specific quality/latency margins. The source-checkout workflow is supported; standalone wheel execution still needs repository knowledge assets and lockfile metadata.
+
+## End-to-end Phoenix workflow, 2026-11-22
+
+`retail-eval run` now validates references, checks or starts local Phoenix, creates the
+experiment and trace project before inference, executes each case, and publishes its captured
+output and independent grades incrementally. Agent execution and answer, draft, and trajectory
+judgments share one experiment cost ceiling and absolute deadline. Per-prompt allowances remain
+independent within that ceiling. The evaluation guide documents the single-command entry point.
+
+The new trajectory evaluator assesses tool selection, arguments, evidence use, recovery, and
+progress from ordered observations. It uses event references, accepts different valid tool
+sequences, and receives neither expected answers nor hidden reviewer evidence. Its ratings are
+diagnostic and do not alter answer-level task success.
+
+Verification passed **289 offline tests**, Ruff checks, formatting, and Pyright. Both opt-in
+integration tests passed against the real local Phoenix service using scripted providers.
+They verify early experiment links, incremental outputs and scores, and annotations attached to
+the appropriate trial and prompt spans. Regression checks cover shared limits, startup failures,
+incomplete judgments, immutable captures, and publication failures that must remain visible even
+when later uploads succeed.
+
+The real-model smoke execution `run-20261122T172426Z-4773837d` completed four cases and six user
+turns using `gemini-3.8-flash`. Agent execution cost 0.493540 USD; initial independent grading cost
+0.605928 USD, for 1.099468 USD combined at the configured rates. All four trials and their scores
+were published to Phoenix. This execution used the ordinary one-command workflow with a 5 USD,
+900-second ceiling.
+
+Initial grading returned one PASS, one FAIL, and two ERROR results. A capture integration bug
+exposed trajectory event IDs to the answer judge, which then cited them as business evidence.
+The answer-judge input now excludes that metadata; frozen captures and strict source validation
+remain intact. Original results are preserved under `grade-20261122T172426Z-bb453ea9`.
+
+The category conversation also exposed a substantive issue: its first answer attributed growth
+to “customer acquisition/activity” from aggregate quarterly customer counts. Those counts do
+not establish acquisition or a causal mechanism. Correct numerical values did not make that
+explanation supported, and the independent answer evaluator rejected it despite runtime approval.
+
+The same six saved answers were regraded under `grade-20261122T173017Z-3b355e7f`, without rerunning
+the agent. This grading cost 0.587964 USD and was published as a separate version. Answer-level
+results were **three PASS and one FAIL**, with **57/57 required numerical facts correct** and all
+six candidate judgments resolved. The unsupported acquisition explanation remained a failure.
+
+Trajectory results were three PASS and one ERROR: for the category conversation, the judge
+claimed complete coverage while omitting observed decision events from its assessment. Validation
+rejected that claim instead of recording a pass. This remains an unresolved diagnostic judgment;
+there was no selective retry to obtain a passing score. It illustrates why trajectory coverage
+checks and human calibration are necessary. The original run and both grade versions remain
+available for inspection.
+
+Phoenix 22.0.1 streams completed spans when trace streaming is enabled. Its experiment table
+does not auto-refresh results logged by an external SDK process; refresh that view to see newly
+published outputs and scores. Neither view promises token-by-token output.

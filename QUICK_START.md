@@ -110,9 +110,22 @@ uv run --locked ruff format --check .
 uv run --locked --group evaluation pyright
 ```
 
-For Phoenix setup, bounded live runs, independent grading and comparisons, follow
-[the evaluation commands](README.md#independent-evaluation). Runtime Golden Knowledge
-and evaluation references are separate. Grading a saved run never executes the agent again.
+For a real-model evaluation, set `GEMINI_API_KEY`, start Docker, and run:
+
+```bash
+uv run --locked --group evaluation retail-eval run \
+  --suite smoke --repetitions 1 \
+  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
+```
+
+This connects to or starts local Phoenix, prints experiment and trace links, executes the cases,
+and publishes answer and trajectory evaluations as trials finish. Enable trace streaming for
+completed spans; refresh the experiment view for new outputs and scores. One cost ceiling and deadline
+cover the agent and judges. No separate grading or publishing command is needed.
+
+For metrics, saved answers, advanced regrading, and comparisons, follow
+[the testing and evaluation guide](docs/evaluation.md). Runtime Golden Knowledge and evaluation
+references are separate. Regrading a saved run never executes the agent again.
 
 ## Configuration
 

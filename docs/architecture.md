@@ -22,7 +22,7 @@ flowchart TD
     A -->|Limit reached| X
 ```
 
-[`Analyst.ask`](../src/retail_agent/runtime.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context contains trusted brand scope, the UTC date, bounded approved conversation history, result handles, and skill summaries. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
+[`Analyst.ask`](../src/retail_agent/runtime.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context contains trusted brand scope, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
 
 The analyst executes an iterative tool loop and submits Markdown through `finish_answer`, referencing supporting evidence. It selects prose, lists, or tables according to the request.
 
@@ -49,6 +49,11 @@ The [registry](../src/retail_agent/tools/registry.py) exposes composable capabil
 | Reviewed completion | `finish_answer` |
 
 Adapters in `tools/` expose model-facing schemas and delegate to `services/`. New analytical questions can compose existing tools; additional capabilities require implementation changes.
+
+Report retrieval, deletion previews and cancellations register their actual observations as
+typed evidence. The analyst can submit those evidence handles to the reviewer without a
+warehouse query. Historical report contents do not become current business facts, and private
+deletion confirmation tokens are excluded from model-visible observations.
 
 ## Knowledge and evaluation assets
 
@@ -128,28 +133,30 @@ Repository-level `knowledge/` contains runtime examples and fixtures. `evaluatio
 
 ## Independent evaluation
 
-Status: the replacement harness, local Phoenix integration, synthetic references, and offline test suite are implemented. Pilot references still require human review; judge calibration and a sealed holdout have not been approved. Code-only results do not establish semantic correctness or production reliability.
+Status: the end-to-end evaluation runner, incremental local Phoenix publication, answer and trajectory graders, synthetic references, and offline test suite are implemented. Pilot references still require human review; judge calibration and a sealed holdout have not been approved. Code-only results do not establish semantic correctness or production reliability.
 
 The runtime reviewer and offline evaluator have different responsibilities. The reviewer can request corrections before publication. The offline evaluator assesses saved executions independently, using references the analyst never sees.
 
 ```mermaid
 flowchart LR
-    C[Frozen cases and fixtures] --> X[Isolated agent trials]
-    X --> A[Saved observations, candidates, outputs, state]
-    A --> G[Independent code checks and LLM judge]
+    C[Validate and freeze cases and fixtures] --> P[Create Phoenix experiment and print links]
+    P --> X[Run one isolated agent trial]
+    X --> A[Save and publish observations and outputs]
+    A --> G[Grade answers, operations, and trajectory]
     R[Reference facts and criteria] --> G
-    G --> S[Versioned scores and reports]
-    A --> P[Local Phoenix traces and experiments]
-    S --> P
+    G --> S[Save and publish versioned scores]
+    S -->|Next trial within shared limits| X
+    S --> F[Final summary]
 ```
 
-- **Execution:** each repetition gets isolated report storage and conversation state. Follow-up steps share only their case's context. Trial artifacts freeze fixture, dataset, runtime, prompt, dependency, and configuration hashes. Each prompt retains its own budget; the experiment also has aggregate cost and time limits.
+- **Execution:** each repetition gets isolated report storage and conversation state. Follow-up steps share only their case's context. Trial artifacts freeze fixture, dataset, runtime, prompt, dependency, and configuration hashes. Each prompt retains its own budget; one experiment cost ceiling and deadline cover execution and independent grading. `retail-eval run` validates the selected cases, checks or starts local Phoenix, creates the experiment, and prints links before model calls.
 - **Ground truth:** independent Python arithmetic derives expected facts from synthetic fixtures. Numeric checks bind values to entity, metric, period, and scope; SQL text and number occurrence alone are insufficient.
 - **Grounding:** a separate structured judge labels material claims against the observations actually available to the analyst. References support correctness checks but do not substitute for observed evidence. Unsupported explanations and causal claims can fail even when the reported numbers are correct.
+- **Trajectory:** a separate structured judge evaluates captured tool availability, calls, results, review feedback, and subsequent actions. Event-bound findings assess selection, argument use, evidence use, recovery, and progress without requiring one tool sequence. These scores are diagnostic and do not alter task success; human calibration remains pending.
 - **Operations and safety:** deterministic checks inspect report ownership, saved content, deletion receipts, final state, output format, and execution boundaries. Adversarial cases cover scope requests, injected instructions, and recovery.
 - **Regrading:** grading reads saved trials without running the agent again. New grader versions append results. Scores retain `PASS`, `FAIL`, `ERROR`, `UNJUDGEABLE`, and `NOT_APPLICABLE`; missing judgment is not a pass. Candidate grades can expose false approvals by the runtime reviewer.
-- **Reporting:** repeated-trial summaries include task success, claim support and coverage, cost, latency, and observed reliability. Phoenix mirrors canonical local artifacts as datasets and experiments; failed publication can be retried without repeating agent execution.
+- **Reporting:** repeated-trial summaries include task success, claim support and coverage, cost, latency, observed reliability, and separate trajectory results. Phoenix receives each completed trial and its scores incrementally. Startup must succeed before model calls; later publication failures preserve canonical local artifacts and can be retried without repeating execution or grading.
 
-Run offline verification with `uv run --locked pytest`; evaluation commands are exposed through `retail-eval`. The [rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) and [review](plans/EVALUATION_REVIEW.md) retain the rollout and acceptance criteria.
+See [Testing and evaluation](evaluation.md) for offline checks, live runs, grading, and Phoenix commands. The [rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) and [review](plans/EVALUATION_REVIEW.md) retain the rollout and acceptance criteria.
 
 Outstanding production work includes real identity and authorization infrastructure, managed storage, persistent chat recovery, operational retention policies, Golden Knowledge publishing, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.
