@@ -190,7 +190,7 @@ HELP = command_help()
 
 async def conversation(analyst: Analyst) -> None:
     console.print(
-        f"Retail assistant - DEMO identity: {analyst.identity.user_id}; scope: {analyst.identity.scope}"
+        f"Retail Insight Agent - DEMO identity: {analyst.identity.user_id}; scope: {analyst.identity.scope}"
     )
     console.print(
         f"Conversation: {analyst.conversation_id}. Type / for commands. Reports save only on request."

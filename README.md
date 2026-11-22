@@ -1,4 +1,4 @@
-# Retail Analysis Assistant
+# Retail Insight Agent
 
 A Python CLI for retail analysis with a single Google ADK/Gemini agent loop. The model selects tools, writes scoped SQL, interprets results and generates Markdown, including tables when appropriate. A tool-free evaluator reviews each candidate; revision feedback returns to the same analyst conversation.
 

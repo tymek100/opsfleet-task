@@ -1286,7 +1286,7 @@ wheels = [
 ]
 
 [[package]]
-name = "opsfleet-retail-agent"
+name = "retail-insight-agent"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [

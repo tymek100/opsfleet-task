@@ -1,5 +1,5 @@
 [project]
-name = "opsfleet-retail-agent"
+name = "retail-insight-agent"
 version = "0.2.0"
 description = "Autonomous retail analyst with Golden retrieval and evaluated completion"
 requires-python = ">=3.12"
