@@ -27,7 +27,7 @@ uv run --locked retail-agent chat --user alice --golden-bootstrap
 
 Demo identities: `alice` can analyze Calvin Klein; `bob` can analyze Levi's; `ceo` can analyze all brands. These are local simulations, not production authentication. Report libraries remain owner-private.
 
-`--golden-bootstrap` enables synthetic, unapproved demonstration methods explicitly. The model can list eligible example summaries and choose which examples to read, or use none. It must query fresh authorized data for current numerical answers. Without that flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
+`--golden-bootstrap` explicitly enables the synthetic, unapproved reference methods. The analyst selects examples from eligible summaries and may use none. Current numerical answers require fresh authorized queries. Without the flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
 
 Example conversations:
 
@@ -46,11 +46,11 @@ Write a short Q1 2026 report and suggest two measurable actions for Q2. Do not s
 Save that exact report as Q1 2026 Review.
 ```
 
-The model writes the complete answer, including optional tables. The evaluator can request corrections. A progress indicator reports model/tool/review activity. An exhausted deadline or unavailable reviewer produces a clear incomplete status instead of an unreviewed answer.
+The model generates the complete answer, including optional tables, and the evaluator can request revisions. The progress indicator reports model, tool and review activity. Deadline exhaustion or reviewer unavailability returns an incomplete status; unreviewed answers are not published.
 
 ## Use synthetic data
 
-This still calls the real Gemini model, but all analytical queries run against a frozen local fixture:
+This mode uses the real Gemini model with analytical queries against a frozen local fixture:
 
 ```bash
 uv run --locked retail-agent chat --user alice --backend fixture --golden-bootstrap
@@ -68,12 +68,12 @@ uv run --locked retail-agent ask \
 
 ## Reports and evidence
 
-In the interactive chat, type `/` to open the command menu. Keep typing to filter
-commands and highlight matching letters, then use **Up/Down** to select a command.
-**Enter** or **Tab** inserts the selected command; add any arguments and press
-**Enter** to run it. **Esc** dismisses the menu. Fully typed commands can be
-submitted directly. Suggestions cover command names; report IDs and confirmation
-tokens are entered explicitly. Piped input remains plain text.
+Type `/` in interactive chat to open the command menu. Typing filters commands
+and highlights matching characters; **Up/Down** changes the selection.
+**Enter** or **Tab** inserts the selected command. Add arguments, then press
+**Enter** to execute. **Esc** dismisses the menu. Fully typed commands submit
+directly. Completion covers command names; enter report IDs and confirmation
+tokens explicitly. Piped input remains plain text.
 
 | Command | Behavior |
 | --- | --- |
@@ -86,9 +86,9 @@ tokens are entered explicitly. Piped input remains plain text.
 | `/new` | Clear conversation context and cancel pending deletion |
 | `/help`, `/exit` | Help or exit |
 
-Deletion confirmation belongs to the same interactive chat that displayed the preview. A one-shot command cannot provide a later interactive confirmation. Cancelling, expiring, replaying or changing a preview does not authorize additional deletion. Successful deletion clears application conversation copies; audit records contain no report text.
+Deletion confirmation is bound to the interactive chat that displayed the preview; one-shot commands cannot accept a later confirmation. Cancelled, expired, replayed or stale previews authorize no additional deletion. Successful deletion clears the current conversation's in-memory context; audit records contain no report text.
 
-The new library uses `.retail-agent/reports-v2.sqlite3`. Earlier files are not overwritten. Explicit migration copies only the named owner's records:
+The report library uses `.retail-agent/reports-v2.sqlite3`. Earlier files are preserved. Explicit migration copies only the named owner's records:
 
 ```bash
 uv run --locked retail-agent import-legacy .retail-agent/reports.db --user alice
@@ -115,10 +115,10 @@ uv run --locked python scripts/evaluate_rewrite.py --live --golden-bootstrap \
   --output evals/rewrite/runs/my-fixture-run
 ```
 
-Use a new output directory each time. Add `--backend bigquery --case rankings` for the real warehouse ranking case. The runner writes JSON captures and Markdown observations. Its approval/number-presence checks do not establish semantic correctness; inspect the actual answers and evidence. See [how to inspect captured runs](evals/rewrite/runs/README.md#what-to-inspect).
+Use a new output directory for each run. Add `--backend bigquery --case rankings` for the live warehouse ranking case. The runner writes JSON captures and Markdown observations. Approval and numeric-token checks are smoke checks; semantic correctness requires reviewing answers against their evidence. See [how to inspect captured runs](evals/rewrite/runs/README.md#what-to-inspect).
 
 ## Configuration
 
-`.env.example` lists provider, budget and storage settings. Analyst calls, evaluator calls and provider retries share the same question budget and deadline. Counts and reserved costs are admission bounds, not an invoice. `MAX_MODEL_CALLS=12` leaves room for retrieval and corrections; smaller values can cause complex requests to finish incomplete. `TURN_TIMEOUT_SECONDS=120` includes review, with a 30-second reserved completion allowance. The analyst uses low thinking by default; `REVIEW_THINKING_LEVEL=medium` gives the completion reviewer a separate setting.
+`.env.example` lists provider, budget and storage settings. Analyst calls, evaluator calls and provider retries share one per-question budget and deadline. Counts and reserved costs are admission bounds, not invoiced charges. `MAX_MODEL_CALLS=12` allows retrieval and revisions; lower limits can leave complex requests incomplete. `TURN_TIMEOUT_SECONDS=120` includes a 30-second review reserve. The analyst defaults to low thinking; `REVIEW_THINKING_LEVEL=medium` configures the reviewer independently.
 
 Input contact-pattern screening catches common pasted PII but is not comprehensive entity recognition. Warehouse privacy is enforced structurally before either model receives results. Production deployment still needs real authentication and controlled corpus publication.

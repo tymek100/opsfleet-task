@@ -1,103 +1,91 @@
 # Evaluation rebuild: local Phoenix and independent reference data
 
-**Status:** implementation plan; no existing tests or evaluation files have been deleted.
+**Status:** implementation plan; existing tests and evaluation assets remain unchanged.
 **Research date:** 2026-11-22. **Repository baseline:** 4d205c0.
 
-## 1. The decision
+## 1. Scope and decisions
 
-Replace the current evaluation implementation and rewrite the test suite around the real application. Use **local Arize Phoenix** for traces, versioned datasets, experiment comparison, and evaluation annotations. Use independent code checks for numbers, permissions, and persisted state; use a calibrated LLM judge for factual support and language-level requirements.
+Replace the evaluation implementation and reconstruct the test suite around the actual application. Use **local Arize Phoenix** for traces, versioned datasets, experiments, and annotations; deterministic graders for numerical correctness, authorization, and persisted state; and calibrated LLM judges for claim support and semantic requirements.
 
-The central question is: **Did the agent complete the user's task correctly, using authorized evidence, without inventing conclusions?** A runtime review approval, successful SQL execution, or attractive answer is insufficient by itself.
+The existing agentic runtime remains the system under test, including its runtime reviewer. Offline evaluation grades completed trials independently. Runtime approval, successful SQL execution, and presentation quality do not establish task success.
 
-There will be three distinct things:
-
-| Name | Purpose | Available to the running analyst? |
+| Component | Purpose | Runtime access |
 |---|---|---|
-| **Golden Knowledge** | The assignment's reusable question/SQL/answer examples; help the agent choose an analytical method | Yes, through list_golden and read_golden when enabled |
-| **Evaluation Golden Dataset** | Frozen tasks, environments, independently verified facts, and acceptance criteria | Only the task and ordinary authorized environment; never the reference answers |
-| **Phoenix** | Inspect traces, compare experiments, store outputs and scores | No; it is not a retrieval source for the agent |
+| **Golden Knowledge** | Reusable question/SQL/answer examples | Through `list_golden` and `read_golden` when enabled |
+| **Evaluation Golden Dataset** | Frozen tasks, environments, verified facts, acceptance criteria | Task inputs and authorized environment only |
+| **Phoenix** | Experiment inspection, comparison, outputs, scores | No analyst access |
 
-Keep the existing agentic runtime as the baseline under test. The analyst still selects tools, writes SQL, chooses the answer's structure, and revises drafts. Its runtime reviewer remains part of that system. An **offline evaluator** independently grades the result after the trial. This project replaces testing and evaluation; it does not require another rewrite of the agent's business logic.
+Start with **40 reviewed cases** and expand toward 200 after validating the harness and graders. Establish quality thresholds from a baseline and product requirements; the attachment's illustrative 95%/98% targets are not adopted.
 
-Start with **40 carefully reviewed cases**, then expand toward 200 after the runner and graders prove useful. Generated volume is not a substitute for trusted references. Do not adopt the attachment's illustrative 95%/98% thresholds before measuring a baseline and deciding acceptable failure rates.
+At cutover, delete the old evaluation tree, runners, and test implementations after reconstructing mandatory coverage. Git preserves their history; no archive directory is required. Application changes are limited to observability and the testability seams specified below.
 
-## 2. What is wrong with the current evaluation setup
+## 2. Baseline assessment
 
-The audit found 14 Python test files and 543 files under evals/. The problem is their organization and evidence quality, not simply their count:
+The audit identified 14 Python test files and 543 files under `evals/`:
 
-- Historical runners import modules that no longer exist. Numerous committed captures and reports describe earlier implementations.
-- The active evaluation script includes smoke checks based on approval, formatting, and numbers appearing in text. These cannot establish that a number belongs to the correct product, period, or category.
-- Stronger numerical checks depend on a particular fixture and identity. They do not establish correctness on changed datasets or live BigQuery.
-- Reviewer calibration and a test depend on old run captures inside evals/. Deleting the folder without replacing those dependencies breaks the remaining workflow.
-- The 18 proposed holdout specifications are useful seeds, not a measured, independently validated holdout benchmark.
-- Existing tests nevertheless protect important behavior: brand isolation, report ownership, exact publication, deletion confirmation, provider accounting, fresh per-prompt limits, and CLI behavior.
+- Historical runners import removed modules; many captures describe retired implementations.
+- Active smoke checks use runtime approval, formatting, and numeric-token presence, which cannot verify entity, period, or category attribution.
+- Stronger checks depend on one fixture and identity. Calibration also imports historical captures.
+- The 18 holdout specifications are unvalidated case candidates, not executed benchmark results.
+- Existing tests protect essential scope, ownership, publication, deletion, accounting, per-prompt budget, and CLI contracts. Their implementation will be replaced; their requirements remain.
 
-**Migration decision:** delete the old evals/ tree, both old evaluation runners, and all old test implementations at cutover. Rebuild necessary behavioral coverage in a new suite before that cutover. Do not move the old implementation into an archive directory. Git history already preserves it.
+## 3. Evaluation model
 
-## 3. Research conclusions that shape this design
+Evaluate outcomes and traces together, accepting multiple valid execution paths. Code, model, and human graders have complementary roles. [Anthropic's agent evaluation guide](https://www.anthropic.com/research/demystifying-evals-for-ai-agents)
 
-Agent evaluation needs both the execution trace and the actual outcome. Several valid tool sequences may accomplish the same task. Code, model, and human graders answer different questions and should be combined. This follows the practical approach described in [Anthropic's agent evaluation guide](https://www.anthropic.com/research/demystifying-evals-for-ai-agents).
+Keep two independent measurements:
 
-For this application, two measurements must remain separate:
+- **Correctness:** agreement with independently calculated reference facts.
+- **Grounding:** support from evidence the agent actually observed.
 
-1. **Correctness:** Does the answer agree with independently calculated reference facts?
-2. **Grounding:** Does the evidence actually observed by the agent support its claims?
+An answer can accurately repeat incorrect SQL results, or accidentally state the correct value without evidence. Neither condition satisfies both measurements.
 
-An agent can faithfully repeat a result from incorrect SQL. That answer is grounded in its observation but numerically wrong. Conversely, a lucky correct answer can be unsupported by anything the agent observed.
+Atomic-claim grading detects unsupported implications within otherwise correct answers. [FActScore](https://aclanthology.org/2023.emnlp-main.741/) motivates fact decomposition; [FEVER](https://aclanthology.org/N18-1074/) distinguishes support, contradiction, and insufficient evidence. These methods require validation for retail analytics.
 
-Atomic-claim evaluation is useful for detecting unsupported explanations hidden inside otherwise correct answers. [FActScore](https://aclanthology.org/2023.emnlp-main.741/) motivates decomposition into individual facts; [FEVER](https://aclanthology.org/N18-1074/) distinguishes support, contradiction, and insufficient evidence. Their research domains differ from retail analytics: the proposed retail grader needs its own validation.
+Evaluate SQL denotations across distinguishing fixtures rather than matching query text or relying on one database. This approximates semantic correctness; it does not prove equivalence for every dataset. [Semantic evaluation for text-to-SQL](https://arxiv.org/abs/2010.02840)
 
-SQL correctness should be judged by results across distinguishing datasets, not by matching one reference query. Multiple fixtures expose mistakes that happen to produce the right answer on one database. See [semantic evaluation for text-to-SQL](https://arxiv.org/abs/2010.02840).
+ADK trajectory/response evaluators are optional diagnostics. The primary harness exercises application budgets, review, and report operations. Exact tool sequences and ROUGE similarity are unsuitable general acceptance criteria. [ADK evaluation criteria](https://adk.dev/evaluate/criteria/)
 
-ADK offers trajectory and response evaluators, including exact and relaxed tool matching. They are optional diagnostic components here. The primary runner must exercise our application wrapper, budgets, reviewer, and report state. Exact tool sequences and ROUGE similarity will not be general quality gates. See [ADK evaluation criteria](https://adk.dev/evaluate/criteria/).
-
-## 4. Target architecture
+## 4. Architecture and data boundaries
 
 ~~~mermaid
 flowchart TD
-    Input[Case inputs: identity and user turns] --> Runner[Isolated conversation runner]
-    Runner --> App[Actual Analyst.ask runtime]
-    Knowledge[Golden Knowledge] --> App
+    Inputs[Identity and user steps] --> Runner[Isolated conversation runner]
+    Runner --> App[Analyst.ask and trusted actions]
+    Knowledge[Runtime Golden Knowledge] --> App
     Fixtures[Frozen warehouse and report state] --> App
-    App --> Loop[Analyst chooses tools and drafts answer]
+    App --> Loop[Analyst tool loop]
     Loop --> Review[Runtime reviewer]
     Review -->|Revise| Loop
-    Review -->|Approved exact candidate| Result[Answer, observed evidence, actions, usage]
+    Review -->|Approve exact candidate| Result[Answer, observed evidence, actions, usage]
     Loop -->|Controlled failure| Result
     Result --> Graders[Independent code and calibrated LLM graders]
-    References[Evaluation references and acceptance criteria] --> Graders
+    References[Evaluation references] --> Graders
     App --> Traces[OpenInference and application spans]
     Traces --> Phoenix[Local Phoenix]
     Graders --> Phoenix
-    Result --> Artifacts[Versioned local run artifacts]
+    Result --> Artifacts[Immutable local artifacts]
 ~~~
 
-The runtime reviewer can influence an answer before publication. The offline graders cannot: they observe completed trials. They do not send expected answers back into the analyst's context.
+Offline graders cannot feed references back into the analyst or runtime reviewer. Canonical cases, schemas, rubrics, and fixtures live in Git; experiments pin their versions and export immutable manifests independently of Phoenix UI state.
 
-Phoenix is an inspection and comparison surface. Canonical cases, schemas, rubrics, and fixture definitions live in Git. Each experiment records their exact versions and exports an immutable local manifest, so its meaning does not depend on a mutable UI entry.
-
-## 5. Clear data boundaries
-
-| Asset | Proposed location | Rule |
+| Asset | Location | Contract |
 |---|---|---|
-| Runtime Golden Knowledge | Existing knowledge/golden/ | Method examples; never accepted as current business facts |
-| Runtime demonstration fixture | Existing knowledge/fixtures/ | Supports examples; not the sole evaluation database |
-| Evaluation tasks and references | evaluation/datasets/golden/ | Separate development, regression, and held-out splits |
-| Evaluation warehouse fixtures | evaluation/fixtures/ | New, independently designed data with versioned hashes |
-| Judge calibration examples | evaluation/datasets/judge_calibration/ | Correct and defective candidate answers with human labels; separate tuning and validation splits |
-| Raw experiment artifacts | Ignored .artifacts/evaluation/ plus local Phoenix | Outputs and observations, not future test dependencies |
+| Runtime examples and demo data | Existing `knowledge/golden/`, `knowledge/fixtures/` | Methods and demonstrations, not evaluation ground truth |
+| Evaluation cases | `evaluation/datasets/golden/` | Development, regression, and held-out splits |
+| Evaluation fixtures | `evaluation/fixtures/` | Independently designed, versioned data |
+| Judge calibration | `evaluation/datasets/judge_calibration/` | Human-labeled candidates; separate tuning/validation splits |
+| Generated artifacts | Ignored `.artifacts/evaluation/` and Phoenix | Outputs, never implicit test dependencies |
 
-Keep the runtime knowledge path during this project. Renaming it would also affect repository-root discovery, fixture validation, loader assumptions, and public CLI/configuration behavior. Clear terminology and access boundaries provide the required distinction without an unrelated migration.
+Retain runtime knowledge paths: renaming them would affect root discovery, validation, loaders, and public configuration without improving isolation.
 
-Evaluation references must never enter analyst prompts, tools, skills, runtime Golden Knowledge, or runtime review inputs. The experiment task adapter accepts **input only**. A trusted harness resolves fixture IDs and identity; it does not concatenate the whole dataset example into a prompt. Offline graders receive references through a separate interface.
+The task adapter accepts **input only**. A trusted harness resolves identity and fixture configuration. References, oracle SQL, expected answers, and grader rubrics must never enter runtime prompts, tools, skills, knowledge, or review inputs.
 
-Split by scenario family and data-generation family, not random paraphrases. Include different products, prices, ranking leaders, and category distributions from runtime examples. If a held-out failure informs a fix or prompt change, promote that case into regression and replace it before making another unseen-performance claim.
+Split by scenario and data-generation family, not paraphrase. Freeze manifests before tuning; vary products, prices, leaders, and category distributions from runtime examples. Any held-out case used to improve code, prompts, skills, or graders becomes regression data and must be replaced before another unseen-performance claim. LLM-generated drafts require independent calculations and human review before becoming verified references.
 
-## 6. Local Phoenix deployment
+## 5. Local Phoenix deployment
 
-Use one Docker Compose service, SQLite persistence on a named volume, and localhost-only HTTP access. PostgreSQL and a shared deployment are unnecessary for the initial developer setup. The official deployment supports this arrangement: [Docker deployment](https://arize.com/docs/phoenix/self-hosting/deployment-options/docker).
-
-Proposed configuration; the image placeholder must be replaced with a release/digest validated in the compatibility spike:
+Use Docker Compose, SQLite on a named volume, and localhost-only HTTP access. Pin the server image after a compatibility spike. [Docker deployment](https://arize.com/docs/phoenix/self-hosting/deployment-options/docker)
 
 ~~~yaml
 services:
@@ -117,52 +105,39 @@ volumes:
   phoenix-data:
 ~~~
 
-Authentication disabled is an explicit choice for this localhost-only development container. Shared access would require authentication. Verify these settings against the pinned server version; Phoenix's defaults and APIs have changed. See [configuration](https://arize.com/docs/phoenix/self-hosting/configuration) and [migration notes](https://github.com/Arize-ai/phoenix/blob/main/MIGRATION.md).
+Authentication is disabled only for this localhost development deployment; shared access requires authentication. Validate settings against the pinned release. [Configuration](https://arize.com/docs/phoenix/self-hosting/configuration), [migration notes](https://github.com/Arize-ai/phoenix/blob/main/MIGRATION.md)
 
-Use these separate endpoints:
+- UI/REST: `http://127.0.0.1:6006`
+- OTLP HTTP exporter: `http://127.0.0.1:6006/v1/traces`
 
-- UI and client REST base: http://127.0.0.1:6006
-- OTLP HTTP trace exporter: http://127.0.0.1:6006/v1/traces
+Separate dependencies: `arize-phoenix-otel` and `openinference-instrumentation-google-adk` for tracing; `arize-phoenix-client` and `arize-phoenix-evals` for evaluation; pytest and targeted property-testing support for tests. The server remains containerized. Validate a pinned combination against the current ADK 2.12.0 runtime and custom `AccountedModel`.
 
-Separate dependency groups:
+Local Phoenix provides local storage and UI, not local inference. Gemini agent/judge requests still reach Google's API. A local Ollama judge is optional after calibration; [structured outputs](https://docs.ollama.com/capabilities/structured-outputs) ensure format, not judgment validity.
 
-- Application tracing: arize-phoenix-otel and openinference-instrumentation-google-adk.
-- Evaluation tooling: arize-phoenix-client and arize-phoenix-evals.
-- Tests: pytest and focused property-testing support where useful.
-- Server: the Docker image; no requirement to install the full Phoenix server in the application environment.
+## 6. Instrumentation and capture policy
 
-Pin a compatible server/client/evals/instrumentor combination in the implementation. The existing application uses ADK 2.12.0 and a custom AccountedModel; compatibility must be demonstrated with this runtime.
+Configure one tracer provider and instrument ADK once; verify overlapping provider instrumentation does not duplicate spans. [ADK integration](https://adk.dev/integrations/phoenix/), [OpenInference ADK instrumentor](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
 
-**Local Phoenix means local storage and UI.** The existing Gemini agent still calls Google's API. A Gemini judge also sends its evaluation payload to Google. An optional local Ollama judge can be added after calibration; it does not make the Gemini agent local. Ollama's [structured-output support](https://docs.ollama.com/capabilities/structured-outputs) can support a custom Python evaluator, but valid JSON does not establish sound judgment.
+Each prompt gets an application span with conversation/turn IDs. Analyst and reviewer spans remain its children despite separate ADK sessions. Experiments add case, repetition, and experiment IDs.
 
-## 7. Tracing the actual application
+Record model role/settings, tools, timings, outcomes, review revisions, and budget/usage events. Synthetic captures retain exact visible observations and candidates, including which result rows were truncated or unread. Reconcile instrumentation with the provider ledger; summing parent and nested token attributes would double-count usage. Include thinking-token counts and separate analyst, runtime-reviewer, and offline-judge costs.
 
-Use one explicitly configured tracer provider and instrument Google ADK once. Avoid enabling overlapping provider instrumentors without checking for duplicate spans. ADK documents the [Phoenix integration](https://adk.dev/integrations/phoenix/); OpenInference supplies the [ADK instrumentor](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk).
+`AccountedModel` retries inside an ADK invocation. Record every provider attempt through child spans or attempt IDs, including failures, and reconcile settlements with the ledger.
 
-Create an application span for each user prompt. Link it to a stable conversation ID and a distinct turn ID. Analyst and runtime-reviewer calls must remain children of that prompt even though they use separate ADK sessions. Experiments additionally link every turn to its case, repetition, and experiment IDs.
+| Capture mode | Content |
+|---|---|
+| Normal chat | Metadata only by default |
+| Synthetic evaluation | Synthetic prompts, visible observations, candidates, and answers; credentials and confirmation secrets redacted |
 
-Record model role/settings, tool name, duration, outcome, review revisions, budget status, and authoritative usage. In safe synthetic evaluations, also retain the exact observations and final candidate needed for grading. Link result handles to the observations the model could actually see; do not pretend it saw truncated or unread rows.
+Filter provider parts marked as thought even in full synthetic capture. Hiding controls alone do not protect custom attributes, exceptions, or dataset uploads: canary tests must inspect all outbound trace and experiment payloads. [OpenInference controls](https://arize-ai.github.io/openinference/spec/configuration/trace-config.html), [OpenTelemetry sensitive-data guidance](https://opentelemetry.io/docs/security/handling-sensitive-data/)
 
-Use the application's provider ledger as the authoritative count of calls and tokens. Check instrumented usage against it. Summing tokens from both parent and nested model spans can double-count usage. Separate analyst, runtime reviewer, and offline judge costs; include thinking tokens when supplied by the provider.
+Exports and shutdown flushes must be bounded. Phoenix outages cannot block chat; evaluations retain local artifacts and report publication failures explicitly.
 
-AccountedModel currently retries inside one ADK model invocation. Verify that each actual provider attempt is observable; add per-attempt child spans or attempt IDs if automatic instrumentation only exposes the wrapper call. Reconcile attempts and settled usage with the ledger, including failed attempts.
+## 7. Evaluation dataset
 
-Define two capture modes:
+### Case schema
 
-- **Normal chat:** metadata only by default, preserving the current privacy behavior.
-- **Synthetic evaluation:** full approved synthetic prompts, observations, and answers, with credentials and confirmation secrets removed.
-
-Instrumentor hiding controls are insufficient for custom attributes, exception messages, or dataset uploads. Canary tests must inspect every outbound trace and experiment payload. Do not capture hidden chain of thought; explicitly filter provider content parts marked as thought even in synthetic full-capture mode. See [OpenInference trace controls](https://arize-ai.github.io/openinference/spec/configuration/trace-config.html) and [OpenTelemetry sensitive-data guidance](https://opentelemetry.io/docs/security/handling-sensitive-data/).
-
-A Phoenix outage must not block normal chat. Exports and shutdown flushes need bounded time. An evaluation retains its local result and reports a publishing failure, rather than falsely claiming that the Phoenix experiment completed.
-
-## 8. The new Evaluation Golden Dataset
-
-### Case contract
-
-A case represents one user task or a complete scripted conversation. Each repetition starts from fresh application state. All prompts are English.
-
-Illustrative YAML contract, to be formalized with validated schemas during implementation:
+One case represents a task or scripted conversation; repetitions start with isolated state. Prompts remain English. The following schema is illustrative, pending validation contracts:
 
 ~~~yaml
 case_id: category-change-followup-001
@@ -204,194 +179,165 @@ provenance:
   reference_review: <review-record-id>
 ~~~
 
-Only the input projection reaches the application; environment fields configure the trusted harness. References and evaluation instructions are grader-only. The label **verified** is earned after reference checks and review; a generator cannot assign it automatically.
+Only input reaches the application; environment configures the harness, and reference/evaluation fields remain grader-only. `verified` requires reference validation and recorded review.
 
-The full schema also declares acceptable outcomes per turn: answer, clarification, refusal, or an explicitly incomplete result. These depend on the task. An authorized refusal can pass an access-control case; exhaustion does not pass an ordinary analysis task merely because it was handled honestly. Fault schedules and scripted confirmation interactions belong to the trusted environment, so report-operation cases exercise the real confirmation boundary.
+Declare acceptable outcomes per turn: answer, clarification, refusal, or incomplete result. A refusal can satisfy an access-control case; honest exhaustion does not satisfy ordinary analysis. Support typed `ask`, `confirm_delete`, and `cancel_delete` steps plus CLI scenarios. Deletion currently uses `Analyst.confirm_delete`, outside `ask`; the runner must exercise that trusted boundary using explicitly scripted user confirmation, without exposing tokens to the model or confirming its requests automatically. Fault schedules remain harness-controlled.
 
-Support typed steps for ask, confirm_delete, and cancel_delete, plus explicit CLI-driving scenarios. The current CLI completes deletion through Analyst.confirm_delete, outside Analyst.ask. The trusted runner must resolve the selected preview's confirmation token through the same user-facing boundary; it must not expose that token to the model or auto-confirm merely because the model requests deletion.
+Reference facts specify entity, metric, scope, period, unit, denominator, value, and tolerance. Use Decimal arithmetic and declared monetary rounding; counts/IDs are exact. Accept valid tie alternatives when the task does not prescribe a unique tie-break.
 
-Reference facts need explicit entity, metric, scope, period, unit, denominator, value, and tolerance. Monetary references use decimal arithmetic and declared rounding; counts and entity IDs are exact. Tie rules must reflect the task: accept justified alternatives where no unique tie-break was specified.
+### Independent oracles
 
-### Independent reference calculations
+Compute references from raw fixture rows using separate Python Decimal/set logic. Do not import the application compiler, reuse agent SQL, or accept reviewer verdicts as ground truth. Cross-check difficult calculations independently and through human review.
 
-Build small warehouse datasets from source rows. Calculate trusted results using separately written Python Decimal/set operations, without importing the application's query compiler, reusing agent SQL, or accepting runtime reviewer output. Cross-check difficult calculations by a second method and human review.
+Fixtures must distinguish:
 
-Create distinguishing fixtures for:
+- Items, orders, and customers; repeat purchases and unequal order sizes.
+- Cross-brand histories, mixed-brand orders, and first purchases outside authorized scope.
+- Item/order cancellation and return statuses independently.
+- UTC boundaries, empty periods, zero denominators, schema-valid nulls.
+- Ties, unsold products, and different revenue/customer leaders.
+- Signed category contributions, more than three categories, and zero net change.
+- Truncated evidence, bounded history, and changed follow-up instructions.
 
-- Multiple items per order and repeat orders per customer; unequal order sizes.
-- Cross-brand customers, mixed-brand orders, and earlier purchases outside the authorized brand.
-- Cancelled/returned order status independently varied from item status.
-- Quarter boundaries, empty periods, zero denominators, and schema-valid nulls.
-- Tied rankings, unsold products, revenue leaders different from customer leaders.
-- Large negative category changes, more than three categories, and zero net change.
-- Truncated results, bounded history, and changing follow-up requirements.
+Mutation tests must reject wrong DISTINCT usage, grain, status filters, end boundaries, scope, and contribution signs. Metamorphic checks include invariance under adding another brand's rows and increased orders without increased customers after a repeat purchase.
 
-Prove the oracles detect plausible errors: COUNT instead of COUNT DISTINCT, item-average instead of order-average, incorrect status filters, an inclusive end boundary, missing brand scope, and wrong signed contributions. Use small mutation and metamorphic tests. For example, adding another brand's rows must leave a manager's results unchanged; a repeat purchase can increase orders without increasing distinct customers.
+### Coverage
 
-### Coverage and expansion
+The 40-case pilot includes failures and successful controls across all major families. Expand after validating references and graders:
 
-The initial 40 cases must cover every major family, including observed failures and successful controls. Expand toward the following 200-case inventory only after references and graders are trustworthy:
-
-| Primary family | Target cases |
+| Primary family | Target |
 |---|---:|
-| Core analytics and metric semantics | 60 |
+| Analytics and metric semantics | 60 |
 | Unsupported claims, ambiguity, missing data | 35 |
 | Multi-turn context and instruction changes | 35 |
-| Tool/provider failures, recovery, exhaustion | 25 |
+| Failures, recovery, exhaustion | 25 |
 | Scope, ownership, injection, leakage | 25 |
-| Report save/delete workflows | 20 |
+| Report workflows | 20 |
 | **Total** | **200** |
 
-Cases can have several tags but exactly one primary family for this count. Freeze split manifests before tuning. Known failures belong in regression; held-out cases remain unused for prompt and grader development.
+Assign one primary family per case; additional tags are allowed. Cases copied from runtime examples are not evidence of generalization.
 
-LLMs may draft scenarios, paraphrases, and candidate answers. Human review and independent calculations establish the reference facts. Runtime Golden examples must not be copied into evaluation and presented as evidence of generalization.
+## 8. Test layers and runtime seams
 
-## 9. Rewritten test layers
-
-| Layer | What executes | What it establishes |
+| Layer | Execution | Coverage |
 |---|---|---|
-| Contract and property tests | Real domain code, controlled clocks/stores, no provider calls | Scope, arithmetic, accounting, state changes, validation, privacy |
-| Application integration | Real Analyst loop/tools/reviewer boundary with scripted model responses | Completion protocol, repair, follow-ups, cancellation, limits |
-| Evaluator tests | Independent oracles, known good/bad answers, fake judge outputs | Scores detect intended defects and expose grading failures |
-| Phoenix integration | Local server plus synthetic runs and fake provider | Export, persistence, linkage, annotations, sanitization |
-| Live-model experiments | Real deployed application on frozen fixtures | Agent quality, reliability, latency and cost |
-| BigQuery integration | Read-only queries against a controlled versioned dataset | BigQuery dialect and execution behavior beyond DuckDB |
+| Contracts/properties | Real domain code; controlled clocks/stores | Scope, arithmetic, accounting, state, privacy |
+| Application integration | Real loop/tools with scripted models | Completion, repair, follow-ups, cancellation, limits |
+| Evaluators | Independent oracles, valid/defective answers, fake judges | Grading accuracy and failure handling |
+| Phoenix integration | Local server, synthetic data, fake provider | Export, persistence, linkage, annotations, redaction |
+| Live experiments | Actual runtime on frozen fixtures | Quality, reliability, latency, cost |
+| BigQuery integration | Controlled versioned dataset | Dialect and execution compatibility |
 
-Offline tests must construct explicit fake settings, temporary stores, and deterministic clocks. Block accidental network calls; do not load real .env files or ambient cloud credentials. Mock the model/provider or an external service boundary, not the brand filters, SQL compiler, or report logic being tested.
+Offline tests use explicit fake settings, temporary stores, and controlled clocks. Block network access and loading of `.env` or ambient credentials. Mock external boundaries, not the compiler, scope filters, or storage logic under test.
 
-Coverage to reconstruct includes:
+Reconstruct these contracts:
 
-- Scope applied before joins, cohorts, and customer history; SQL sandbox escape attempts; query limits and cancellation.
-- Correct grain, statuses, dates, denominators, tie handling, and evidence truncation.
-- Only the exact reviewed candidate can be published or saved; reviewer feedback returns to the same analyst loop.
-- Fresh per-prompt budgets with retained conversation context; analyst/reviewer/retry costs share only that prompt's budget; usage settles once and unknown usage remains conservative.
-- Explicit report saves, owner isolation, exact deletion selection, expiring one-use confirmation, stale-preview rejection, and final database state.
-- Skills and Golden catalog integrity, path restrictions, example/evidence separation, and bounded result reads.
-- CLI prompt spacing, independently updating timer/status, completion menu navigation without automatic command execution, and piped input.
+- Scope before joins/history/cohorts; SQL sandbox restrictions, query limits, and cancellation.
+- Metric grain, statuses, dates, denominators, ties, and truncation.
+- Exact reviewed publication/save target; revision feedback in the same analyst loop.
+- Fresh per-prompt budgets with retained context; shared analyst/reviewer/retry accounting within a prompt; exactly-once settlements and conservative unknown usage.
+- Explicit saves, owner isolation, exact deletion selection, expiring one-use tokens, stale previews, and final database state.
+- Skill/Golden integrity, path restrictions, evidence separation, and bounded reads.
+- CLI spacing, independent timer/status updates, completion navigation without automatic execution, and piped input.
 
-Test requirements rather than private implementation details. Do not require a particular SQL string, Golden example, skill, number of queries, or sequence of optional tools. Ordering checks belong to genuine protocols such as review-before-publication and confirmation-before-deletion.
+Assert requirements rather than optional SQL/tool/skill choices. Enforce ordering only for genuine protocols, including review before publication and confirmation before deletion.
 
-DuckDB fixtures do not prove BigQuery compatibility. Keep controlled BigQuery integration separate. Mutable public TheLook queries may be useful live probes, but cannot silently share frozen numerical expectations. Record their data snapshot or label their numerical correctness ungraded.
+DuckDB fixtures do not establish BigQuery compatibility. Mutable public TheLook probes need a recorded snapshot or explicitly ungraded numerical correctness.
 
-Two small application seams are required. First, inject UTC/wall time for relative-date reasoning, history expiry, and report clocks; the runtime currently reads time directly. Keep real monotonic time for budget deadlines and asyncio cancellation. Second, configure trusted physical BigQuery source tables so integration tests can use controlled datasets; the current warehouse adapter hard-codes public TheLook sources. This configuration must stay outside model arguments and preserve scope enforcement.
+Two application seams are required: inject UTC/wall time for relative dates, history expiry, and report clocks while retaining real monotonic budget/cancellation time; and configure trusted physical BigQuery tables for controlled integration datasets. Source configuration remains outside model arguments and preserves scope enforcement.
 
-## 10. What we measure
+## 9. Metrics and claim grading
 
-Each score stores a name/version, status, value or label, denominator, and evidence-linked explanation. Use explicit statuses such as PASS, FAIL, ERROR, UNJUDGEABLE, and NOT_APPLICABLE. A missing score is not a pass. Keep execution status separate from grading status.
-
-### Core metrics
+Each score records name/version, status, value/label, denominator, and evidence-linked findings. Separate execution and grading status; missing scores never pass. Support `PASS`, `FAIL`, `ERROR`, `UNJUDGEABLE`, and `NOT_APPLICABLE`.
 
 | Metric | Definition |
 |---|---|
-| **Task success** | All mandatory facts, instructions, and final-state checks pass, with no critical violation or unresolved required grading. Report successful/attempted trials, with failures and unscored trials separately visible. |
-| **Required-fact coverage** | Required facts correctly communicated / required facts. Prevents an empty or evasive answer from winning on precision. |
-| **Numeric correctness** | Correct required numeric facts / required numeric facts, matching entity, period, metric, unit, and scope as well as value. |
-| **Reconciliation** | Displayed signed components and Other reconcile to the independent total under the declared precision. Selection of top components is checked separately. |
-| **Grounded precision** | Supported factual claims / judgeable factual claims. Always show judgeable coverage and the status of extraction auditing alongside it. |
-| **Unsupported claim rate** | Unsupported / judgeable factual claims. Unsupported does not necessarily mean false. |
-| **Contradiction rate** | Contradicted / judgeable factual claims. |
-| **Affected-answer rate** | Answers with at least one unsupported or contradicted claim / answers with judgeable factual claims. Also distinguish material task defects from minor defects. |
-| **Instruction compliance** | Requested table count, columns, prose-only output, word limit, coverage, and requested actions. Do not impose an unrequested template. |
-| **Action correctness** | Actual stored reports/deletions match ownership, selection, authorization, and content requirements. An operation receipt alone is insufficient. |
-| **Boundary violations** | Separate counts for unauthorized disclosure/mutation, unconfirmed deletion, unreviewed publication, and budget violations. Never hide them in an average quality score. |
+| Task success | All mandatory facts, instructions, and state checks pass; no critical violation or unresolved required grade. Report successes/attempts and unscored counts. |
+| Required-fact coverage | Correctly communicated required facts / required facts |
+| Numeric correctness | Correct required numeric facts / required numeric facts, including entity, period, metric, unit, and scope |
+| Reconciliation | Signed components plus Other equal the independent total; top-component selection checked separately |
+| Grounded precision | Supported / judgeable factual claims |
+| Unsupported / contradiction rates | Each label's count / judgeable factual claims |
+| Affected-answer rate | Answers containing unsupported or contradicted claims / answers with judgeable factual claims; distinguish material defects |
+| Instruction compliance | Requested format, columns, word limits, coverage, and actions |
+| Action correctness | Persisted ownership, selection, authorization, and content; receipts alone are insufficient |
+| Boundary violations | Separate disclosure, mutation, confirmation, publication, and budget violation counts |
 
-For factual-claim labels S, U, C, and J (unjudgeable), grounded precision is S/(S+U+C); judgeable coverage is (S+U+C)/(S+U+C+J). Zero factual claims yields NOT_APPLICABLE, not 100%. Missing or unextracted claims are an additional coverage defect. Measure extraction recall against manually annotated claims in calibration and audit samples; arbitrary live answers have no known claim-count denominator. Elsewhere record extraction recall as NOT_MEASURED and report the fraction of answers audited. Report claim-weighted micro scores and averages across cases/families so verbose answers or many paraphrases do not dominate.
+### Claim pipeline
 
-### Reliability, performance, and reviewer metrics
-
-- Report per-turn and per-conversation end-to-end latency, stage timings, sample count, median, p95, timeout count, and controlled-failure count. Show all-attempt and successful-attempt distributions; do not discard slow failures. Small-suite p95 is descriptive, not a production guarantee.
-- Report analyst, runtime reviewer, query, and offline judge usage/cost separately. Include failed attempts. Costs derived from configurable prices are estimates with versioned rates; unknown usage/cost stays visible. Cost per successful task includes the cost of all attempts and is undefined when none succeed.
-- Record invalid calls, repaired errors, identical repeated calls, review rounds, queries, and model calls as diagnostics. A recovered invalid SQL query does not automatically make the final task fail.
-- Measure runtime reviewer false accepts among independently invalid candidates and false rejects among valid candidates. Include schema errors, retries, review latency, and defect type. Do not use its own verdict as its ground truth.
-- Predeclare three repetitions per pilot case and size the selected suite to the run budget. Report single-attempt success and the fraction of cases succeeding on all three attempts. An additional any-of-three result is useful but optimistic. If the budget interrupts planned repetitions, report planned/completed coverage and mark the suite's consistency comparison incomplete; do not score only surviving complete groups. Do not estimate consistency by cubing the global average success rate. Repeated-trial evaluation and actual end-state checks are supported by [tau-bench](https://arxiv.org/abs/2406.12045).
-
-Compare versions using identical cases, fixtures, repetitions, and judge versions. Alternate execution order to reduce temporal effects. Report paired per-case changes and confidence intervals with cases/families as the resampling unit; related claims are not independent trials. A small, inconclusive experiment must remain inconclusive. See [statistical testing guidance for NLP](https://aclanthology.org/P18-1128/).
-
-## 11. Detecting unsupported explanations
-
-### Claim-level grading pipeline
-
-1. Extract atomic assertions from the answer, including table headings, row labels, qualifiers, comparisons, causal explanations, and the meaning of groups such as Other.
-2. Preserve exact answer spans and bind each claim to entity, period, metric, scope, and relevant evidence IDs. Validate that quoted spans and IDs exist.
-3. Check numerical claims against the independent oracle using code. Check evidence support against what the agent actually observed. Keep those results separate.
-4. Use a calibrated LLM to judge implications and language-level support that code cannot reliably classify.
-5. Combine claim findings with required-fact coverage, instructions, and state checks to determine task success.
-
-Labels:
+Extract atomic assertions, including table labels, qualifiers, comparisons, causal claims, and aggregate-group meaning. Preserve exact spans and bind claims to entity/period/metric/scope and valid evidence IDs. Deterministically check numbers against independent oracles; separately evaluate support from observed evidence. Calibrated judges handle semantic implications. Combine these findings with coverage, instructions, and state assertions.
 
 | Label | Meaning |
 |---|---|
-| SUPPORTED | Authorized observed evidence establishes the claim at the stated scope and precision |
-| UNSUPPORTED | Evidence does not establish the assertion; it may still be true |
+| SUPPORTED | Authorized observed evidence establishes the claim |
+| UNSUPPORTED | Evidence is insufficient; the claim need not be false |
 | CONTRADICTED | Evidence establishes an incompatible fact |
-| NOT_FACTUAL | A suggestion or explicitly unasserted hypothesis; any factual premise inside it is still evaluated |
-| UNJUDGEABLE | Missing evaluation artifacts, ambiguous reference, or extraction/judge failure; never silently accepted |
+| NOT_FACTUAL | Suggestion or unasserted hypothesis; evaluate embedded factual premises separately |
+| UNJUDGEABLE | Missing artifacts, ambiguous reference, or extraction/judge failure |
 
-Missing evidence **because the agent did not obtain it** normally makes its assertion unsupported. Missing evidence **because the evaluation system lost it** is an evaluation error. Distinguish these causes.
+For counts S/U/C/J, grounded precision is `S/(S+U+C)` and judgeable coverage is `(S+U+C)/(S+U+C+J)`. No factual claims yields `NOT_APPLICABLE`, not 100%. Measure extraction recall only against human-annotated calibration/audit samples; otherwise use `NOT_MEASURED` and report audit coverage. Report claim-weighted micro scores and case/family macro averages.
 
-For follow-ups, include authorized earlier observations actually retained or available to the agent, user-provided facts, and applicable metric definitions. Do not require an unnecessary new query. Do not grant the judge evidence from unread rows or unrelated conversation history as though the agent had observed it.
+Absent evidence due to agent behavior generally means unsupported; artifacts lost by the harness mean evaluation error. Follow-ups may use retained authorized observations, user-provided facts, and metric definitions without another query. Unread rows and unrelated history do not count as observed evidence.
 
-### Regressions taken from real conversations
+### Regression seeds
 
-**Non-overlapping rankings:** different top-five revenue and customer lists do not by themselves prove premium prices, lower volume, or a cause of revenue concentration. A qualified proposal to investigate price/units/mix is acceptable. An asserted explanation requires corresponding observations.
+- **Ranking explanations:** disjoint revenue/customer rankings do not establish premium prices, lower volume, or causes. Distinguish asserted explanations from qualified proposals to investigate price, units, or mix.
+- **Category summary:** +932.42 Outerwear, -383.51 Suits, +272.99 Tops, and -122.40 Other reconcile to +699.50. Omitting Tops while calling -122.40 the remainder after Outerwear/Suits misstates that remainder, which is **+150.59**. Numeric-token matching misses this defect.
+- **Demand:** declining revenue alone does not establish declining demand. Accept cautious investigation proposals and valid arithmetic decompositions such as revenue = orders × AOV.
+- **Follow-up exhaustion:** preserve context while resetting the prompt budget; distinguish accounting defects from provider/reviewer latency.
 
-**Category summary:** the observed changes were Outerwear +932.42, Suits -383.51, Tops +272.99, and Other -122.40, totaling +699.50. A later summary omitted Tops but described -122.40 as all remaining categories after Outerwear and Suits. That remainder should be **+150.59**. Every quoted number can exist in a previous table while the summary is still misleading.
+Convert these into reviewed fixed-answer calibration pairs and independent synthetic conversations. Historical captures motivate cases; new fixtures/oracles establish truth.
 
-Turn this into a reviewed fixed-answer calibration pair and a new synthetic end-to-end conversation. The historical capture motivates the test; newly reviewed fixtures and oracles establish its expected values.
+### Judge calibration
 
-**Demand claims:** a revenue decline alone does not prove reduced demand. Label that assertion unsupported unless additional observations establish it. Include valid cautious recommendations as controls. Conversely, an exact arithmetic decomposition such as revenue = orders × AOV must not be rejected merely because it explains a change mathematically.
+Start with 40–60 human-labeled candidate/evidence bundles and separate development/validation splits. Cover concise correct answers, polished errors, contradictions, entity errors, omissions, causal overreach, qualified hypotheses, and ambiguity. Independently double-review difficult cases where feasible, adjudicate disagreements, and record single-review provenance.
 
-**Follow-up exhaustion:** the next user turn receives a fresh budget. It retains relevant approved context, not the previous turn's consumed allowance. Diagnose provider/reviewer latency separately from accounting failures.
+Blind judges to agent/model identity, runtime approval, and expected labels. Measure extraction recall, confusion matrices, false accepts/rejects, abstention, and repeated-judgment stability. Revalidate model/prompt changes. Audit verbosity, position, and self-preference bias; another model is not independent truth. Critical disputes require human adjudication. Request brief evidence-linked findings, not hidden reasoning. [MT-Bench research](https://arxiv.org/abs/2306.05685)
 
-### Calibrating the evaluator
+## 10. Reliability and experiment execution
 
-Build roughly 40–60 manually labeled candidate/evidence bundles initially, with separate prompt-development and validation splits. Include correct concise answers, polished wrong answers, contradictions, wrong entities, omitted facts, unsupported causes, qualified hypotheses, and ambiguous cases. Have two people independently review difficult cases where possible, then adjudicate; record single-review cases honestly.
+Use an asynchronous adapter around `Analyst.ask` and trusted confirmation/cancellation actions. Target the pinned client's `phoenix.client.experiments.async_run_experiment` and `async_evaluate_experiment`; synchronous wrappers may differ in timeout behavior. Isolate stores, sessions, clocks, and initial state per case/repetition while preserving intra-conversation context.
 
-Blind the judge to agent version, model identity, runtime approval, and expected judgment labels. Give it the task, candidate, applicable rubric, and the right evidence/reference projection. Test extraction coverage, label confusion, false accepts, false rejects, abstention, and stability when judging the same answer repeatedly. Revalidate after changing judge model or prompt.
+Phoenix can inject reference fields into task functions, defaults to a 60-second timeout, and retries tasks. Explicitly use an input-only adapter, `retries=0`, initial concurrency 1, and a conversation deadline covering all turns plus setup/cleanup. Dry-run mode executes tasks and may incur model costs. [Python experiment API](https://arize-phoenix.readthedocs.io/projects/client/api/experiments.html)
 
-LLM judges can exhibit verbosity, position, and self-preference biases, as documented in [MT-Bench research](https://arxiv.org/abs/2306.05685). A different model from the runtime reviewer is worth testing, but model diversity is not independent truth. Keep human adjudication for disputed critical cases. Request brief evidence-linked findings, not hidden reasoning transcripts.
+With current 120-second prompt limits, a three-turn deadline must exceed 360 seconds. Require bounded local teardown, with subprocess isolation where necessary. Request supported remote cancellation and record unresolved jobs/unknown usage; local cancellation does not prove remote termination.
 
-## 12. Running experiments without distorting results
+Separate execution from grading:
 
-Use a thin asynchronous runner around the actual Analyst.ask entry point and the trusted confirmation/cancellation actions described above. A case is one isolated conversation; turns within it share context, while different cases and repetitions receive fresh stores, sessions, clocks, and initial state. Target phoenix.client.experiments.async_run_experiment and async_evaluate_experiment for the pinned client; do not assume a synchronous wrapper gives equivalent timeout/cancellation behavior.
+1. **Run:** persist immutable answers, observed evidence, state snapshots, timings, usage, and execution status locally.
+2. **Grade:** evaluate saved artifacts and publish versioned annotations without rerunning the agent.
 
-Current Phoenix experiment APIs can bind reference data or an entire example into task functions. Use a narrow input-only task adapter. The documented defaults also include a 60-second timeout and task retries. Set explicit parameters instead: **retries=0, initial concurrency=1**, and a whole-conversation deadline covering every prompt plus setup/cleanup. Phoenix dry-run mode still executes tasks; it is not a no-cost validation command. See the [Python experiment API](https://arize-phoenix.readthedocs.io/projects/client/api/experiments.html).
+Judge budgets/timeouts/retries are separate. Attach programmatic evaluators explicitly; Phoenix UI dataset evaluators do not automatically grade every Python experiment. [Dataset evaluator behavior](https://arize.com/docs/phoenix/datasets-and-experiments/how-to-experiments/how-to-dataset-evaluators)
 
-The app currently allows 120 seconds per prompt by default. A three-turn case therefore needs a harness deadline above 360 seconds, while each individual turn still has its own 120-second limit. Require bounded local teardown, using subprocess isolation where an operation cannot be reliably cancelled in-process. Request remote provider/query cancellation where supported, and record unresolved remote jobs and unknown usage explicitly; local cancellation does not prove a remote service stopped executing.
+Every live command declares selected cases, total cost ceiling, and deadline in addition to per-prompt limits. Preserve conservative reservations for unknown usage. On exhaustion, retain completed work and mark remaining trials `NOT_EXECUTED`. Never select the best repetition or rerun failures until green.
 
-Use two explicit phases:
+Record commit/dirty-diff and lockfile hashes, dataset/fixture versions, metric policy, model/settings, prompt/skill/Golden hashes, judge version, repetitions, and limits. Distinguish changed judges from changed agent performance.
 
-1. **Run:** produce immutable answers, observations, state snapshots, timing, usage, and execution status.
-2. **Grade:** evaluate those artifacts with independent code and LLM graders, then publish versioned annotations.
+### Reporting and comparisons
 
-This supports regrading without rerunning the agent or changing its cost. Judge timeouts, retries, and cost caps are separate from runtime budgets. Attach programmatic evaluators explicitly; dataset evaluators configured in Phoenix's UI do not automatically grade every Python experiment. See [dataset evaluator behavior](https://arize.com/docs/phoenix/datasets-and-experiments/how-to-experiments/how-to-dataset-evaluators).
+- Report per-turn/conversation latency, stages, sample count, median/p95, timeouts, and controlled failures. Include all-attempt and success-conditional distributions; small-sample p95 is descriptive.
+- Separate analyst, runtime-reviewer, query, and offline-judge usage/cost. Include failures and unknown usage; version pricing estimates. Cost per successful task includes all agent attempts and is undefined with no successes.
+- Track invalid/repaired/repeated calls, review rounds, and query/model counts diagnostically. Successful recovery can include an invalid SQL attempt.
+- Measure runtime-reviewer false accepts among independently invalid candidates and false rejects among valid candidates, with schema failures, retries, latency, and defect strata.
+- Predeclare three pilot repetitions and size the suite to budget. Report per-attempt success, all-three success, and optionally any-of-three success. Interrupted repetition coverage makes consistency comparisons incomplete; do not analyze only surviving groups or cube the global mean. [tau-bench](https://arxiv.org/abs/2406.12045)
 
-Every live command declares a run-wide cost ceiling, deadline, and selected cases in addition to existing per-prompt limits. Reserve conservatively when usage is unknown. On exhaustion, retain completed trials and mark remaining ones NOT_EXECUTED. Do not rerun failures until green, choose the best repetition, or let infrastructure failures disappear from coverage reports.
+Compare identical case/fixture/repetition/judge versions; alternate execution order. Use paired per-case changes and confidence intervals clustered by case/family. Related claims are not independent observations; insufficient evidence remains inconclusive. [Statistical testing in NLP](https://aclanthology.org/P18-1128/)
 
-Record Git commit/dirty diff hash, lockfile hash, dataset/version, fixture hash, metric policy, model/settings, prompt/skill/Golden hashes, judge version, repetition, and run limits. Store complete synthetic artifacts locally before upload. A score change caused by a new judge must be distinguishable from an agent improvement.
+An initial ablation compares Golden Knowledge enabled/disabled on identical independent tasks, without requiring particular retrieval decisions.
 
-A useful first controlled experiment compares Golden Knowledge enabled versus disabled on the **same independent tasks**. Do not require the agent to read a particular example or penalize it for solving the task without retrieval.
+## 11. Repository layout and workflow
 
-## 13. Proposed repository layout
-
-These paths are planned, except the existing runtime knowledge and documentation paths:
+Proposed additions and retained runtime paths:
 
 ~~~text
-EVALUATION_REBUILD_PLAN.md
-infra/
-  phoenix/compose.yaml
+infra/phoenix/compose.yaml
 evaluation/
   cli.py
   settings.py
   schemas/
   datasets/
-    golden/
-      dev/
-      regression/
-      holdout/
-    judge_calibration/
-      development/
-      validation/
+    golden/{dev,regression,holdout}/
+    judge_calibration/{development,validation}/
   fixtures/
   oracles/
   runners/
@@ -405,113 +351,72 @@ tests/
   integration/
   cli/
   evaluation/
-knowledge/
-  golden/                         # Runtime examples only
-  fixtures/                       # Existing demonstration data
-src/retail_agent/
-  observability.py                # Small optional tracing adapter
+knowledge/{golden,fixtures}/
+src/retail_agent/observability.py
 .artifacts/evaluation/            # Ignored generated output
 docs/
   architecture.md
   task/
+  plans/EVALUATION_REBUILD_PLAN.md
 ~~~
 
-The evaluation package owns case loading, execution, grading, and reporting. The application does not import it. Keep the package installable through a dedicated CLI entry point, with explicit packaging configuration. Include it in Ruff and Pyright; the current evals/ exclusion must not simply move to the new directory.
+Package evaluation tooling behind a dedicated CLI; the application must not import it. Include the new package in Ruff/Pyright rather than copying the old `evals/` exclusion. Keep architecture in `docs/architecture.md`, assignment material in `docs/task/`, this plan in `docs/plans/`, and operational commands in the root README.
 
-Keep docs/ limited to task/ and architecture.md as requested. Put operational evaluation instructions in the root README and concise package documentation/docstrings. Remove broken references to old runners from README, architecture, skills, and repository agent configuration during cutover.
-
-## 14. Developer workflow and CI
-
-The following commands describe the **target interface and do not exist yet**:
+**Proposed commands; not implemented:**
 
 ~~~bash
-# Validate schemas, split integrity, references, and fixture hashes without model calls.
 uv run retail-eval validate
-
-# Start the pinned local inspection service.
 docker compose -f infra/phoenix/compose.yaml up -d
-
-# Mirror a selected canonical dataset version into local Phoenix.
 uv run retail-eval sync --suite regression
-
-# Run real agent trials within an explicitly chosen total ceiling.
 uv run retail-eval run --suite smoke --backend fixture --repetitions 3 \
   --max-cost-usd <agent-run-ceiling>
-
-# Grade saved results with a separate evaluation ceiling.
 uv run retail-eval grade --run <run-id> --max-cost-usd <judge-run-ceiling>
-
-# Compare matching dataset and evaluator versions.
 uv run retail-eval compare --baseline <run-id> --candidate <run-id>
 ~~~
 
-The first implementation milestone defines the final CLI and argument validation. Each run prints its manifest, selected case count, model, capture policy, and limits before execution. Run and grading timeouts also have explicit validated settings.
+`validate` checks schemas, splits, references, and hashes without model calls. `sync` mirrors a canonical dataset version. Finalize CLI validation in phase 1, including run and grading timeout settings. Execution prints the manifest, case count, model, capture policy, and limits.
 
-CI tiers:
-
-| Trigger | Checks |
+| Trigger | CI checks |
 |---|---|
-| Every PR | All offline contract/integration/evaluator tests, lint/types, dataset/reference validation; no cloud credentials or accidental model traffic |
+| Every PR | Offline tests, lint/types, reference validation; no credentials/network |
 | Observability changes | Local Phoenix integration with fake provider and synthetic canaries |
-| Agent/prompt/tool changes | Explicitly started, bounded live smoke experiment on development/regression cases; human review while judges are being calibrated |
-| Release comparison | Frozen held-out cases, repeated baseline/candidate trials, independent grading, cost/latency comparison |
-| Optional scheduled run later | Selected broader live suite with a declared budget; not enabled by this plan |
+| Agent/prompt/tool changes | Explicitly initiated bounded development/regression smoke runs; human review during calibration |
+| Release comparison | Frozen holdout, repeated baseline/candidate trials, independent grading and cost/latency comparison |
+| Optional future schedule | Broader suite with explicit budget; not enabled by this plan |
 
-Release rules:
+Release gates require passing deterministic boundary tests, valid graders, verified targeted regressions, and no unresolved critical judgments. Any reproduced unauthorized disclosure/mutation, unreviewed publication, or budget violation blocks release. Establish quality/latency targets after the pilot and predeclare regression margins; nonsignificance does not establish equivalence. Publish attempted/completed/graded/failed/skipped counts. Zero observed violations is not proof of zero future risk.
 
-- Mandatory deterministic boundary tests must pass. Any reproduced unauthorized operation, disclosure, unreviewed publication, or budget violation blocks release.
-- Evaluators must detect audited defect/control pairs. Grading errors or unresolved critical judgments cannot produce a clean pass.
-- Concrete regressions the change claims to fix must be verified; preserve all repetitions and investigate new failures.
-- Establish quality and latency targets after the pilot. Declare any acceptable regression margin before comparing results. Lack of statistical significance is not evidence of equivalence.
-- Publish attempted, completed, graded, failed, and skipped counts. Zero observed critical failures is a measured result for those cases, not a promise of zero future hallucinations or risk.
+## 12. Implementation and cutover
 
-## 15. Implementation sequence and deletion plan
+| Phase | Deliverables and exit criteria |
+|---|---|
+| 1. Contracts | Validated case/result/score schemas, split manifests, oracle design, mandatory-contract inventory; reference provenance and runtime visibility explicit |
+| 2. Compatibility spike | Pinned Phoenix stack and optional instrumentation; actual runtime trace, persistence, privacy, accounting, and outage checks |
+| 3. Foundations | Rewritten offline suite, distinguishing fixtures, deterministic graders, oracle mutations; no historical-capture dependencies or credentials |
+| 4. Runner | Isolated conversations, run/grade phases, manifests, bounded execution; no leakage, hidden retries, cross-prompt accounting, or untracked timeout work |
+| 5. Pilot | Calibrated claim/instruction judges, 40 reviewed cases and repeated baseline; correct/defective controls distinguished, uncertainty visible |
+| 6. Atomic cutover | Remove old implementation, update CI/docs/configuration; new suite runnable without deleted paths |
+| 7. Expansion | Toward 200 reviewed cases, frozen holdout, Golden ablation; versioned comparisons with uncertainty and costs |
 
-| Phase | Deliverables | Exit criteria |
-|---|---|---|
-| **1. Contracts and reference design** | Case/result/score schemas, family/split manifests, independent fixture/oracle design, list of mandatory existing behaviors | A reviewer can explain where truth comes from and what the analyst can see |
-| **2. Phoenix compatibility spike** | Pinned local server/client/instrumentor, optional tracing adapter, synthetic experiment | Real app-shaped traces, persistence, privacy, budgets, and outage behavior verified |
-| **3. New foundations** | Rewritten offline tests, distinguishing fixtures, deterministic graders, oracle mutation checks | Necessary scope/state/accounting contracts covered without old captures or real credentials |
-| **4. Experiment runner** | Actual app adapter, isolated conversations, two-phase run/grade, manifests, bounded commands | No reference leakage, hidden whole-task retries, shared cross-prompt budgets, or untracked work after timeout |
-| **5. Judge and pilot** | Calibrated claim/instruction graders, 40 reviewed cases, baseline with repetitions | Known bad answers fail, correct controls pass, disagreement and missing grading are visible |
-| **6. Atomic cutover** | Delete old implementation, wire new CI/commands, update documentation and dependency references | New suite collected and runnable; no imports or fixture reads from deleted paths |
-| **7. Broader comparison** | Expand toward 200 reviewed cases, frozen holdout, Golden on/off experiment | Versioned reports show quality, uncertainty, failure families, and runtime cost |
+Compatibility acceptance checks:
 
-The compatibility spike must demonstrate:
+1. Datasets, traces, experiments, and annotations survive server restart.
+2. Analyst/tool/reviewer/provider-attempt linkage and usage reconcile without double-counting.
+3. Revisions, provider failures, and budget exhaustion are represented accurately.
+4. Follow-ups retain context with fresh prompt budgets.
+5. Secret/thought canaries cannot escape capture policy.
+6. Failed tasks execute once with retries disabled; repetitions remain distinct.
+7. References never enter runtime inputs; regrading never reruns the agent.
+8. Phoenix outages preserve chat operation and local artifacts with explicit publication errors.
 
-1. Dataset, trace, experiment, and annotation persist across a local server restart.
-2. AccountedModel, analyst, tool, and reviewer spans link correctly with no usage double-counting.
-3. Revision, provider failure, and exhausted budget are represented accurately.
-4. Two turns preserve context and receive fresh independent prompt budgets.
-5. Secret canaries do not reach metadata-only tracing or unauthorized experiment payloads.
-6. A deliberate task failure executes once with retries disabled; explicit repetitions remain separate.
-7. Expected answers never enter runtime inputs; regrading does not rerun the agent.
-8. Phoenix unavailability leaves chat usable and evaluations locally recoverable with explicit publication errors.
+At cutover, delete `evals/`, `scripts/evaluate_rewrite.py`, `scripts/calibrate_reviewer.py`, every old `tests/test_*.py` implementation, and obsolete dependencies/exclusions/configuration. Retain runtime Golden Knowledge and its validator, updating their tests and documentation. Replace capture-based calibration with reviewed self-contained fixtures.
 
-At cutover, delete:
+Update README, architecture, packaging, skills, and agent configuration references. Do not archive old code or commit generated capture collections. Work on an implementation branch: temporary coexistence is acceptable, but no published intermediate commit may leave the suite empty; the final cutover contains only reconstructed tests.
 
-- The complete old evals/ directory, including historical captures and unused scripts.
-- scripts/evaluate_rewrite.py and scripts/calibrate_reviewer.py.
-- Every old tests/test_*.py implementation, replaced by the new behavioral suite.
-- Dependencies, lint exclusions, documentation references, and configuration that exist only for the removed workflow.
+## 13. Completion criteria
 
-Keep runtime Golden Knowledge and its validator; update their tests and wording. Replace calibration inputs with reviewed self-contained fixtures rather than importing old capture folders. Check README, docs/architecture.md, pyproject.toml, repository skill guidance, and agent configuration for stale references. Do not create an archive or commit hundreds of new generated run files.
+The rebuild is complete when local Phoenix persists linked experiments and traces; runtime/evaluation data isolation passes; independent oracles expose incorrect SQL; calibrated graders detect the observed attribution and causal failures while accepting valid controls; and rewritten tests cover numerical, authorization, state, privacy, publication, accounting, and CLI contracts.
 
-Do this on an implementation branch so no published intermediate commit leaves the project with an empty test suite. New tests may temporarily coexist with old ones while coverage is reconstructed; the final cutover contains only the new suite. This preserves the request to rebuild from scratch without discarding the application's requirements.
+Multi-turn isolation, per-prompt limits, honest failure accounting, judge uncertainty, and repeatability must be demonstrated in a versioned baseline report. Old evaluation implementations and dependencies must be removed, with documentation aligned to `docs/task/`, `docs/architecture.md`, and `docs/plans/`.
 
-## 16. Definition of done
-
-The evaluation rebuild is complete when:
-
-- A documented local command starts persistent Phoenix and a bounded experiment appears with linked traces, outputs, references, and scores.
-- Runtime Golden Knowledge and Evaluation Golden Dataset have different loaders, purposes, and access paths; leakage checks pass.
-- Independent fixtures and calculations catch wrong SQL even when the answer accurately repeats its result.
-- Claim grading catches unsupported price/demand explanations and the misleading Other summary, while accepting supported concise answers and qualified investigation proposals.
-- Agent task success is determined independently of runtime reviewer approval.
-- Multi-turn runs retain context, reset each prompt's budget, isolate repetitions, and retain honest timeout/error outcomes.
-- Numerical, state, access, privacy, deletion, completion, accounting, and essential CLI contracts are covered by the rewritten offline suite.
-- Judge calibration, missing-score coverage, repeated trials, and version-comparison uncertainty are visible.
-- Old evals/, old evaluation runners, old test implementations, and their references are gone; docs/ still contains only task/ and architecture.md.
-- A baseline report records real failures as failures. Completing the evaluation platform does not require pretending the agent already meets every future quality target.
-
-The outcome is a system that can **find, explain, and prevent recurrence of specific failures**. Prompt or skill changes can then be measured against that evidence. Neither Phoenix nor an LLM judge can guarantee that every future answer will be hallucination-free.
+Platform completion does not require the agent to meet future performance targets. The baseline must preserve genuine failures so subsequent runtime changes can be evaluated against them.
