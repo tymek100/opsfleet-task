@@ -19,12 +19,34 @@ from rich.text import Text
 
 from retail_agent.config import Settings
 from retail_agent.contracts import DEMO_USERS, TurnResult
+from retail_agent.observability import TracingSession, configure_tracing
 from retail_agent.privacy import screen
 from retail_agent.runtime import Analyst
 from retail_agent.terminal import command_help, create_prompt_session
 
 app = typer.Typer(help="Autonomous retail analysis with reviewed answers.", no_args_is_help=True)
 console = Console()
+
+
+def _start_tracing(enabled: bool) -> TracingSession | None:
+    if not enabled:
+        return None
+    try:
+        return configure_tracing(mode="metadata")
+    except Exception:
+        console.print("Phoenix tracing is unavailable; continuing without tracing.")
+        return None
+
+
+def _close_tracing(session: TracingSession | None) -> None:
+    if session is None:
+        return
+    try:
+        complete = session.close(timeout_seconds=2)
+        if not complete or session.failed_exports:
+            console.print("Some Phoenix traces could not be exported; the answer is unaffected.")
+    except Exception:
+        console.print("Phoenix tracing could not finish; the answer is unaffected.")
 
 
 def build(user: str, backend: str | None, bootstrap: bool) -> Analyst:
@@ -145,9 +167,11 @@ def ask(
     backend: str | None = None,
     golden_bootstrap: bool = False,
     output_json: Path | None = None,
+    phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
 ) -> None:
     """Answer one question; optionally capture its answer, evidence and metadata."""
     analyst = build(user, backend, golden_bootstrap)
+    tracing = _start_tracing(phoenix)
     try:
         result = asyncio.run(run_question(analyst, prompt))
         display(result)
@@ -158,6 +182,7 @@ def ask(
             raise typer.Exit(1)
     finally:
         analyst.reports.close()
+        _close_tracing(tracing)
 
 
 HELP = command_help()
@@ -248,13 +273,20 @@ async def conversation(analyst: Analyst) -> None:
 
 
 @app.command()
-def chat(user: str = "alice", backend: str | None = None, golden_bootstrap: bool = False) -> None:
+def chat(
+    user: str = "alice",
+    backend: str | None = None,
+    golden_bootstrap: bool = False,
+    phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
+) -> None:
     """Start an interactive conversation with ephemeral history and persistent reports."""
     analyst = build(user, backend, golden_bootstrap)
+    tracing = _start_tracing(phoenix)
     try:
         asyncio.run(conversation(analyst))
     finally:
         analyst.reports.close()
+        _close_tracing(tracing)
 
 
 @app.command()

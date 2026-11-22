@@ -20,3 +20,4 @@ htmlcov/
 .retail-agent
 .retail-agent-*/
 dist/
+.artifacts/

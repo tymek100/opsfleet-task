@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "id": "empty-q1",
+  "family": "empty-data",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "empty_q1_v1",
+  "fixture_sha256": "208dc8349e8d8c61fff2c396ee89858b9286db923f7e4ca941649576d896726b",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "Show our Q1 2026 qualifying revenue, distinct customers, distinct orders, and average order value.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "q1_revenue",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "q1.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "q1_customers",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "q1.customers",
+          "metric": "customers",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_orders",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "q1.orders",
+          "metric": "orders",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_aov",
+          "value": null,
+          "value_type": "null",
+          "source_key": "q1.aov",
+          "metric": "aov",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": "distinct qualifying orders in the same scope and period",
+          "tolerance": "0"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        },
+        {
+          "id": "undefined_average",
+          "kind": "semantic",
+          "description": "AOV is undefined because there are no qualifying orders.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: Q1 2026; authorized brand; revenue: 0.00 unspecified currency; Q1 2026; authorized brand; customers: 0 count; Q1 2026; authorized brand; orders: 0 count; Q1 2026; authorized brand; aov: undefined (zero denominator) unspecified currency.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "metamorphic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

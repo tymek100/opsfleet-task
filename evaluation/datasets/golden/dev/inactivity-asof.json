@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "id": "inactivity-asof",
+  "family": "temporal-cohort",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "retail_v1",
+  "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "As of April 1, 2026 UTC, how many customers with an earlier qualifying purchase had not purchased for strictly more than 90 days? Show the eligible count, inactive count, and rate; use only purchases before that date.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "inactivity_end_eligible",
+          "value": "12",
+          "value_type": "number",
+          "source_key": "inactivity.end.eligible",
+          "metric": "eligible",
+          "entity": "customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old",
+          "period": "as of 2026-04-01 UTC",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "inactivity_end_inactive",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "inactivity.end.inactive",
+          "metric": "inactive",
+          "entity": "customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old",
+          "period": "as of 2026-04-01 UTC",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "inactivity_end_percent",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "inactivity.end.percent",
+          "metric": "percent",
+          "entity": "customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old",
+          "period": "as of 2026-04-01 UTC",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "customers with a qualifying purchase before the as-of timestamp",
+          "tolerance": "0.005"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: as of 2026-04-01 UTC; customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old; eligible: 12 count; as of 2026-04-01 UTC; customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old; inactive: 0 count; as of 2026-04-01 UTC; customers with a prior qualifying purchase; inactive if last purchase is strictly over 90 days old; percent: 0.00 percent.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

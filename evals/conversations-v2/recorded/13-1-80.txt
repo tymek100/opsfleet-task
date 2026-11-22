@@ -1,3 +1,0 @@
-
-Deletion preview prepared. Nothing deleted; use the exact confirmation token    
-shown by the CLI or /cancel.                                                    

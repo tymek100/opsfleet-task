@@ -77,6 +77,12 @@ class CompletionTools:
             "pending_save": self.turn.pending_save,
             "save_target": {"id": target.id, "markdown": target.markdown} if target else None,
         }
+        self.turn.app.observe(
+            "answer_candidate",
+            candidate={"markdown": markdown, "evidence_ids": evidence_ids, "outcome": outcome},
+            evidence=evidence,
+            conversation=payload["conversation"],
+        )
         self.turn.emit("review_start", attempt=self.turn.reviews)
         review_model = self.turn.app.reviewer_model or self.turn.app.model
         if review_model is None:
@@ -89,6 +95,7 @@ class CompletionTools:
             self.turn.emit,
             review_skill=self.turn.app.skills.review_skill(),
         )
+        self.turn.app.observe("review_result", review=review.model_dump())
         self.turn.emit(
             "review_end",
             decision=review.decision,

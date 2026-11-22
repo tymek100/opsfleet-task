@@ -64,7 +64,10 @@ class DataTools:
         async def analyze():
             parents = {i: self.turn.app.results[i] for i in result_ids}
             result = await analyze_results(
-                parents, sql, timeout=min(5, self.turn.budget.work_remaining())
+                parents,
+                sql,
+                timeout=min(5, self.turn.budget.work_remaining()),
+                as_of=self.turn.app.now(),
             )
             return self.turn.artifact(result, purpose, result_ids)
 

@@ -96,26 +96,23 @@ uv run --locked retail-agent import-legacy .retail-agent/reports.db --user alice
 
 Supply the actual existing legacy SQLite/JSON path; the filename above is an example. The source remains unchanged. Deleting an imported report deletes the new library's copy, not the separately retained legacy source.
 
-## Checks and observed prompts
+## Tests and evaluation
 
-Offline checks do not require credentials:
+Offline checks use isolated settings, temporary stores and scripted providers:
 
 ```bash
-uv run --locked pytest
+uv sync --locked --group evaluation
+uv run --locked --group evaluation pytest
+uv run --locked --group evaluation retail-eval validate
 uv run --locked python scripts/validate_golden_bootstrap.py
 uv run --locked ruff check .
 uv run --locked ruff format --check .
-uv run --locked pyright
+uv run --locked --group evaluation pyright
 ```
 
-Explicit live smoke run, using a temporary report library:
-
-```bash
-uv run --locked python scripts/evaluate_rewrite.py --live --golden-bootstrap \
-  --output evals/rewrite/runs/my-fixture-run
-```
-
-Use a new output directory for each run. Add `--backend bigquery --case rankings` for the live warehouse ranking case. The runner writes JSON captures and Markdown observations. Approval and numeric-token checks are smoke checks; semantic correctness requires reviewing answers against their evidence. See [how to inspect captured runs](evals/rewrite/runs/README.md#what-to-inspect).
+For Phoenix setup, bounded live runs, independent grading and comparisons, follow
+[the evaluation commands](README.md#independent-evaluation). Runtime Golden Knowledge
+and evaluation references are separate. Grading a saved run never executes the agent again.
 
 ## Configuration
 

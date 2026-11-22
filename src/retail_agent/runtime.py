@@ -5,6 +5,8 @@ import json
 import logging
 import time
 import uuid
+from collections.abc import Callable
+from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from google.genai import types
 from retail_agent.budget import LimitReached
 from retail_agent.config import Settings
 from retail_agent.contracts import Answer, Identity, TurnResult
+from retail_agent.observability import CaptureMode, Observer, observation, record_observation, span
 from retail_agent.privacy import screen
 from retail_agent.provider import AccountedModel, ProviderUnavailable, make_gemini
 from retail_agent.services.golden import GoldenStore
@@ -39,8 +42,19 @@ class Analyst:
         gateway=None,
         reports=None,
         progress=None,
+        clock: Callable[[], datetime] | None = None,
+        observer: Observer | None = None,
+        observation_mode: CaptureMode = "metadata",
     ):
         self.settings, self.identity = settings, identity
+        if observation_mode not in ("metadata", "synthetic"):
+            raise ValueError("Capture mode must be metadata or synthetic")
+        self.clock = clock or (lambda: datetime.now(UTC))
+        self.observer = observer
+        self.observation_mode: CaptureMode = observation_mode
+        self.observer_errors = 0
+        self.turn_id = ""
+        self._trace_ids: dict[str, str] = {}
         # Framework exception logs can contain generated arguments. Emit our metadata instead.
         logging.getLogger("google_adk").setLevel(logging.CRITICAL)
         self.model = model
@@ -52,11 +66,15 @@ class Analyst:
             backend=settings.backend,
             fixture_path=settings.fixture_path,
             max_bytes=settings.max_query_bytes,
+            source_dataset=settings.warehouse_source_dataset,
+            clock=clock,
         )
         self.knowledge = GoldenStore(
             settings.golden_path, identity.brands, bootstrap=settings.golden_bootstrap
         )
-        self.reports = reports or ReportStore(settings.data_dir / "reports-v2.sqlite3")
+        self.reports = reports or ReportStore(
+            settings.data_dir / "reports-v2.sqlite3", clock=lambda: self.now().timestamp()
+        )
         self.progress = progress or (lambda event: None)
         self.conversation_id = uuid.uuid4().hex[:12]
         self.results: dict[str, dict] = {}
@@ -66,6 +84,54 @@ class Analyst:
         self._result_counter = 0
 
     async def ask(self, question: str) -> TurnResult:
+        self.turn_id = uuid.uuid4().hex
+        self.observer_errors = 0
+        with span(
+            "retail.prompt",
+            **{
+                "session.id": self.conversation_id,
+                "retail.turn_id": self.turn_id,
+                "openinference.span.kind": "CHAIN",
+            },
+        ) as current:
+            context = current.get_span_context()
+            self._trace_ids = {
+                "trace_id": format(context.trace_id, "032x") if context.is_valid else "",
+                "span_id": format(context.span_id, "016x") if context.is_valid else "",
+            }
+            result = await self._ask(question)
+            self.observe("turn_result", result=asdict(result), capture_errors=self.observer_errors)
+            current.set_attribute("retail.status", result.status)
+            current.set_attribute("retail.capture_errors", self.observer_errors)
+            return result
+
+    def now(self) -> datetime:
+        value = self.clock()
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("The application clock must return a timezone-aware datetime")
+        return value.astimezone(UTC)
+
+    def observe(self, event: str, **fields) -> None:
+        """Capture only explicit application data; instrumentation failure is nonfatal."""
+        try:
+            record = observation(
+                {
+                    "event": event,
+                    "conversation_id": self.conversation_id,
+                    "turn_id": self.turn_id,
+                    **self._trace_ids,
+                    **fields,
+                },
+                mode=self.observation_mode,
+                secrets=(self.settings.gemini_api_key.get_secret_value(),),
+            )
+            record_observation(record, self.observation_mode)
+            if self.observer is not None:
+                self.observer(record)
+        except Exception:
+            self.observer_errors += 1
+
+    async def _ask(self, question: str) -> TurnResult:
         started = time.monotonic()
         try:
             question = screen(question.strip())
@@ -74,7 +140,7 @@ class Analyst:
         except ValueError as exc:
             return TurnResult(None, "input_rejected", str(exc), [], {}, [], 0)
         # Approved context is bounded and ephemeral. No raw ADK reasoning is persisted.
-        cutoff = time.time() - 90 * 86400
+        cutoff = self.now().timestamp() - 90 * 86400
         self.history = [h for h in self.history if h["timestamp"] >= cutoff][-6:]
         begin_turn = getattr(self.gateway, "begin_turn", None)
         if begin_turn:
@@ -109,12 +175,13 @@ class Analyst:
                 runner = Runner(app_name="retail", agent=agent, session_service=sessions)
                 context = {
                     "trusted_scope": self.identity.scope,
-                    "today_utc": datetime.now(UTC).date().isoformat(),
+                    "today_utc": self.now().date().isoformat(),
                     "prior_approved_conversation": self.context_history(),
                     "available_results": self.result_manifest(),
                     "available_skills": self.skills.list(role="analyst"),
                     "user_question": question,
                 }
+                self.observe("initial_context", context=context)
                 prompt = json.dumps(context, ensure_ascii=False)
                 # Only a bounded protocol correction; business actions loop inside ADK.
                 for attempt in range(2):
@@ -173,7 +240,7 @@ class Analyst:
                     "answer_id": turn.answer.id,
                     "markdown": turn.answer.markdown,
                     "evidence_ids": turn.answer.evidence_ids,
-                    "timestamp": time.time(),
+                    "timestamp": self.now().timestamp(),
                 }
             )
         result = TurnResult(
@@ -225,7 +292,7 @@ class Analyst:
             stream.write(
                 json.dumps(
                     {
-                        "at": datetime.now(UTC).isoformat(),
+                        "at": self.now().isoformat(),
                         "conversation": self.conversation_id,
                         "status": result.status,
                         "elapsed_seconds": result.elapsed_seconds,

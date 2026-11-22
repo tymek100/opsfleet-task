@@ -17,6 +17,7 @@ from pydantic import BaseModel, PrivateAttr
 
 from retail_agent.budget import Budget
 from retail_agent.config import Settings
+from retail_agent.observability import detached_span
 from retail_agent.privacy import screen
 
 
@@ -154,23 +155,52 @@ class AccountedModel(BaseLlm):
             last_usage = None
             complete_response = False
             try:
-                async with asyncio.timeout(self._budget.work_remaining(reviewer=self._reviewer)):
-                    async for response in self.delegate.generate_content_async(llm_request, stream):
-                        complete_response = response.partial is not True
-                        last_usage = response.usage_metadata if complete_response else None
-                        if complete_response and (
-                            not stream or response.finish_reason or response.turn_complete
+                with detached_span(
+                    "retail.provider_attempt",
+                    **{
+                        "openinference.span.kind": "LLM",
+                        "retail.role": role,
+                        "retail.attempt": attempt + 1,
+                        "retail.provider_reservation": reservation,
+                        "llm.model_name": self.model,
+                    },
+                ) as provider_span:
+                    async with asyncio.timeout(
+                        self._budget.work_remaining(reviewer=self._reviewer)
+                    ):
+                        async for response in self.delegate.generate_content_async(
+                            llm_request, stream
                         ):
-                            # ADK executes tools (including the reviewer) while
-                            # suspended at yield, so refund completed usage first.
-                            self._settle_usage(reservation, last_usage)
-                        emitted = True
-                        yield response
-                if complete_response:
-                    # Streaming metadata is cumulative, not an increment per chunk.
-                    # Legacy streams may mark completion only through exhaustion.
-                    self._settle_usage(reservation, last_usage)
-                return
+                            complete_response = response.partial is not True
+                            last_usage = response.usage_metadata if complete_response else None
+                            if complete_response and (
+                                not stream or response.finish_reason or response.turn_complete
+                            ):
+                                # ADK executes tools (including the reviewer) while
+                                # suspended at yield, so refund completed usage first.
+                                self._settle_usage(reservation, last_usage)
+                            counts = _usage_counts(last_usage)
+                            if counts is not None:
+                                provider_span.set_attribute("llm.token_count.prompt", counts[0])
+                                provider_span.set_attribute(
+                                    "llm.token_count.completion", counts[1] + counts[2]
+                                )
+                                provider_span.set_attribute("llm.token_count.total", sum(counts))
+                            if (
+                                complete_response
+                                and (not stream or response.finish_reason or response.turn_complete)
+                                and provider_span.is_recording()
+                            ):
+                                # ADK can run tools while this generator is suspended.
+                                # Provider latency ends when its complete response arrives.
+                                provider_span.end()
+                            emitted = True
+                            yield response
+                    if complete_response:
+                        # Streaming metadata is cumulative, not an increment per chunk.
+                        # Legacy streams may mark completion only through exhaustion.
+                        self._settle_usage(reservation, last_usage)
+                    return
             except (errors.APIError, httpx.NetworkError, httpx.TimeoutException) as exc:
                 retryable = not isinstance(exc, errors.APIError) or exc.code in (
                     429,

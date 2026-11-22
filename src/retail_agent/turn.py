@@ -7,7 +7,6 @@ import hashlib
 import inspect
 import json
 import time
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from retail_agent.budget import Budget, LimitReached
@@ -44,6 +43,7 @@ class Turn:
         }
         self.trace.append(record)
         self.app.progress(record)
+        self.app.observe(event, **{key: value for key, value in record.items() if key != "event"})
 
     def observe_model(self, callback_context, llm_response):
         calls = (
@@ -75,6 +75,7 @@ class Turn:
             if result["status"] not in ("ok", "empty"):
                 self.failed_actions[digest] = self.failed_actions.get(digest, 0) + 1
             self.emit("tool_end", tool=name, status=result["status"], evidence_id=result.get("id"))
+            self.app.observe("tool_observation", name=name, result=result)
             return result
         except (LimitReached, asyncio.CancelledError, TimeoutError):
             raise
@@ -88,7 +89,9 @@ class Turn:
                 if hasattr(exc, "code")
                 else "The tool could not process these arguments. Try a corrected request."
             )
-            return {"status": code, "message": message}
+            result = {"status": code, "message": message}
+            self.app.observe("tool_observation", name=name, result=result)
+            return result
         finally:
             self.active -= 1
 
@@ -102,7 +105,7 @@ class Turn:
             "id": key,
             "purpose": purpose,
             "scope": self.app.identity.scope,
-            "queried_at": datetime.now(UTC).isoformat(),
+            "queried_at": self.app.now().isoformat(),
             "parents": parents or [],
         }
         self.app.results[key] = artifact

@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "new-returning",
+  "family": "scoped-cohort",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "retail_v1",
+  "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "How many Q1 2026 qualifying customers were new to our brand versus returning? Show both counts and the total distinct customers. A customer is new if they had no earlier qualifying purchase from our brand, even if they previously bought another brand.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "q1_new_customers",
+          "value": "4",
+          "value_type": "number",
+          "source_key": "q1.new_customers",
+          "metric": "new_customers",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_returning_customers",
+          "value": "8",
+          "value_type": "number",
+          "source_key": "q1.returning_customers",
+          "metric": "returning_customers",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_customers",
+          "value": "12",
+          "value_type": "number",
+          "source_key": "q1.customers",
+          "metric": "customers",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        },
+        {
+          "id": "scoped_history",
+          "kind": "semantic",
+          "description": "Determine first purchase within authorized brand history, not across all brands; four customers are new, eight returning.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: Q1 2026; authorized brand; new_customers: 4 count; Q1 2026; authorized brand; returning_customers: 8 count; Q1 2026; authorized brand; customers: 12 count.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "id": "zero-baseline",
+  "family": "zero-denominator",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "zero_baseline_v1",
+  "fixture_sha256": "420ed6c69ca5633bdcf65d62ef8f3057c852ca3c2ae98255b0c344ff9c0bbe03",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "Compare qualifying revenue in Q1 2026 with Q4 2025. Show each quarter's revenue, plus the absolute and percentage change. If the earlier quarter is zero, state that percentage change is undefined.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "q4_revenue",
+          "value": "0",
+          "value_type": "number",
+          "source_key": "q4.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "q1_revenue",
+          "value": "798",
+          "value_type": "number",
+          "source_key": "q1.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_revenue_absolute",
+          "value": "798",
+          "value_type": "number",
+          "source_key": "change.revenue.absolute",
+          "metric": "revenue absolute change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_revenue_percent",
+          "value": null,
+          "value_type": "null",
+          "source_key": "change.revenue.percent",
+          "metric": "revenue percent change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "Q4 2025 value of the same metric",
+          "tolerance": "0"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: Q4 2025; authorized brand; revenue: 0.00 unspecified currency; Q1 2026; authorized brand; revenue: 798.00 unspecified currency; Q1 2026 versus Q4 2025; authorized brand; revenue absolute change: 798.00 unspecified currency; Q1 2026 versus Q4 2025; authorized brand; revenue percent change: undefined (zero denominator) percent.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "metamorphic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

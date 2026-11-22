@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore", env_file=None)
     gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
+    warehouse_source_dataset: str = "bigquery-public-data.thelook_ecommerce"
     gemini_model: str = "gemini-3.8-flash"
     thinking_level: Literal["low", "medium", "high"] = "low"
     review_thinking_level: Literal["low", "medium", "high"] = "medium"

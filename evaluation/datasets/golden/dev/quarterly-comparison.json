@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "id": "quarterly-comparison",
+  "family": "quarter-comparison",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "retail_v1",
+  "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "Compare our Q1 2026 performance with Q4 2025. Show qualifying revenue, distinct customers, distinct orders, and average order value, including absolute and percentage changes.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "q4_revenue",
+          "value": "570",
+          "value_type": "number",
+          "source_key": "q4.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "q1_revenue",
+          "value": "798",
+          "value_type": "number",
+          "source_key": "q1.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "q4_customers",
+          "value": "8",
+          "value_type": "number",
+          "source_key": "q4.customers",
+          "metric": "customers",
+          "entity": "authorized brand",
+          "period": "Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_customers",
+          "value": "12",
+          "value_type": "number",
+          "source_key": "q1.customers",
+          "metric": "customers",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q4_orders",
+          "value": "9",
+          "value_type": "number",
+          "source_key": "q4.orders",
+          "metric": "orders",
+          "entity": "authorized brand",
+          "period": "Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q1_orders",
+          "value": "20",
+          "value_type": "number",
+          "source_key": "q1.orders",
+          "metric": "orders",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "q4_aov",
+          "value": "63.33333333333333333333333333",
+          "value_type": "number",
+          "source_key": "q4.aov",
+          "metric": "aov",
+          "entity": "authorized brand",
+          "period": "Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": "distinct qualifying orders in the same scope and period",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "q1_aov",
+          "value": "39.9",
+          "value_type": "number",
+          "source_key": "q1.aov",
+          "metric": "aov",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": "distinct qualifying orders in the same scope and period",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_revenue_absolute",
+          "value": "228",
+          "value_type": "number",
+          "source_key": "change.revenue.absolute",
+          "metric": "revenue absolute change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_revenue_percent",
+          "value": "40.0",
+          "value_type": "number",
+          "source_key": "change.revenue.percent",
+          "metric": "revenue percent change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "Q4 2025 value of the same metric",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_customers_absolute",
+          "value": "4",
+          "value_type": "number",
+          "source_key": "change.customers.absolute",
+          "metric": "customers absolute change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "change_customers_percent",
+          "value": "50.0",
+          "value_type": "number",
+          "source_key": "change.customers.percent",
+          "metric": "customers percent change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "Q4 2025 value of the same metric",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_orders_absolute",
+          "value": "11",
+          "value_type": "number",
+          "source_key": "change.orders.absolute",
+          "metric": "orders absolute change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "change_orders_percent",
+          "value": "122.2222222222222222222222222",
+          "value_type": "number",
+          "source_key": "change.orders.percent",
+          "metric": "orders percent change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "Q4 2025 value of the same metric",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_aov_absolute",
+          "value": "-23.43333333333333333333333333",
+          "value_type": "number",
+          "source_key": "change.aov.absolute",
+          "metric": "aov absolute change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": "distinct qualifying orders in the same scope and period",
+          "tolerance": "0.005"
+        },
+        {
+          "id": "change_aov_percent",
+          "value": "-37.00000000000000000000000000",
+          "value_type": "number",
+          "source_key": "change.aov.percent",
+          "metric": "aov percent change",
+          "entity": "authorized brand",
+          "period": "Q1 2026 versus Q4 2025",
+          "scope": "Calvin Klein",
+          "unit": "percent",
+          "denominator": "Q4 2025 value of the same metric",
+          "tolerance": "0.005"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: Q4 2025; authorized brand; revenue: 570.00 unspecified currency; Q1 2026; authorized brand; revenue: 798.00 unspecified currency; Q4 2025; authorized brand; customers: 8 count; Q1 2026; authorized brand; customers: 12 count; Q4 2025; authorized brand; orders: 9 count; Q1 2026; authorized brand; orders: 20 count; Q4 2025; authorized brand; aov: 63.33 unspecified currency; Q1 2026; authorized brand; aov: 39.90 unspecified currency; Q1 2026 versus Q4 2025; authorized brand; revenue absolute change: 228.00 unspecified currency; Q1 2026 versus Q4 2025; authorized brand; revenue percent change: 40.00 percent; Q1 2026 versus Q4 2025; authorized brand; customers absolute change: 4 count; Q1 2026 versus Q4 2025; authorized brand; customers percent change: 50.00 percent; Q1 2026 versus Q4 2025; authorized brand; orders absolute change: 11 count; Q1 2026 versus Q4 2025; authorized brand; orders percent change: 122.22 percent; Q1 2026 versus Q4 2025; authorized brand; aov absolute change: -23.43 unspecified currency; Q1 2026 versus Q4 2025; authorized brand; aov percent change: -37.00 percent.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

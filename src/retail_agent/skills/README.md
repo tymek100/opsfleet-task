@@ -1,6 +1,6 @@
 # Runtime skills
 
-This library contains runtime guidance for the retail analyst and reviewer. Repository instructions for coding assistants live separately in `.agents/skills/`.
+This library contains runtime guidance for the retail analyst and reviewer.
 
 | Skill | Audience | Purpose |
 | --- | --- | --- |

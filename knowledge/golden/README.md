@@ -78,7 +78,6 @@ The LLM may adapt, combine or ignore examples, then compose SQL and generate its
 
 Offline checks cover eligibility, pagination and tool integration. Relevance and answer-quality improvements require model trials with and without examples on identical questions and data. Evaluate outcomes without prescribing example IDs or tool order.
 
-A [live fixture smoke run](../../evals/rewrite/runs/golden-catalog-01/observations.md) exercised catalog selection, example reading and fresh queries. Its calculation matched fixture facts, but the answer was verbose. This single run does not establish improvement over keyword search.
 
 ## Production publication
 

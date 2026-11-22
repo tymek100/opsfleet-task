@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "period-clarification",
+  "family": "bounded-clarification",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "retail_v1",
+  "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "What was our revenue? Ask me which reporting period before querying; do not assume a period.",
+      "when_previous_outcome": []
+    },
+    {
+      "id": "turn-2",
+      "kind": "ask",
+      "message": "Use Q1 2026 and qualifying sales.",
+      "when_previous_outcome": [
+        "clarification"
+      ]
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        },
+        {
+          "id": "ask_period",
+          "kind": "semantic",
+          "description": "Request the period and do not fabricate a revenue result.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "clarification"
+      ],
+      "answerability": "clarification_required",
+      "reference_answer": "Which reporting period should I use?",
+      "reference_procedure": "Ask for the missing reporting period before issuing a warehouse query."
+    },
+    "turn-2": {
+      "facts": [
+        {
+          "id": "q1_revenue",
+          "value": "798",
+          "value_type": "number",
+          "source_key": "q1.revenue",
+          "metric": "revenue",
+          "entity": "authorized brand",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "unspecified currency",
+          "denominator": null,
+          "tolerance": "0.005"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Calvin Klein: Q1 2026; authorized brand; revenue: 798.00 unspecified currency.",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

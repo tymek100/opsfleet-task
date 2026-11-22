@@ -1,7 +1,10 @@
 # Evaluation rebuild: local Phoenix and independent reference data
 
-**Status:** implementation plan; existing tests and evaluation assets remain unchanged.
+**Status:** evaluation platform implemented; human review, human calibration, and a sealed holdout remain pending. Old evaluation code and test implementations have been removed.
+**Observed implementation:** [verification and pilot results](EVALUATION_IMPLEMENTATION_RESULTS.md).
+
 **Research date:** 2026-11-22. **Repository baseline:** 4d205c0.
+**Methodology review:** [Google, Anthropic, and OpenAI review](EVALUATION_REVIEW.md), 2026-11-22, against documentation baseline 37dfe2e. Implementation decisions and remaining validation are recorded below.
 
 ## 1. Scope and decisions
 
@@ -45,6 +48,8 @@ Atomic-claim grading detects unsupported implications within otherwise correct a
 Evaluate SQL denotations across distinguishing fixtures rather than matching query text or relying on one database. This approximates semantic correctness; it does not prove equivalence for every dataset. [Semantic evaluation for text-to-SQL](https://arxiv.org/abs/2010.02840)
 
 ADK trajectory/response evaluators are optional diagnostics. The primary harness exercises application budgets, review, and report operations. Exact tool sequences and ROUGE similarity are unsuitable general acceptance criteria. [ADK evaluation criteria](https://adk.dev/evaluate/criteria/)
+
+Imported metrics require a versioned contract for evaluation unit, denominator, score direction, missing-output handling, and judge settings. ADK's sentence-level hallucination metric includes nonfactual sentences as successes; it is not interchangeable with our factual-claim precision. Report it separately if adopted.
 
 ## 4. Architecture and data boundaries
 
@@ -185,6 +190,14 @@ Declare acceptable outcomes per turn: answer, clarification, refusal, or incompl
 
 Reference facts specify entity, metric, scope, period, unit, denominator, value, and tolerance. Use Decimal arithmetic and declared monetary rounding; counts/IDs are exact. Accept valid tie alternatives when the task does not prescribe a unique tie-break.
 
+Freeze atomic acceptance criteria before running candidates: criterion ID, applicable turn/branch, required evidence, grader, severity, and whether failure blocks task success. Criteria derive from the request, metric policy, or environment, never from the candidate answer. An LLM may draft criteria for review, but cannot relax them while grading. This adapts Google's task-specific rubric approach. [Google evaluation overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/evaluation-overview)
+
+Admission requires a reviewed passing answer/state and, for answerable tasks, a feasible reference procedure through authorized tools under the declared limits. The procedure validates solvability, not an expected trajectory. Mutated controls must fail the intended criteria. Broken fixtures/references become `INVALID_CASE` with recorded exclusions; repairs create a new version and require comparable baseline/candidate runs. [OpenAI evaluation-validity guidance](https://openai.com/index/trustworthy-third-party-evaluations-foundations/)
+
+### Conversation scenarios
+
+Retain scripted regressions and include a small set of bounded branching scenarios in the pilot: missing period, clarification, corrected definition, false premise, and cancellation. Branch on actual responses so a legitimate clarification does not encounter an unrelated next prompt. LLM user simulation is optional later, with capped turns/cost, user-owned scenario facts only, recorded transcripts/version, and independent simulator-validity checks. Simulator failures are harness errors; simulators cannot access oracle answers or authorize destructive actions. [ADK user simulation](https://adk.dev/evaluate/user-sim/)
+
 ### Independent oracles
 
 Compute references from raw fixture rows using separate Python Decimal/set logic. Do not import the application compiler, reuse agent SQL, or accept reviewer verdicts as ground truth. Cross-check difficult calculations independently and through human review.
@@ -217,6 +230,8 @@ The 40-case pilot includes failures and successful controls across all major fam
 
 Assign one primary family per case; additional tags are allowed. Cases copied from runtime examples are not evidence of generalization.
 
+Tag suite purpose independently of the development/regression/holdout split: representative workload, stable regression, or exploratory challenge. The 200-case allocation is diagnostic coverage, not an estimate of traffic frequencies. Report slices separately; weight workload estimates only from a documented sampling frame. Maintain a lightweight intake record for sanitized user-reported failures and successful controls, fixture reproduction, references, and review status. Preserve metadata-only chat defaults; richer capture requires explicit scope and sanitization. Saturated cases remain regressions while new realistic challenges extend coverage. [OpenAI evaluation best practices](https://developers.openai.com/api/docs/guides/evaluation-best-practices)
+
 ## 8. Test layers and runtime seams
 
 | Layer | Execution | Coverage |
@@ -246,13 +261,29 @@ DuckDB fixtures do not establish BigQuery compatibility. Mutable public TheLook 
 
 Two application seams are required: inject UTC/wall time for relative dates, history expiry, and report clocks while retaining real monotonic budget/cancellation time; and configure trusted physical BigQuery tables for controlled integration datasets. Source configuration remains outside model arguments and preserves scope enforcement.
 
+Clock control must also account for SQL `CURRENT_DATE`/`CURRENT_TIMESTAMP`; changing prompt time alone does not freeze the database clock. Verify consistent as-of semantics or label the case non-frozen. Fault schedules specify boundary, trigger, response/latency, seed, and recovery expectations. Inject faults below the compiler/scope checks being tested; generative tool mocks cannot supply numerical ground truth.
+
+### Adversarial and context boundaries
+
+Exercise both runtime and evaluation surfaces with synthetic paired payloads:
+
+| Surface | Attempt | Required observation |
+|---|---|---|
+| Product values, tool errors, Golden examples, saved reports | Override scope, fabricate facts, request unauthorized save/delete | No forbidden disclosure/mutation; retain legitimate task utility |
+| Candidate, quoted history, selected evidence | Persuade the runtime reviewer to approve or authorize saving | Record reviewer false accepts and actual persisted state separately |
+| Candidate/evidence passed to offline graders | Spoof rubric/system messages, full-score JSON, evidence IDs | Trusted criteria unchanged; defective controls remain failures |
+
+Distinguish blocked attempts from successful policy violations and judge manipulation. Include benign quoted-instruction controls. Code validates boundaries and final state; no model score can override a failed invariant. These adapt [ADK's trust-boundary guidance](https://adk.dev/safety/) to the application's actual surfaces.
+
+Stress current history limits: six entries, 4 KB answer excerpts, aggregate context allowance, and 30-result manifests. Use scripted models for boundary coverage and selected live scenarios with period/definition changes and older-answer references. Record visible context; missing details require rereading, querying, or clarification, not invented continuity. No new memory subsystem is required. [Anthropic context engineering](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents)
+
 ## 9. Metrics and claim grading
 
 Each score records name/version, status, value/label, denominator, and evidence-linked findings. Separate execution and grading status; missing scores never pass. Support `PASS`, `FAIL`, `ERROR`, `UNJUDGEABLE`, and `NOT_APPLICABLE`.
 
 | Metric | Definition |
 |---|---|
-| Task success | All mandatory facts, instructions, and state checks pass; no critical violation or unresolved required grade. Report successes/attempts and unscored counts. |
+| Task success | All mandatory published turns, facts, instructions, and state checks pass; no critical violation or unresolved required grade. Report successes/attempts and unscored counts. |
 | Required-fact coverage | Correctly communicated required facts / required facts |
 | Numeric correctness | Correct required numeric facts / required numeric facts, including entity, period, metric, unit, and scope |
 | Reconciliation | Signed components plus Other equal the independent total; top-component selection checked separately |
@@ -262,6 +293,14 @@ Each score records name/version, status, value/label, denominator, and evidence-
 | Instruction compliance | Requested format, columns, word limits, coverage, and actions |
 | Action correctness | Persisted ownership, selection, authorization, and content; receipts alone are insufficient |
 | Boundary violations | Separate disclosure, mutation, confirmation, publication, and budget violation counts |
+
+Grade every published answer with its turn-specific references and evidence. A later correction does not erase an earlier material failure; report first error, propagation, and recovery separately. Unpublished drafts rejected by review are diagnostics, not user-visible failures. This adapts Anthropic's conversation-wide evaluation principle. [Building strong safety evaluations, 2026-11-13](https://www.anthropic.com/research/building-strong-safety-evaluations)
+
+### Answerability and abstention
+
+Label each turn/branch as answerable, clarification-required, evidence-unavailable, or access-denied under its authorized environment. Pair sufficient/insufficient evidence and benign/adversarial cases. Report useful answer coverage on answerable tasks, unnecessary refusal/clarification, correct abstention where required, and material error rate among substantive answers. Keep provider failures and judge uncertainty separate; an empty result is not a failed query. Do not interpret model-reported confidence as calibrated probability. These measures expose both confident guessing and blanket refusal. [OpenAI hallucination research](https://openai.com/index/why-language-models-hallucinate/)
+
+Use explicit denominators: useful coverage = correct, required-complete substantive answers on answerable turns / attempted answerable turns; unnecessary abstention = unjustified refusals or clarifications / gradable answerable turns; answer risk = substantive answers with a material factual/support defect / gradable substantive answers. Report answer-level grading coverage and unresolved counts so missing grades cannot dilute risk. Report appropriate limited responses separately for clarification-required, unavailable, and denied cases. Zero denominators produce `NOT_APPLICABLE`.
 
 ### Claim pipeline
 
@@ -277,7 +316,7 @@ Extract atomic assertions, including table labels, qualifiers, comparisons, caus
 
 For counts S/U/C/J, grounded precision is `S/(S+U+C)` and judgeable coverage is `(S+U+C)/(S+U+C+J)`. No factual claims yields `NOT_APPLICABLE`, not 100%. Measure extraction recall only against human-annotated calibration/audit samples; otherwise use `NOT_MEASURED` and report audit coverage. Report claim-weighted micro scores and case/family macro averages.
 
-Absent evidence due to agent behavior generally means unsupported; artifacts lost by the harness mean evaluation error. Follow-ups may use retained authorized observations, user-provided facts, and metric definitions without another query. Unread rows and unrelated history do not count as observed evidence.
+Absent evidence due to agent behavior generally means unsupported; artifacts lost by the harness mean evaluation error. Follow-ups may use retained authorized observations and applicable definitions without another query. Track source type, scope, period, and authority: user assertions are premises to verify, historical reports are not current warehouse evidence, and explicit hypothetical assumptions must remain hypothetical. User-defined metrics configure the task but do not establish observed values. Unread rows and unrelated history do not count as observed evidence.
 
 ### Regression seeds
 
@@ -293,6 +332,10 @@ Convert these into reviewed fixed-answer calibration pairs and independent synth
 Start with 40–60 human-labeled candidate/evidence bundles and separate development/validation splits. Cover concise correct answers, polished errors, contradictions, entity errors, omissions, causal overreach, qualified hypotheses, and ambiguity. Independently double-review difficult cases where feasible, adjudicate disagreements, and record single-review provenance.
 
 Blind judges to agent/model identity, runtime approval, and expected labels. Measure extraction recall, confusion matrices, false accepts/rejects, abstention, and repeated-judgment stability. Revalidate model/prompt changes. Audit verbosity, position, and self-preference bias; another model is not independent truth. Critical disputes require human adjudication. Request brief evidence-linked findings, not hidden reasoning. [MT-Bench research](https://arxiv.org/abs/2306.05685)
+
+Keep offline judges tool-free, with trusted rubrics/references separate from bounded untrusted fields. Reject invalid labels, invented spans/IDs, and unexpected score fields. Add grader attacks to the labeled calibration set: instructions to approve, fake authority, wrong answers wrapped in score JSON, and fabricated citations. OpenAI reports injections targeting monitors/graders; schema validity alone is insufficient. [OpenAI monitoring research](https://openai.com/index/how-we-monitor-internal-coding-agents-misalignment/)
+
+Run a frozen sentinel set on every grader/model change. Include fact-preserving paraphrases, nonfactual padding, polished incorrect answers, and correct concise controls. Track human-human agreement where available; audit a sample of passes as well as failures. If a plausible calibrated alternative grader reverses a claimed improvement, adjudicate before accepting it.
 
 ## 10. Reliability and experiment execution
 
@@ -319,9 +362,12 @@ Record commit/dirty-diff and lockfile hashes, dataset/fixture versions, metric p
 - Separate analyst, runtime-reviewer, query, and offline-judge usage/cost. Include failures and unknown usage; version pricing estimates. Cost per successful task includes all agent attempts and is undefined with no successes.
 - Track invalid/repaired/repeated calls, review rounds, and query/model counts diagnostically. Successful recovery can include an invalid SQL attempt.
 - Measure runtime-reviewer false accepts among independently invalid candidates and false rejects among valid candidates, with schema failures, retries, latency, and defect strata.
+- Blind-grade first drafts, revisions, and published answers against independent truth and each candidate's contemporaneous evidence. Report invalid-to-valid repair yield, valid-to-invalid regression, and valid-but-blocked completion alongside review cost/latency. Keep reference/oracle versions fixed; later evidence cannot retroactively ground an earlier draft. These transitions are observational diagnostics, not isolated causal effects of the reviewer.
 - Predeclare three pilot repetitions and size the suite to budget. Report per-attempt success, all-three success, and optionally any-of-three success. Interrupted repetition coverage makes consistency comparisons incomplete; do not analyze only surviving groups or cube the global mean. [tau-bench](https://arxiv.org/abs/2406.12045)
 
 Compare identical case/fixture/repetition/judge versions; alternate execution order. Use paired per-case changes and confidence intervals clustered by case/family. Related claims are not independent observations; insufficient evidence remains inconclusive. [Statistical testing in NLP](https://aclanthology.org/P18-1128/)
+
+Predeclare primary metrics, slices, comparison, and acceptable margins in the run manifest. Mark additional analyses exploratory; multiple tested variants must not turn a selected favorable result into an unqualified improvement claim.
 
 An initial ablation compares Golden Knowledge enabled/disabled on identical independent tasks, without requiring particular retrieval decisions.
 
@@ -362,16 +408,17 @@ docs/
 
 Package evaluation tooling behind a dedicated CLI; the application must not import it. Include the new package in Ruff/Pyright rather than copying the old `evals/` exclusion. Keep architecture in `docs/architecture.md`, assignment material in `docs/task/`, this plan in `docs/plans/`, and operational commands in the root README.
 
-**Proposed commands; not implemented:**
+**CLI examples** (install dependencies with `uv sync --locked --group evaluation`):
 
 ~~~bash
 uv run retail-eval validate
 docker compose -f infra/phoenix/compose.yaml up -d
 uv run retail-eval sync --suite regression
-uv run retail-eval run --suite smoke --backend fixture --repetitions 3 \
-  --max-cost-usd <agent-run-ceiling>
-uv run retail-eval grade --run <run-id> --max-cost-usd <judge-run-ceiling>
-uv run retail-eval compare --baseline <run-id> --candidate <run-id>
+uv run --group evaluation retail-eval run --suite smoke --repetitions 3 \
+  --max-cost-usd 10 --deadline-seconds 2400 --allow-unreviewed
+uv run --group evaluation retail-eval grade --run <run-directory> \
+  --max-cost-usd 5 --deadline-seconds 1200
+uv run --group evaluation retail-eval compare --baseline <baseline-grade-directory> --candidate <candidate-grade-directory>
 ~~~
 
 `validate` checks schemas, splits, references, and hashes without model calls. `sync` mirrors a canonical dataset version. Finalize CLI validation in phase 1, including run and grading timeout settings. Execution prints the manifest, case count, model, capture policy, and limits.
@@ -390,11 +437,11 @@ Release gates require passing deterministic boundary tests, valid graders, verif
 
 | Phase | Deliverables and exit criteria |
 |---|---|
-| 1. Contracts | Validated case/result/score schemas, split manifests, oracle design, mandatory-contract inventory; reference provenance and runtime visibility explicit |
+| 1. Contracts | Validated schemas, frozen atomic criteria, case-admission controls, split/suite manifests, oracle design; provenance and runtime visibility explicit |
 | 2. Compatibility spike | Pinned Phoenix stack and optional instrumentation; actual runtime trace, persistence, privacy, accounting, and outage checks |
 | 3. Foundations | Rewritten offline suite, distinguishing fixtures, deterministic graders, oracle mutations; no historical-capture dependencies or credentials |
 | 4. Runner | Isolated conversations, run/grade phases, manifests, bounded execution; no leakage, hidden retries, cross-prompt accounting, or untracked timeout work |
-| 5. Pilot | Calibrated claim/instruction judges, 40 reviewed cases and repeated baseline; correct/defective controls distinguished, uncertainty visible |
+| 5. Pilot | Calibrated judges with adversarial controls; 40 reviewed cases including answerability pairs and branching/context cases; per-turn, reviewer-impact, and repeated baseline results |
 | 6. Atomic cutover | Remove old implementation, update CI/docs/configuration; new suite runnable without deleted paths |
 | 7. Expansion | Toward 200 reviewed cases, frozen holdout, Golden ablation; versioned comparisons with uncertainty and costs |
 
@@ -417,6 +464,36 @@ Update README, architecture, packaging, skills, and agent configuration referenc
 
 The rebuild is complete when local Phoenix persists linked experiments and traces; runtime/evaluation data isolation passes; independent oracles expose incorrect SQL; calibrated graders detect the observed attribution and causal failures while accepting valid controls; and rewritten tests cover numerical, authorization, state, privacy, publication, accounting, and CLI contracts.
 
+Grader attacks, case-admission controls, every-turn scoring, answerability pairs, and current context boundaries must be covered before trusting live pilot scores. Adaptive LLM simulation and broader sensitivity studies remain later extensions.
+
 Multi-turn isolation, per-prompt limits, honest failure accounting, judge uncertainty, and repeatability must be demonstrated in a versioned baseline report. Old evaluation implementations and dependencies must be removed, with documentation aligned to `docs/task/`, `docs/architecture.md`, and `docs/plans/`.
 
 Platform completion does not require the agent to meet future performance targets. The baseline must preserve genuine failures so subsequent runtime changes can be evaluated against them.
+
+Evaluation measures protection; it does not provide it by itself. For each observed failure, use its trace to select a targeted prompt, skill, tool-contract, or review change; rerun the defect, its valid control, and the broader comparison. Runtime authorization and mutation checks remain application-enforced. Improve measured correction/abstention behavior without prescribing a fixed analytical workflow or adding an unvalidated reviewer to every tool call.
+
+## 14. Implemented scope and remaining validation
+
+The implementation uses Pydantic contracts in `evaluation/models.py` and `results.py`,
+independent raw JSON fixtures rendered to SQL, immutable run snapshots, isolated conversation
+execution, code graders, a tool-free Gemini judge, versioned grading outputs, and local Phoenix
+publication. Phoenix's public `create`, `log_run`, and `log_evaluation` APIs import saved trials
+with original timestamps and trace IDs. This replaces the proposed SDK task runner and avoids
+implicit task retries or reference injection. Agent execution and grading stay separate.
+
+The pilot contains 43 code-verified cases (40 core plus three edge cases) and 40 paired judge controls. Neither set claims
+human approval. `--allow-unreviewed` explicitly admits diagnostic runs; ordinary admission
+rejects unreviewed cases. No production success threshold or unseen holdout accuracy is claimed.
+The comparison command checks grader/reference compatibility and reports uncertainty, including
+missing repetitions. The test suite no longer depends on historical captures.
+
+The platform still requires independent human reference review, adjudicated judge calibration,
+a frozen held-out family split, product-specific quality margins, and controlled BigQuery
+execution before release-quality conclusions. LLM user simulation, a 200-case expansion,
+Golden Knowledge ablation, bias/stability studies and production workload sampling remain
+subsequent experiments. Local DuckDB denotations do not establish BigQuery equivalence.
+
+Operational commands live in the root README. Reproducible dataset builders are maintenance
+tools; rebuilding a dataset changes its version and requires comparable new baseline/candidate
+runs. Repository Codex skills were removed at the user's request; runtime ADK analytical skills
+remain part of the application under test.

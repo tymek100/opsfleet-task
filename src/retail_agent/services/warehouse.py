@@ -17,8 +17,10 @@ import multiprocessing
 import re
 import time
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import sqlglot
 from sqlglot import exp
@@ -49,6 +51,7 @@ SALE_COLUMNS = [
     "order_status",
 ]
 RELATIONS = {"sales", "transactions", "products"}
+DEFAULT_SOURCE_DATASET = "bigquery-public-data.thelook_ecommerce"
 FORBIDDEN_COLUMNS = {
     "email",
     "first_name",
@@ -340,10 +343,50 @@ def _bind(tree: exp.Expr, parameters: dict[str, Any] | None) -> exp.Expr:
     return tree
 
 
-def _base_relation(name: str, brands: tuple[str, ...] | None) -> exp.Select:
+def _source_dataset(value: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]*\.[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("Warehouse source must be a trusted project.dataset identifier")
+    return value
+
+
+def _freeze_clock(tree: exp.Expr, as_of: dt.datetime | None) -> exp.Expr:
+    """Freeze volatile SQL clock expressions before either backend executes them."""
+    if as_of is None:
+        return tree
+    if as_of.tzinfo is None or as_of.utcoffset() is None:
+        raise ValueError("SQL clock must be timezone-aware")
+    for node in list(tree.walk()):
+        if not isinstance(
+            node, (exp.CurrentDate, exp.CurrentDatetime, exp.CurrentTime, exp.CurrentTimestamp)
+        ):
+            continue
+        zone = node.args.get("this")
+        if zone is not None and not (isinstance(zone, exp.Literal) and zone.is_string):
+            raise DataError("invalid_request", "Clock timezone must be a literal or bound string.")
+        try:
+            instant = as_of.astimezone(ZoneInfo(zone.this) if zone else dt.UTC)
+        except (ValueError, ZoneInfoNotFoundError):
+            raise DataError("invalid_request", "Clock timezone is not recognized.") from None
+        if isinstance(node, exp.CurrentTimestamp):
+            kind, value = "TIMESTAMP", as_of.astimezone(dt.UTC).isoformat()
+        elif isinstance(node, exp.CurrentDate):
+            kind, value = "DATE", instant.date().isoformat()
+        elif isinstance(node, exp.CurrentDatetime):
+            kind, value = "DATETIME", instant.replace(tzinfo=None).isoformat()
+        else:
+            kind, value = "TIME", instant.time().isoformat()
+        node.replace(
+            exp.Cast(
+                this=exp.Literal.string(value), to=exp.DataType.build(kind, dialect="bigquery")
+            )
+        )
+    return tree
+
+
+def _base_relation(name: str, brands: tuple[str, ...] | None, source_dataset: str) -> exp.Select:
     scope = "TRUE" if brands is None else "p.brand IN UNNEST(@__scope_brands)"
     products = f"""SELECT p.id AS product_id, p.name AS product_name, p.brand, p.category
-        FROM `bigquery-public-data.thelook_ecommerce.products` AS p WHERE {scope}"""
+        FROM `{source_dataset}.products` AS p WHERE {scope}"""
     if name == "products":
         return cast(exp.Select, sqlglot.parse_one(products, read="bigquery"))
     statuses = (
@@ -355,21 +398,32 @@ def _base_relation(name: str, brands: tuple[str, ...] | None) -> exp.Select:
     sql = f"""SELECT i.id AS item_id, i.order_id, i.user_id, i.product_id,
         i.sale_price, i.created_at AS purchased_at, p.brand, p.category,
         p.name AS product_name, i.status AS item_status, o.status AS order_status
-        FROM `bigquery-public-data.thelook_ecommerce.order_items` AS i
-        JOIN `bigquery-public-data.thelook_ecommerce.orders` AS o
+        FROM `{source_dataset}.order_items` AS i
+        JOIN `{source_dataset}.orders` AS o
           ON o.order_id = i.order_id AND o.user_id = i.user_id
-        JOIN `bigquery-public-data.thelook_ecommerce.products` AS p ON p.id = i.product_id
+        JOIN `{source_dataset}.products` AS p ON p.id = i.product_id
         WHERE {scope} {statuses}"""
     return cast(exp.Select, sqlglot.parse_one(sql, read="bigquery"))
 
 
-def compile_query(sql: str, brands: tuple[str, ...] | None, parameters: dict | None = None) -> str:
+def compile_query(
+    sql: str,
+    brands: tuple[str, ...] | None,
+    parameters: dict | None = None,
+    *,
+    source_dataset: str = DEFAULT_SOURCE_DATASET,
+    as_of: dt.datetime | None = None,
+) -> str:
     """Replace every resolved physical logical source with a scoped projection."""
     tree, tables = _read_query(sql, RELATIONS)
     _bind(tree, parameters)
+    _freeze_clock(tree, as_of)
+    _source_dataset(source_dataset)
     for table in tables:
         alias = table.alias_or_name
-        table.replace(_base_relation(table.name.lower(), brands).subquery(alias=alias))
+        table.replace(
+            _base_relation(table.name.lower(), brands, source_dataset).subquery(alias=alias)
+        )
     return tree.sql(dialect="bigquery")
 
 
@@ -552,7 +606,13 @@ async def _run_local(payload: dict, timeout: float) -> dict:
         process.close()
 
 
-async def analyze_results(results: dict[str, dict], sql: str, timeout: float = 5) -> dict:
+async def analyze_results(
+    results: dict[str, dict],
+    sql: str,
+    timeout: float = 5,
+    *,
+    as_of: dt.datetime | None = None,
+) -> dict:
     """Query session-authorized result snapshots by their handle, without warehouse access."""
     if not results or len(results) > 10:
         raise DataError("invalid_request", "Select between one and ten existing result handles.")
@@ -567,6 +627,7 @@ async def analyze_results(results: dict[str, dict], sql: str, timeout: float = 5
         )
     tree, _ = _read_query(sql, {key.lower() for key in results})
     _bind(tree, None)
+    _freeze_clock(tree, as_of)
     result = await _run_local(
         {
             "results": results,
@@ -577,6 +638,8 @@ async def analyze_results(results: dict[str, dict], sql: str, timeout: float = 5
         timeout,
     )
     result["parents"] = list(results)
+    if as_of is not None:
+        result["executed_at"] = as_of.astimezone(dt.UTC).isoformat()
     return result
 
 
@@ -589,6 +652,9 @@ class QueryGateway:
         fixture_path: Path | None = None,
         max_bytes: int = 100_000_000,
         row_limit: int = 200,
+        *,
+        source_dataset: str = DEFAULT_SOURCE_DATASET,
+        clock: Callable[[], dt.datetime] | None = None,
     ):
         if backend not in {"bigquery", "fixture"}:
             raise ValueError("backend must be bigquery or fixture")
@@ -600,6 +666,8 @@ class QueryGateway:
         self.fixture_path = fixture_path
         self.max_bytes = max_bytes
         self.row_limit = row_limit
+        self.source_dataset = _source_dataset(source_dataset)
+        self.clock = clock
         self._client: Any = None
         self._job_ids: dict[str, str] = {}
         self._submitted: set[str] = set()
@@ -638,7 +706,10 @@ class QueryGateway:
     async def query(self, sql: str, parameters: dict | None = None, timeout: float = 30) -> dict:
         if timeout <= 0:
             raise DataError("limit_reached", "The query deadline has expired.")
-        compiled = compile_query(sql, self.brands, parameters)
+        as_of = self.clock() if self.clock is not None else None
+        compiled = compile_query(
+            sql, self.brands, parameters, source_dataset=self.source_dataset, as_of=as_of
+        )
         if self.backend == "fixture":
             if self.fixture_path is None or not self.fixture_path.is_file():
                 raise DataError(
@@ -646,6 +717,7 @@ class QueryGateway:
                 )
             tree, _ = _read_query(sql, RELATIONS)
             _bind(tree, parameters)
+            _freeze_clock(tree, as_of)
             try:
                 local_sql = tree.sql(dialect="duckdb", unsupported_level=sqlglot.ErrorLevel.RAISE)
             except UnsupportedError:
@@ -667,6 +739,8 @@ class QueryGateway:
             result = await self._warehouse(compiled, sql, timeout)
         result["parameters"] = parameters or {}
         result["scope"] = list(self.brands) if self.brands is not None else "all brands"
+        if as_of is not None:
+            result["executed_at"] = as_of.astimezone(dt.UTC).isoformat()
         return result
 
     def _execute_bigquery(self, compiled: str, logical: str, timeout: float, job_id: str) -> dict:
@@ -813,11 +887,11 @@ class QueryGateway:
         scope = "TRUE" if self.brands is None else "p.brand IN UNNEST(@__scope_brands)"
         sql = f"""SELECT u.state, COUNT(DISTINCT i.user_id) AS customers,
             COUNT(DISTINCT i.order_id) AS orders, SUM(i.sale_price) AS revenue
-            FROM `bigquery-public-data.thelook_ecommerce.order_items` i
-            JOIN `bigquery-public-data.thelook_ecommerce.orders` o
+            FROM `{self.source_dataset}.order_items` i
+            JOIN `{self.source_dataset}.orders` o
               ON o.order_id=i.order_id AND o.user_id=i.user_id
-            JOIN `bigquery-public-data.thelook_ecommerce.products` p ON p.id=i.product_id
-            JOIN `bigquery-public-data.thelook_ecommerce.users` u ON u.id=i.user_id
+            JOIN `{self.source_dataset}.products` p ON p.id=i.product_id
+            JOIN `{self.source_dataset}.users` u ON u.id=i.user_id
             WHERE {scope} AND {statuses[status_definition]}
               AND i.created_at >= TIMESTAMP '{start_date.isoformat()}'
               AND i.created_at < TIMESTAMP '{end_date.isoformat()}'
@@ -831,4 +905,6 @@ class QueryGateway:
             "so visible totals may not equal all-brand-scope totals. No individual geography is exposed."
         )
         result["scope"] = list(self.brands) if self.brands is not None else "all brands"
+        if self.clock is not None:
+            result["executed_at"] = self.clock().astimezone(dt.UTC).isoformat()
         return result

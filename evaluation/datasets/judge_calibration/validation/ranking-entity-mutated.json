@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "id": "ranking-entity-mutated",
+  "family": "ranking-entity",
+  "split": "validation",
+  "question": "Name the leading Q1 product by revenue, with its ID and revenue.",
+  "answer": "The Q1 revenue leader was Cedar Tailored Suit (1002), with revenue 420.",
+  "reference": {
+    "facts": [
+      {
+        "id": "rank_revenue_1_product_id",
+        "value": "1001",
+        "value_type": "number",
+        "source_key": "rank.revenue.1.product_id",
+        "metric": "product_id",
+        "entity": "rank 1 by revenue",
+        "period": "Q1 2026",
+        "scope": "Calvin Klein",
+        "unit": "product ID",
+        "denominator": null,
+        "tolerance": "0"
+      },
+      {
+        "id": "rank_revenue_1_revenue",
+        "value": "420",
+        "value_type": "number",
+        "source_key": "rank.revenue.1.revenue",
+        "metric": "revenue",
+        "entity": "rank 1 by revenue; Harbor Wool Coat (product 1001)",
+        "period": "Q1 2026",
+        "scope": "Calvin Klein",
+        "unit": "unspecified currency",
+        "denominator": null,
+        "tolerance": "0.005"
+      }
+    ],
+    "criteria": [
+      {
+        "id": "grounded_interpretation",
+        "kind": "semantic",
+        "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+        "severity": "material",
+        "blocks_success": true,
+        "options": {}
+      },
+      {
+        "id": "control_requirement",
+        "kind": "semantic",
+        "description": "Preserve the requested metric, entity, scope, period, and denominator.",
+        "severity": "material",
+        "blocks_success": true,
+        "options": {}
+      }
+    ],
+    "allowed_outcomes": [
+      "answer"
+    ],
+    "answerability": "answerable",
+    "reference_answer": "The Q1 revenue leader was Harbor Wool Coat (1001), with revenue 420.",
+    "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "kind": "scoped_warehouse_result",
+      "scope": "Calvin Klein",
+      "definition": "Qualifying sales exclude Cancelled/Returned at both order and item level; UTC [start,end) periods; revenue=sum(sale_price), AOV=revenue/distinct orders.",
+      "rows": [
+        {
+          "metric_key": "rank.revenue.1.product_id",
+          "value": "1001"
+        },
+        {
+          "metric_key": "rank.revenue.1.product_name",
+          "value": "Harbor Wool Coat"
+        },
+        {
+          "metric_key": "rank.revenue.1.revenue",
+          "value": "420"
+        },
+        {
+          "metric_key": "rank.revenue.3.product_id",
+          "value": "1002"
+        },
+        {
+          "metric_key": "rank.revenue.3.product_name",
+          "value": "Cedar Tailored Suit"
+        },
+        {
+          "metric_key": "rank.revenue.3.revenue",
+          "value": "80"
+        }
+      ]
+    }
+  ],
+  "expected_claims": [
+    {
+      "span": "The Q1 revenue leader was Cedar Tailored Suit (1002), with revenue 420.",
+      "label": "CONTRADICTED"
+    }
+  ],
+  "expected_pass": false,
+  "human_reviewed": false,
+  "code_verified": true,
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "fixture": "retail_v1",
+    "review": "Code-authored control checked against independent oracle facts; human review pending."
+  }
+}

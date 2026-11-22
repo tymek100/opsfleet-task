@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "id": "rank-customers",
+  "family": "product-ranking",
+  "split": "dev",
+  "purpose": "diagnostic",
+  "identity": "alice",
+  "fixture": "retail_v1",
+  "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
+  "clock_utc": "2026-04-02T12:00:00Z",
+  "golden_enabled": false,
+  "tags": [],
+  "steps": [
+    {
+      "id": "turn-1",
+      "kind": "ask",
+      "message": "Show our top five products by distinct purchasing customers in Q1 2026. Include each product's ID and distinct customer count; break ties by ascending product ID.",
+      "when_previous_outcome": []
+    }
+  ],
+  "references": {
+    "turn-1": {
+      "facts": [
+        {
+          "id": "rank_customers_1_product_id",
+          "value": "1005",
+          "value_type": "number",
+          "source_key": "rank.customers.1.product_id",
+          "metric": "product_id",
+          "entity": "rank 1 by customers",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "product ID",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_1_customers",
+          "value": "8",
+          "value_type": "number",
+          "source_key": "rank.customers.1.customers",
+          "metric": "customers",
+          "entity": "rank 1 by customers; Everyday Cotton Briefs (product 1005)",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_2_product_id",
+          "value": "1003",
+          "value_type": "number",
+          "source_key": "rank.customers.2.product_id",
+          "metric": "product_id",
+          "entity": "rank 2 by customers",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "product ID",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_2_customers",
+          "value": "5",
+          "value_type": "number",
+          "source_key": "rank.customers.2.customers",
+          "metric": "customers",
+          "entity": "rank 2 by customers; Linen Crew Shirt (product 1003)",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_3_product_id",
+          "value": "1006",
+          "value_type": "number",
+          "source_key": "rank.customers.3.product_id",
+          "metric": "product_id",
+          "entity": "rank 3 by customers",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "product ID",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_3_customers",
+          "value": "4",
+          "value_type": "number",
+          "source_key": "rank.customers.3.customers",
+          "metric": "customers",
+          "entity": "rank 3 by customers; Canvas Weekend Belt (product 1006)",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_4_product_id",
+          "value": "1001",
+          "value_type": "number",
+          "source_key": "rank.customers.4.product_id",
+          "metric": "product_id",
+          "entity": "rank 4 by customers",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "product ID",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_4_customers",
+          "value": "2",
+          "value_type": "number",
+          "source_key": "rank.customers.4.customers",
+          "metric": "customers",
+          "entity": "rank 4 by customers; Harbor Wool Coat (product 1001)",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_5_product_id",
+          "value": "1002",
+          "value_type": "number",
+          "source_key": "rank.customers.5.product_id",
+          "metric": "product_id",
+          "entity": "rank 5 by customers",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "product ID",
+          "denominator": null,
+          "tolerance": "0"
+        },
+        {
+          "id": "rank_customers_5_customers",
+          "value": "1",
+          "value_type": "number",
+          "source_key": "rank.customers.5.customers",
+          "metric": "customers",
+          "entity": "rank 5 by customers; Cedar Tailored Suit (product 1002)",
+          "period": "Q1 2026",
+          "scope": "Calvin Klein",
+          "unit": "count",
+          "denominator": null,
+          "tolerance": "0"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "grounded_interpretation",
+          "kind": "semantic",
+          "description": "State only supported observations. Treat causal explanations as unverified hypotheses unless the observed data establish them.",
+          "severity": "material",
+          "blocks_success": true,
+          "options": {}
+        }
+      ],
+      "allowed_outcomes": [
+        "answer"
+      ],
+      "answerability": "answerable",
+      "reference_answer": "Top five Calvin Klein products by customers, Q1 2026 (qualifying sales).\n| Rank | Product ID | Product | Customers |\n|---:|---:|---|---:|\n| 1 | 1005 | Everyday Cotton Briefs | 8 |\n| 2 | 1003 | Linen Crew Shirt | 5 |\n| 3 | 1006 | Canvas Weekend Belt | 4 |\n| 4 | 1001 | Harbor Wool Coat | 2 |\n| 5 | 1002 | Cedar Tailored Suit | 1 |",
+      "reference_procedure": "Read the scoped schema. Aggregate the sales relation at the requested grain and UTC [start,end) period; report the verified results. No write operation is needed."
+    }
+  },
+  "initial_reports": [],
+  "expected_report_count": 0,
+  "expected_final_reports": [],
+  "faults": [],
+  "provenance": {
+    "author": "Codex",
+    "source": "synthetic",
+    "human_reviewed": false,
+    "oracle_verified": true,
+    "notes": "Authored synthetic scenario. Facts recomputed by independent Decimal/set oracle; acceptance criteria and candidate controls are code-reviewed only. Human review remains pending."
+  }
+}

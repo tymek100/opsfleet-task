@@ -1,0 +1,534 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "products": [
+    {
+      "product_id": 1001,
+      "brand": "Calvin Klein",
+      "category": "Outerwear",
+      "product_name": "Harbor Wool Coat"
+    },
+    {
+      "product_id": 1002,
+      "brand": "Calvin Klein",
+      "category": "Suits",
+      "product_name": "Cedar Tailored Suit"
+    },
+    {
+      "product_id": 1003,
+      "brand": "Calvin Klein",
+      "category": "Tops",
+      "product_name": "Linen Crew Shirt"
+    },
+    {
+      "product_id": 1004,
+      "brand": "Calvin Klein",
+      "category": "Denim",
+      "product_name": "Indigo Straight Jeans"
+    },
+    {
+      "product_id": 1005,
+      "brand": "Calvin Klein",
+      "category": "Underwear",
+      "product_name": "Everyday Cotton Briefs"
+    },
+    {
+      "product_id": 1006,
+      "brand": "Calvin Klein",
+      "category": "Accessories",
+      "product_name": "Canvas Weekend Belt"
+    },
+    {
+      "product_id": 1007,
+      "brand": "Calvin Klein",
+      "category": "Dresses",
+      "product_name": "Willow Midi Dress"
+    },
+    {
+      "product_id": 1008,
+      "brand": "Calvin Klein",
+      "category": "Outerwear",
+      "product_name": "Unsold Rain Jacket"
+    },
+    {
+      "product_id": 2001,
+      "brand": "Levi's",
+      "category": "Denim",
+      "product_name": "Western Selvedge Jeans"
+    },
+    {
+      "product_id": 2002,
+      "brand": "Levi's",
+      "category": "Tops",
+      "product_name": "Sunset Pocket Tee"
+    }
+  ],
+  "orders": [
+    {
+      "order_id": 1,
+      "user_id": 1,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 2,
+      "user_id": 2,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 3,
+      "user_id": 2,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 4,
+      "user_id": 3,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 5,
+      "user_id": 4,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 6,
+      "user_id": 5,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 7,
+      "user_id": 6,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 8,
+      "user_id": 7,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 9,
+      "user_id": 8,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 90,
+      "user_id": 11,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 101,
+      "user_id": 1,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 102,
+      "user_id": 2,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 103,
+      "user_id": 3,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 104,
+      "user_id": 4,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 105,
+      "user_id": 5,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 106,
+      "user_id": 6,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 107,
+      "user_id": 7,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 108,
+      "user_id": 3,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 201,
+      "user_id": 1,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 202,
+      "user_id": 2,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 203,
+      "user_id": 3,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 204,
+      "user_id": 4,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 205,
+      "user_id": 5,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 206,
+      "user_id": 6,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 207,
+      "user_id": 7,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 208,
+      "user_id": 8,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 309,
+      "user_id": 9,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 310,
+      "user_id": 10,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 311,
+      "user_id": 11,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 312,
+      "user_id": 12,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 401,
+      "user_id": 13,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 501,
+      "user_id": 14,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 502,
+      "user_id": 15,
+      "order_status": "Returned"
+    },
+    {
+      "order_id": 503,
+      "user_id": 16,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 504,
+      "user_id": 17,
+      "order_status": "Cancelled"
+    },
+    {
+      "order_id": 601,
+      "user_id": 1,
+      "order_status": "Complete"
+    },
+    {
+      "order_id": 602,
+      "user_id": 14,
+      "order_status": "Complete"
+    }
+  ],
+  "items": [
+    {
+      "item_id": 10,
+      "order_id": 90,
+      "user_id": 11,
+      "product_id": 2001,
+      "sale_price": "700",
+      "purchased_at": "2025-09-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 11,
+      "order_id": 101,
+      "user_id": 1,
+      "product_id": 1001,
+      "sale_price": "250",
+      "purchased_at": "2026-01-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 12,
+      "order_id": 101,
+      "user_id": 1,
+      "product_id": 1002,
+      "sale_price": "80",
+      "purchased_at": "2026-01-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 13,
+      "order_id": 101,
+      "user_id": 1,
+      "product_id": 2001,
+      "sale_price": "900",
+      "purchased_at": "2026-01-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 14,
+      "order_id": 102,
+      "user_id": 2,
+      "product_id": 1001,
+      "sale_price": "170",
+      "purchased_at": "2026-02-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 15,
+      "order_id": 102,
+      "user_id": 2,
+      "product_id": 1007,
+      "sale_price": "60",
+      "purchased_at": "2026-02-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 16,
+      "order_id": 103,
+      "user_id": 3,
+      "product_id": 1003,
+      "sale_price": "20",
+      "purchased_at": "2026-02-03",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 17,
+      "order_id": 104,
+      "user_id": 4,
+      "product_id": 1003,
+      "sale_price": "20",
+      "purchased_at": "2026-02-04",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 18,
+      "order_id": 105,
+      "user_id": 5,
+      "product_id": 1003,
+      "sale_price": "20",
+      "purchased_at": "2026-02-05",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 19,
+      "order_id": 106,
+      "user_id": 6,
+      "product_id": 1003,
+      "sale_price": "20",
+      "purchased_at": "2026-02-06",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 20,
+      "order_id": 107,
+      "user_id": 7,
+      "product_id": 1003,
+      "sale_price": "20",
+      "purchased_at": "2026-02-07",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 21,
+      "order_id": 108,
+      "user_id": 3,
+      "product_id": 1004,
+      "sale_price": "70",
+      "purchased_at": "2026-03-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 22,
+      "order_id": 201,
+      "user_id": 1,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 23,
+      "order_id": 202,
+      "user_id": 2,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-02",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 24,
+      "order_id": 203,
+      "user_id": 3,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-03",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 25,
+      "order_id": 204,
+      "user_id": 4,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-04",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 26,
+      "order_id": 205,
+      "user_id": 5,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-05",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 27,
+      "order_id": 206,
+      "user_id": 6,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-06",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 28,
+      "order_id": 207,
+      "user_id": 7,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-07",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 29,
+      "order_id": 208,
+      "user_id": 8,
+      "product_id": 1005,
+      "sale_price": "5",
+      "purchased_at": "2026-03-08",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 30,
+      "order_id": 309,
+      "user_id": 9,
+      "product_id": 1006,
+      "sale_price": "7",
+      "purchased_at": "2026-03-09",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 31,
+      "order_id": 310,
+      "user_id": 10,
+      "product_id": 1006,
+      "sale_price": "7",
+      "purchased_at": "2026-03-10",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 32,
+      "order_id": 311,
+      "user_id": 11,
+      "product_id": 1006,
+      "sale_price": "7",
+      "purchased_at": "2026-03-11",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 33,
+      "order_id": 312,
+      "user_id": 12,
+      "product_id": 1006,
+      "sale_price": "7",
+      "purchased_at": "2026-03-12",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 34,
+      "order_id": 401,
+      "user_id": 13,
+      "product_id": 2002,
+      "sale_price": "40",
+      "purchased_at": "2026-01-05",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 35,
+      "order_id": 501,
+      "user_id": 14,
+      "product_id": 1001,
+      "sale_price": "999",
+      "purchased_at": "2026-01-09",
+      "item_status": "Returned"
+    },
+    {
+      "item_id": 36,
+      "order_id": 502,
+      "user_id": 15,
+      "product_id": 1001,
+      "sale_price": "999",
+      "purchased_at": "2026-01-10",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 37,
+      "order_id": 503,
+      "user_id": 16,
+      "product_id": 1001,
+      "sale_price": "999",
+      "purchased_at": "2026-01-11",
+      "item_status": "Cancelled"
+    },
+    {
+      "item_id": 38,
+      "order_id": 504,
+      "user_id": 17,
+      "product_id": 1001,
+      "sale_price": "999",
+      "purchased_at": "2026-01-12",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 39,
+      "order_id": 601,
+      "user_id": 1,
+      "product_id": 1001,
+      "sale_price": "1000",
+      "purchased_at": "2026-04-01",
+      "item_status": "Complete"
+    },
+    {
+      "item_id": 40,
+      "order_id": 602,
+      "user_id": 14,
+      "product_id": 1003,
+      "sale_price": "45",
+      "purchased_at": "2026-07-01",
+      "item_status": "Complete"
+    }
+  ]
+}

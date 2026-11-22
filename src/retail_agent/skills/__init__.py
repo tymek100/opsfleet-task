@@ -1,4 +1,4 @@
-"""Versioned runtime guidance, separate from developer-only .agents/skills."""
+"""Versioned runtime analytical guidance loaded by the ADK agent."""
 
 from retail_agent.skills.catalog import SkillCatalog, SkillError
 

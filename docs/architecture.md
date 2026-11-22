@@ -56,7 +56,8 @@ Adapters in `tools/` expose model-facing schemas and delegate to `services/`. Ne
 |---|---|---|
 | Skills | Analytical and writing procedures, loaded on demand | [`src/retail_agent/skills/`](../src/retail_agent/skills/README.md) |
 | Golden Knowledge | Reusable question/SQL/answer examples | [`knowledge/golden/`](../knowledge/golden/README.md) |
-| Offline evaluation | Reference cases, checks, and recorded runs | [`evals/`](../evals/README.md) |
+| Evaluation references | Frozen cases, criteria, numeric facts, and fixtures; never supplied to the analyst | [`evaluation/datasets/`](../evaluation/datasets/README.md) |
+| Judge calibration | Labeled candidate answers for testing the independent evaluator | `evaluation/datasets/judge_calibration/` |
 
 The analyst receives skill metadata and selects relevant instructions. The reviewer always receives the analytical-review skill. Skills neither execute scripts nor grant permissions.
 
@@ -102,6 +103,12 @@ Model calls reserve estimated input and maximum output cost. Complete usage sett
 
 Recoverable errors return to the analyst within the same limits. Exhaustion produces an incomplete status; `/details` exposes completed evidence. The CLI updates elapsed time and activity independently. Metadata-only diagnostics record timing, usage, and outcomes without raw prompts, result contents, credentials, or hidden reasoning.
 
+`--phoenix` on `chat` or `ask` enables local OpenTelemetry tracing. Each prompt has a separate root span and turn ID; a stable session ID links follow-ups. Analyst and reviewer provider attempts report usage once, while the budget ledger remains authoritative. Automatic ADK payloads are hidden, and an exporter allowlist also strips exception details and arbitrary attributes. Trace failures are nonfatal; shutdown waits at most two seconds.
+
+Synthetic evaluation capture is a separate opt-in observer. It records initial context, actual tool responses, candidates entering review, review decisions, and final outcomes. Capture removes credentials, hidden thoughts, and deletion tokens. Analyst-visible result previews are kept distinct from the full evidence bundle available to the reviewer. An injected UTC clock freezes prompt dates, report timestamps, and SQL clock expressions; monotonic deadlines remain real. Trusted physical BigQuery datasets can be configured outside tool arguments for snapshot evaluation.
+
+Phoenix runs locally at `http://127.0.0.1:6006` with persistent SQLite storage. The [Compose configuration](../infra/phoenix/README.md) disables automatic telemetry and external-resource fetching. Synthetic traces may include evaluation content; normal chat remains metadata-only.
+
 ## Modules
 
 Python paths below are relative to `src/retail_agent/`.
@@ -114,14 +121,35 @@ Python paths below are relative to `src/retail_agent/`.
 | `tools/`, `services/` | Tool contracts and domain implementations |
 | `skills/` | Runtime skill catalog and loader |
 | `budget.py`, `provider.py` | Limits, provider retries, usage settlement |
+| `observability.py` | Optional tracing, export redaction, synthetic capture |
 | `config.py`, `contracts.py`, `privacy.py` | Configuration, shared types, privacy controls |
 
-Repository-level `knowledge/` contains runtime examples and fixtures; `tests/` and `evals/` contain current tests and evaluation artifacts. Coding-agent skills in `.agents/skills/` are separate from runtime skills. Original assignment material is preserved in `docs/task/`.
+Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests. Original assignment material remains in `docs/task/`.
 
-## Verification and planned work
+## Independent evaluation
 
-Run the offline suite with `uv run --locked pytest`. Controlled fixtures and fake providers exercise analytics, scope, report state, accounting, runtime protocols, and CLI behavior. [Recorded live evaluations](../evals/rewrite/runs/README.md) provide behavioral evidence; reviewer approval alone is not a passing test, and small runs do not establish production reliability.
+Status: the replacement harness, local Phoenix integration, synthetic references, and offline test suite are implemented. Pilot references still require human review; judge calibration and a sealed holdout have not been approved. Code-only results do not establish semantic correctness or production reliability.
 
-The [evaluation rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) specifies a replacement suite, independent reference datasets, and local Phoenix integration. That migration is not implemented.
+The runtime reviewer and offline evaluator have different responsibilities. The reviewer can request corrections before publication. The offline evaluator assesses saved executions independently, using references the analyst never sees.
 
-Other outstanding capabilities include production identity and hosting, managed storage and monitoring, persistent chat recovery, Golden Knowledge publishing, inferred preferences, and persona administration with an automated quality gate. Production deployment also requires the retention policies and operational targets defined in the client Q&A.
+```mermaid
+flowchart LR
+    C[Frozen cases and fixtures] --> X[Isolated agent trials]
+    X --> A[Saved observations, candidates, outputs, state]
+    A --> G[Independent code checks and LLM judge]
+    R[Reference facts and criteria] --> G
+    G --> S[Versioned scores and reports]
+    A --> P[Local Phoenix traces and experiments]
+    S --> P
+```
+
+- **Execution:** each repetition gets isolated report storage and conversation state. Follow-up steps share only their case's context. Trial artifacts freeze fixture, dataset, runtime, prompt, dependency, and configuration hashes. Each prompt retains its own budget; the experiment also has aggregate cost and time limits.
+- **Ground truth:** independent Python arithmetic derives expected facts from synthetic fixtures. Numeric checks bind values to entity, metric, period, and scope; SQL text and number occurrence alone are insufficient.
+- **Grounding:** a separate structured judge labels material claims against the observations actually available to the analyst. References support correctness checks but do not substitute for observed evidence. Unsupported explanations and causal claims can fail even when the reported numbers are correct.
+- **Operations and safety:** deterministic checks inspect report ownership, saved content, deletion receipts, final state, output format, and execution boundaries. Adversarial cases cover scope requests, injected instructions, and recovery.
+- **Regrading:** grading reads saved trials without running the agent again. New grader versions append results. Scores retain `PASS`, `FAIL`, `ERROR`, `UNJUDGEABLE`, and `NOT_APPLICABLE`; missing judgment is not a pass. Candidate grades can expose false approvals by the runtime reviewer.
+- **Reporting:** repeated-trial summaries include task success, claim support and coverage, cost, latency, and observed reliability. Phoenix mirrors canonical local artifacts as datasets and experiments; failed publication can be retried without repeating agent execution.
+
+Run offline verification with `uv run --locked pytest`; evaluation commands are exposed through `retail-eval`. The [rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) and [review](plans/EVALUATION_REVIEW.md) retain the rollout and acceptance criteria.
+
+Outstanding production work includes real identity and authorization infrastructure, managed storage, persistent chat recovery, operational retention policies, Golden Knowledge publishing, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.
