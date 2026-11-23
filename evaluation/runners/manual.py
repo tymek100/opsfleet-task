@@ -26,7 +26,7 @@ from evaluation.runners.artifacts import digest, identifier, read_json, write_js
 from evaluation.runners.conversation import _capture_turn, report_state
 from retail_agent.config import Settings, repository_root
 from retail_agent.contracts import DEMO_USERS
-from retail_agent.observability import sanitize_capture
+from retail_agent.observability import sanitize_capture, trace_context
 from retail_agent.runtime import Analyst
 
 
@@ -313,8 +313,14 @@ async def run_manual(
                             progress(f"{scenario.id}/{step_id}: running ({scenario.identity})")
                             started = time.monotonic()
                             try:
-                                async with asyncio.timeout(time_left):
-                                    result = await app.ask(question)
+                                with trace_context(
+                                    run_id=directory.name,
+                                    case_id=scenario.id,
+                                    step_id=step_id,
+                                    phase=phase,
+                                ):
+                                    async with asyncio.timeout(time_left):
+                                        result = await app.ask(question)
                                 record = _capture_turn(
                                     SimpleNamespace(id=step_id, message=question),
                                     result,

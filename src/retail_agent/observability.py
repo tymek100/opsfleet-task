@@ -12,6 +12,7 @@ import re
 import threading
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
@@ -21,7 +22,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import Status
+from opentelemetry.trace import Status, StatusCode
 
 if TYPE_CHECKING:
     from retail_agent.prompt_catalog import PromptSpec
@@ -92,6 +93,13 @@ _SAFE_ATTRIBUTES = frozenset(
         "retail.case_id",
         "retail.repetition",
         "retail.run_id",
+        "retail.step_id",
+        "retail.phase",
+        "retail.judge_kind",
+        "retail.provider_code",
+        "llm.cost.prompt",
+        "llm.cost.completion",
+        "llm.cost.total",
         "retail.prompt_name",
         "retail.prompt_sha256",
         "prompt.vendor",
@@ -101,6 +109,142 @@ _SAFE_ATTRIBUTES = frozenset(
 )
 _active: TracingSession | None = None
 _lock = threading.Lock()
+_trace_fields: ContextVar[dict[str, str] | None] = ContextVar("retail_trace_fields", default=None)
+
+
+@contextmanager
+def trace_context(**fields: str) -> Iterator[None]:
+    """Trusted evaluation labels, inherited by async work without entering model context."""
+    if any(key not in {"run_id", "case_id", "step_id", "phase"} for key in fields):
+        raise ValueError("Unknown trace context field")
+    if any(
+        not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", value)
+        for value in fields.values()
+    ):
+        raise ValueError("Invalid trace context value")
+    token = _trace_fields.set(
+        {**(_trace_fields.get() or {}), **{f"retail.{k}": v for k, v in fields.items()}}
+    )
+    try:
+        yield
+    finally:
+        _trace_fields.reset(token)
+
+
+def display_fields(
+    operation: str,
+    observations: list[dict],
+    attributes: Mapping,
+    *,
+    mode: CaptureMode = "synthetic",
+) -> dict:
+    """Build Phoenix previews only from explicit, sanitized application observations.
+
+    Raw instrumentation attributes are never promoted into visible payloads. This pure
+    projection is also used when repairing historical rows without altering their evidence.
+    """
+    events = [observation(e, mode=mode) for e in observations]
+    result: dict[str, Any] = {}
+    status, message = "UNSET", None
+    metadata = {
+        key.removeprefix("retail."): attributes[key]
+        for key in (
+            "retail.run_id",
+            "retail.case_id",
+            "retail.step_id",
+            "retail.phase",
+            "retail.judge_kind",
+        )
+        if key in attributes
+    }
+    metadata["operation"] = operation
+    if "step_id" in metadata:
+        metadata["turn"] = {"turn-1": "Initial question", "turn-2": "Follow-up"}.get(
+            metadata["step_id"], metadata["step_id"]
+        )
+
+    def preview(key: str, value: Any) -> None:
+        if mode != "synthetic" or value is None:
+            return
+        rendered = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+        rendered = sanitize_capture(rendered)
+        if len(rendered.encode()) > 64_000:
+            rendered = (
+                rendered.encode()[:64_000].decode(errors="ignore")
+                + "\n[Preview truncated; see captured events.]"
+            )
+            metadata[key + "_truncated"] = True
+        result[key + ".value"] = rendered
+        result[key + ".mime_type"] = "text/plain"
+
+    if operation == "retail.prompt":
+        for event in events:
+            if event.get("event") == "prompt_input":
+                preview("input", event.get("question"))
+            elif event.get("event") == "initial_context":
+                preview("input", event.get("context", {}).get("user_question"))
+            elif event.get("event") == "turn_result":
+                turn = event.get("result")
+                if not isinstance(turn, Mapping):
+                    continue  # Content withheld by the observer is not a failed answer.
+                outcome = turn.get("status") or attributes.get("retail.status")
+                metadata["execution_status"] = outcome
+                answer = turn.get("answer") or {}
+                if answer.get("markdown") is not None:
+                    preview("output", answer["markdown"])
+                else:
+                    failures = [
+                        e for e in turn.get("trace", []) if e.get("event") == "provider_failure"
+                    ]
+                    code = next(
+                        (e["code"] for e in reversed(failures) if isinstance(e.get("code"), int)),
+                        None,
+                    )
+                    if code is not None:
+                        result["retail.provider_code"] = code
+                    preview(
+                        "output",
+                        f"No answer generated: {outcome or 'incomplete'}."
+                        + (f" Model provider returned HTTP {code}." if code else ""),
+                    )
+                status = "OK" if outcome == "approved" else "ERROR"
+                message = (
+                    None if status == "OK" else "The prompt did not produce an approved answer."
+                )
+            elif event.get("event") == "prompt_error":
+                status, message = "ERROR", "Prompt execution was interrupted."
+                preview("output", message)
+    elif operation in {"retail.judge", "retail.provider_attempt"}:
+        prefix = "judge" if operation == "retail.judge" else "provider"
+        for event in events:
+            if event.get("event") == prefix + "_input":
+                task = (
+                    event.get("question") or f"{event.get('role', 'Model').title()} model request"
+                )
+                preview("input", task)
+                if event.get("kind"):
+                    metadata["judge_kind"] = event["kind"]
+            elif event.get("event") == prefix + "_result":
+                preview("output", event.get("summary"))
+                status = "OK" if event.get("status") in {"completed", "ok", "OK"} else "ERROR"
+                message = None if status == "OK" else "Model request or result validation failed."
+                metadata["execution_status"] = event.get("status")
+                if isinstance(event.get("provider_code"), int):
+                    result["retail.provider_code"] = event["provider_code"]
+    elif mode == "synthetic":
+        # Tool and review observations already passed the explicit application capture policy.
+        for event in events:
+            if event.get("event") == "tool_call":
+                preview("input", {"tool": event.get("name"), "arguments": event.get("args")})
+            elif event.get("event") == "tool_observation" and "result" in event:
+                preview("output", {"tool": event.get("name"), "result": event["result"]})
+    if status == "UNSET" and attributes.get("retail.status"):
+        outcome = attributes["retail.status"]
+        metadata["execution_status"] = outcome
+        status = "OK" if outcome in {"approved", "completed"} else "ERROR"
+        message = None if status == "OK" else "The operation did not complete successfully."
+    result["metadata"] = json.dumps(metadata, ensure_ascii=False)
+    return {"attributes": result, "status_code": status, "status_message": message}
 
 
 def sanitize_capture(value: Any, secrets: Sequence[str] = ()) -> Any:
@@ -194,10 +338,12 @@ class SanitizingExporter(SpanExporter):
                 for key, value in (span.attributes or {}).items()
                 if key in _SAFE_ATTRIBUTES
                 and (
-                    not key.startswith("llm.token_count.") or span.name == "retail.provider_attempt"
+                    not key.startswith(("llm.token_count.", "llm.cost."))
+                    or span.name in {"retail.provider_attempt", "retail.judge"}
                 )
             }
             events = []
+            observations = []
             for event in span.events:
                 if event.name != "retail.observation":
                     continue
@@ -206,6 +352,7 @@ class SanitizingExporter(SpanExporter):
                         str((event.attributes or {}).get("retail.observation", "{}"))
                     )
                     payload = observation(payload, mode=self.mode)
+                    observations.append(payload)
                     events.append(
                         Event(
                             "retail.observation",
@@ -227,6 +374,11 @@ class SanitizingExporter(SpanExporter):
                 }
                 else f"adk.{kind}"
             )
+            display = display_fields(name, observations, attributes, mode=self.mode)
+            attributes.update(display["attributes"])
+            status = Status(span.status.status_code)
+            if display["status_code"] != "UNSET" and span.status.status_code != StatusCode.ERROR:
+                status = Status(StatusCode[display["status_code"]], display["status_message"])
             resource = Resource(
                 {"service.name": "retail-agent", "openinference.project.name": self.project}
             )
@@ -240,7 +392,7 @@ class SanitizingExporter(SpanExporter):
                     events=events,
                     links=(),
                     kind=span.kind,
-                    status=Status(span.status.status_code),
+                    status=status,
                     start_time=span.start_time,
                     end_time=span.end_time,
                     instrumentation_scope=InstrumentationScope("retail_agent"),
@@ -388,9 +540,18 @@ def configure_tracing(
 def detached_span(name: str, **attributes: Any) -> Iterator[Any]:
     """Record an operation without leaking its context across an async yield."""
     provider = _active.provider if _active is not None else trace.NoOpTracerProvider()
-    current = provider.get_tracer("retail_agent").start_span(name, attributes=attributes)
+    current = provider.get_tracer("retail_agent").start_span(
+        name, attributes={**(_trace_fields.get() or {}), **attributes}
+    )
     try:
         yield current
+    except BaseException:
+        if (
+            current.is_recording()
+            and getattr(current, "status", Status()).status_code == StatusCode.UNSET
+        ):
+            current.set_status(Status(StatusCode.ERROR, "Operation interrupted or failed."))
+        raise
     finally:
         if current.is_recording():
             current.end()
@@ -400,6 +561,17 @@ def detached_span(name: str, **attributes: Any) -> Iterator[Any]:
 def span(name: str, **attributes: Any) -> Iterator[Any]:
     provider = _active.provider if _active is not None else trace.NoOpTracerProvider()
     with provider.get_tracer("retail_agent").start_as_current_span(
-        name, attributes=attributes, record_exception=False, set_status_on_exception=False
+        name,
+        attributes={**(_trace_fields.get() or {}), **attributes},
+        record_exception=False,
+        set_status_on_exception=False,
     ) as current:
-        yield current
+        try:
+            yield current
+        except BaseException:
+            if (
+                current.is_recording()
+                and getattr(current, "status", Status()).status_code == StatusCode.UNSET
+            ):
+                current.set_status(Status(StatusCode.ERROR, "Operation interrupted or failed."))
+            raise

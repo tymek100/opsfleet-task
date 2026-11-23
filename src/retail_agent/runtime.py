@@ -99,7 +99,22 @@ class Analyst:
                 "trace_id": format(context.trace_id, "032x") if context.is_valid else "",
                 "span_id": format(context.span_id, "016x") if context.is_valid else "",
             }
-            result = await self._ask(question)
+            try:
+                record_observation(
+                    observation(
+                        {"event": "prompt_input", "question": question},
+                        mode=self.observation_mode,
+                        secrets=(self.settings.gemini_api_key.get_secret_value(),),
+                    ),
+                    self.observation_mode,
+                )
+            except Exception:
+                self.observer_errors += 1
+            try:
+                result = await self._ask(question)
+            except BaseException:
+                self.observe("prompt_error", status="interrupted")
+                raise
             self.observe("turn_result", result=asdict(result), capture_errors=self.observer_errors)
             current.set_attribute("retail.status", result.status)
             current.set_attribute("retail.capture_errors", self.observer_errors)

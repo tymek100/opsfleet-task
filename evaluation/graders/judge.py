@@ -12,13 +12,14 @@ from typing import Literal, TypeVar
 
 from google import genai
 from google.genai import errors, types
+from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, ValidationError
 
 from evaluation.models import TurnReference
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.results import Judgment, Trial, TurnRecord
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import prompt_attributes, sanitize_capture, span
+from retail_agent.observability import prompt_attributes, record_observation, sanitize_capture, span
 from retail_agent.provider import _usage_counts
 
 PROMPT_PATH = Path(__file__).parents[1] / "prompts/judge.md"
@@ -174,6 +175,40 @@ def validate_judgment(
         raise JudgmentValidationError("Substantive answer has no claim coverage")
 
 
+def _trace_question(payload: dict, kind: str) -> str:
+    """Describe the evaluated task without exporting evidence or hidden reference context."""
+    if kind == "answer":
+        return str(payload.get("trusted", {}).get("question", "Answer evaluation"))
+    steps = payload.get("untrusted_execution", {}).get("steps", [])
+    return "Review the conversation trajectory:\n" + "\n".join(
+        f"{step.get('step_id', 'turn')}: {step.get('question', '')}" for step in steps
+    )
+
+
+def _trace_summary(call: dict) -> str:
+    """Successful judgment execution is not an answer-quality PASS."""
+    if call["status"] != "completed":
+        if call.get("provider_code") is not None:
+            return f"Evaluation unavailable: provider HTTP {call['provider_code']}. No judgment produced."
+        return f"Evaluation failed during {call.get('error_stage', 'execution')}. No judgment produced."
+    result = call["resolved_judgment"]
+    if call["kind"] == "trajectory":
+        findings = "; ".join(
+            f"{finding['criterion']}: {finding['status']}" for finding in result["findings"]
+        )
+        return f"Trajectory evaluation completed. {findings}. Coverage complete: {result['coverage_complete']}."
+    counts = {}
+    for claim in result["claims"]:
+        counts[claim["label"]] = counts.get(claim["label"], 0) + 1
+    labels = ", ".join(f"{count} {label}" for label, count in sorted(counts.items())) or "none"
+    passed = sum(item["passed"] for item in result["criteria"])
+    return (
+        f"Answer evaluation completed. Response: {result['response_kind']}. Claims: {labels}. "
+        f"Criteria: {passed} passed, {len(result['criteria']) - passed} failed. "
+        f"Extracted facts: {len(result['facts'])}. Coverage complete: {result['coverage_complete']}."
+    )
+
+
 class GeminiJudge:
     def __init__(
         self,
@@ -306,12 +341,29 @@ class GeminiJudge:
         }
         self.calls.append(call)
         started = time.monotonic()
-        try:
-            with span(
-                "retail.judge",
-                **attributes,
-                **{"openinference.span.kind": "LLM", "llm.model_name": prompt_spec.model},
-            ):
+        with span(
+            "retail.judge",
+            **attributes,
+            **{
+                "openinference.span.kind": "LLM",
+                "llm.model_name": prompt_spec.model,
+                "retail.judge_kind": kind,
+                "retail.step_id": step_id,
+            },
+        ) as current:
+            record_observation(
+                sanitize_capture(
+                    {
+                        "event": "judge_input",
+                        "kind": kind,
+                        "question": _trace_question(payload, kind),
+                        "step_id": step_id,
+                    },
+                    self._redaction_secrets,
+                ),
+                mode="synthetic",
+            )
+            try:
                 async with asyncio.timeout(remaining):
                     response = await self.client.aio.models.generate_content(
                         model=prompt_spec.model,
@@ -320,80 +372,107 @@ class GeminiJudge:
                             update={"system_instruction": prompt, "response_json_schema": schema}
                         ),
                     )
-            counts = _usage_counts(response.usage_metadata)
-            if counts is not None:
-                inputs, outputs, thinking = counts
-                cost = (
-                    inputs * self.settings.input_usd_per_million
-                    + (outputs + thinking) * self.settings.output_usd_per_million
-                ) / 1e6
-                self.accounted_usd += cost - reservation
-                call.update(
-                    input_tokens=inputs,
-                    output_tokens=outputs,
-                    thinking_tokens=thinking,
-                    accounted_usd=cost,
+                counts = _usage_counts(response.usage_metadata)
+                if counts is not None:
+                    inputs, outputs, thinking = counts
+                    input_cost = inputs * self.settings.input_usd_per_million / 1e6
+                    output_cost = (outputs + thinking) * self.settings.output_usd_per_million / 1e6
+                    cost = input_cost + output_cost
+                    self.accounted_usd += cost - reservation
+                    call.update(
+                        input_tokens=inputs,
+                        output_tokens=outputs,
+                        thinking_tokens=thinking,
+                        accounted_usd=cost,
+                    )
+                    for name, value in {
+                        "llm.token_count.prompt": inputs,
+                        "llm.token_count.completion": outputs + thinking,
+                        "llm.token_count.total": inputs + outputs + thinking,
+                        "llm.cost.prompt": input_cost,
+                        "llm.cost.completion": output_cost,
+                        "llm.cost.total": cost,
+                    }.items():
+                        current.set_attribute(name, value)
+                parts = [
+                    p.text
+                    for c in (response.candidates or [])
+                    if c.content
+                    for p in (c.content.parts or [])
+                    if p.text and not p.thought
+                ]
+                visible = "".join(parts)
+                call.update(visible_response_record(visible, self._redaction_secrets))
+                decoded = json.loads(visible)
+                result = parse(decoded)
+                call["resolved_judgment"] = sanitize_capture(
+                    result.model_dump(mode="json"), self._redaction_secrets
                 )
-            parts = [
-                p.text
-                for c in (response.candidates or [])
-                if c.content
-                for p in (c.content.parts or [])
-                if p.text and not p.thought
-            ]
-            visible = "".join(parts)
-            call.update(visible_response_record(visible, self._redaction_secrets))
-            decoded = json.loads(visible)
-            result = parse(decoded)
-            call["resolved_judgment"] = sanitize_capture(
-                result.model_dump(mode="json"), self._redaction_secrets
-            )
-            call["status"] = "completed"
-            return result
-        except json.JSONDecodeError as exc:
-            call.update(
-                status="ERROR",
-                error="JSONDecodeError",
-                error_stage="parse",
-                validation_error=f"Judge response is not valid JSON (line {exc.lineno}, column {exc.colno})",
-            )
-            raise JudgeUnavailable(call["validation_error"]) from None
-        except ValidationError as exc:
-            call.update(
-                status="ERROR",
-                error="ValidationError",
-                error_stage="schema",
-                validation_error=f"Judge response violates the judgment schema ({exc.error_count()} errors)",
-                schema_error_types=sorted(
-                    {error["type"] for error in exc.errors(include_input=False, include_url=False)}
-                ),
-            )
-            raise JudgeUnavailable(call["validation_error"]) from None
-        except JudgmentValidationError as exc:
-            call.update(
-                status="ERROR",
-                error="JudgmentValidationError",
-                error_stage="attribution",
-                validation_error=str(exc),
-            )
-            raise JudgeUnavailable(call["validation_error"]) from None
-        except errors.APIError as exc:
-            message = sanitize_capture(exc.message or "", self._redaction_secrets)
-            call.update(
-                status="ERROR",
-                error=type(exc).__name__,
-                error_stage="provider",
-                provider_code=exc.code,
-                provider_message=str(message).encode()[:1024].decode(errors="ignore"),
-            )
-            raise JudgeUnavailable(f"Judge provider request failed (code {exc.code})") from None
-        except Exception as exc:
-            call["status"] = "ERROR"
-            call["error"] = type(exc).__name__
-            call["error_stage"] = "provider_or_runtime"
-            raise JudgeUnavailable(f"Judge call failed: {type(exc).__name__}") from None
-        finally:
-            call["elapsed_seconds"] = round(time.monotonic() - started, 3)
+                call["status"] = "completed"
+                return result
+            except json.JSONDecodeError as exc:
+                call.update(
+                    status="ERROR",
+                    error="JSONDecodeError",
+                    error_stage="parse",
+                    validation_error=f"Judge response is not valid JSON (line {exc.lineno}, column {exc.colno})",
+                )
+                raise JudgeUnavailable(call["validation_error"]) from None
+            except ValidationError as exc:
+                call.update(
+                    status="ERROR",
+                    error="ValidationError",
+                    error_stage="schema",
+                    validation_error=f"Judge response violates the judgment schema ({exc.error_count()} errors)",
+                    schema_error_types=sorted(
+                        {
+                            error["type"]
+                            for error in exc.errors(include_input=False, include_url=False)
+                        }
+                    ),
+                )
+                raise JudgeUnavailable(call["validation_error"]) from None
+            except JudgmentValidationError as exc:
+                call.update(
+                    status="ERROR",
+                    error="JudgmentValidationError",
+                    error_stage="attribution",
+                    validation_error=str(exc),
+                )
+                raise JudgeUnavailable(call["validation_error"]) from None
+            except errors.APIError as exc:
+                message = sanitize_capture(exc.message or "", self._redaction_secrets)
+                call.update(
+                    status="ERROR",
+                    error=type(exc).__name__,
+                    error_stage="provider",
+                    provider_code=exc.code,
+                    provider_message=str(message).encode()[:1024].decode(errors="ignore"),
+                )
+                raise JudgeUnavailable(f"Judge provider request failed (code {exc.code})") from None
+            except Exception as exc:
+                call["status"] = "ERROR"
+                call["error"] = type(exc).__name__
+                call["error_stage"] = "provider_or_runtime"
+                raise JudgeUnavailable(f"Judge call failed: {type(exc).__name__}") from None
+            finally:
+                if call["status"] == "unknown":
+                    call.update(status="ERROR", error_stage="interrupted")
+                call["elapsed_seconds"] = round(time.monotonic() - started, 3)
+                completed = call["status"] == "completed"
+                current.set_attribute("retail.status", call["status"])
+                current.set_status(Status(StatusCode.OK if completed else StatusCode.ERROR))
+                record_observation(
+                    {
+                        "event": "judge_result",
+                        "kind": kind,
+                        "status": call["status"],
+                        "summary": _trace_summary(call),
+                        "provider_code": call.get("provider_code"),
+                        "error_stage": call.get("error_stage"),
+                    },
+                    mode="synthetic",
+                )
 
     async def close(self) -> None:
         async with asyncio.timeout(2):

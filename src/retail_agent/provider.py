@@ -13,6 +13,7 @@ from google.adk.models import BaseLlm, Gemini
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import errors, types
+from opentelemetry.trace import Span, Status, StatusCode
 from pydantic import BaseModel, PrivateAttr
 
 from retail_agent.budget import Budget
@@ -24,6 +25,50 @@ from retail_agent.prompt_catalog import PromptSpec
 
 class ProviderUnavailable(Exception):
     pass
+
+
+def _provider_event(current: Span, event: str, **fields) -> None:
+    """Fixed operational summaries only; never include provider payloads or errors."""
+    current.add_event(
+        "retail.observation", {"retail.observation": json.dumps({"event": event, **fields})}
+    )
+
+
+def _provider_result(current: Span, role: str, error: BaseException | None = None) -> None:
+    if not current.is_recording():
+        return
+    fields: dict[str, str | int] = {"role": role, "status": "ERROR" if error else "completed"}
+    summary = "Model response received."
+    if error is not None:
+        summary = "Provider request failed."
+        if isinstance(error, errors.APIError):
+            current.set_attribute("retail.provider_code", error.code)
+            fields["provider_code"] = error.code
+            summary = f"Provider request failed (HTTP {error.code})."
+        elif isinstance(error, (TimeoutError, httpx.TimeoutException)):
+            summary = "Provider request timed out."
+        elif isinstance(error, asyncio.CancelledError):
+            summary = "Provider request cancelled."
+    current.set_attribute("retail.status", fields["status"])
+    current.set_status(Status(StatusCode.ERROR, summary) if error else Status(StatusCode.OK))
+    _provider_event(current, "provider_result", **fields, summary=summary)
+
+
+def _provider_usage(current: Span, counts: tuple[int, int, int], settings: Settings) -> None:
+    if not current.is_recording():
+        return
+    inputs, outputs, thinking = counts
+    prompt_cost = inputs * settings.input_usd_per_million / 1e6
+    completion_cost = (outputs + thinking) * settings.output_usd_per_million / 1e6
+    for name, value in {
+        "llm.token_count.prompt": inputs,
+        "llm.token_count.completion": outputs + thinking,
+        "llm.token_count.total": sum(counts),
+        "llm.cost.prompt": prompt_cost,
+        "llm.cost.completion": completion_cost,
+        "llm.cost.total": prompt_cost + completion_cost,
+    }.items():
+        current.set_attribute(name, value)
 
 
 def _usage_counts(
@@ -164,6 +209,7 @@ class AccountedModel(BaseLlm):
             emitted = False
             last_usage = None
             complete_response = False
+            response_failed = False
             try:
                 with detached_span(
                     "retail.provider_attempt",
@@ -176,41 +222,59 @@ class AccountedModel(BaseLlm):
                         **(prompt_attributes(self._prompt) if self._prompt else {}),
                     },
                 ) as provider_span:
-                    async with asyncio.timeout(
-                        self._budget.work_remaining(reviewer=self._reviewer)
-                    ):
-                        async for response in self.delegate.generate_content_async(
-                            llm_request, stream
+                    _provider_event(provider_span, "provider_input", role=role)
+                    try:
+                        async with asyncio.timeout(
+                            self._budget.work_remaining(reviewer=self._reviewer)
                         ):
-                            complete_response = response.partial is not True
-                            last_usage = response.usage_metadata if complete_response else None
-                            if complete_response and (
-                                not stream or response.finish_reason or response.turn_complete
+                            async for response in self.delegate.generate_content_async(
+                                llm_request, stream
                             ):
-                                # ADK executes tools (including the reviewer) while
-                                # suspended at yield, so refund completed usage first.
-                                self._settle_usage(reservation, last_usage)
-                            counts = _usage_counts(last_usage)
-                            if counts is not None:
-                                provider_span.set_attribute("llm.token_count.prompt", counts[0])
-                                provider_span.set_attribute(
-                                    "llm.token_count.completion", counts[1] + counts[2]
-                                )
-                                provider_span.set_attribute("llm.token_count.total", sum(counts))
-                            if (
-                                complete_response
-                                and (not stream or response.finish_reason or response.turn_complete)
-                                and provider_span.is_recording()
-                            ):
-                                # ADK can run tools while this generator is suspended.
-                                # Provider latency ends when its complete response arrives.
-                                provider_span.end()
-                            emitted = True
-                            yield response
-                    if complete_response:
-                        # Streaming metadata is cumulative, not an increment per chunk.
-                        # Legacy streams may mark completion only through exhaustion.
-                        self._settle_usage(reservation, last_usage)
+                                complete_response = response.partial is not True
+                                response_failed = bool(response.error_code)
+                                last_usage = response.usage_metadata if complete_response else None
+                                if complete_response and (
+                                    not stream or response.finish_reason or response.turn_complete
+                                ):
+                                    # ADK executes tools (including the reviewer) while
+                                    # suspended at yield, so refund completed usage first.
+                                    self._settle_usage(reservation, last_usage)
+                                counts = _usage_counts(last_usage)
+                                if counts is not None:
+                                    _provider_usage(provider_span, counts, self._budget.settings)
+                                if (
+                                    complete_response
+                                    and (
+                                        not stream
+                                        or response.finish_reason
+                                        or response.turn_complete
+                                    )
+                                    and provider_span.is_recording()
+                                ):
+                                    # ADK can run tools while this generator is suspended.
+                                    # Provider latency ends when its complete response arrives.
+                                    _provider_result(
+                                        provider_span,
+                                        role,
+                                        ProviderUnavailable() if response_failed else None,
+                                    )
+                                    provider_span.end()
+                                emitted = True
+                                yield response
+                        if complete_response:
+                            # Streaming metadata is cumulative, not an increment per chunk.
+                            # Legacy streams may mark completion only through exhaustion.
+                            self._settle_usage(reservation, last_usage)
+                            _provider_result(
+                                provider_span,
+                                role,
+                                ProviderUnavailable() if response_failed else None,
+                            )
+                        else:
+                            _provider_result(provider_span, role, ProviderUnavailable())
+                    except BaseException as exc:
+                        _provider_result(provider_span, role, exc)
+                        raise
                     return
             except (errors.APIError, httpx.NetworkError, httpx.TimeoutException) as exc:
                 retryable = not isinstance(exc, errors.APIError) or exc.code in (

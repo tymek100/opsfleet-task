@@ -48,6 +48,41 @@ and `Answer review`; new roots have `Scenario` and `Automatic answer evaluation`
 Each experiment output links to both turn traces. Earlier failures remain visible.
 Phoenix also retains its empty, protected `default` system project; it contains no evaluations.
 
+### Reading the trace list
+
+Evaluation spans expose standard Phoenix Input and Output fields. `retail.prompt` shows the
+question and the approved Markdown answer, or an explicit failure summary when no answer was
+generated. `retail.judge` shows the question/task and a compact assessment or provider error.
+Provider spans show safe request/result summaries and reported token usage. Their metadata
+includes the run, scenario, phase, and initial/follow-up label where applicable. Raw system
+prompts and hidden reasoning are not copied into these previews. Normal chat tracing remains
+metadata-only; visible evaluation content requires the existing synthetic capture mode.
+
+The standard span status describes **execution**: OK means the operation completed; ERROR
+means execution or validation failed. A completed judge may still assign a FAIL quality score.
+Quality verdicts remain separate experiment/span annotations.
+
+The `parent_id is None` filter shows only root operations. Repeated `retail.prompt` names are
+the operation type, while Input identifies the actual question. Remove that filter to inspect
+provider/tool spans. It also filters cost statistics: provider costs live on child spans, so a
+root-only view can show $0 despite recorded model costs. Phoenix uses its registered model
+pricing for those estimates; the application's budget ledger uses configured rates and retains
+unknown-usage reservations. Neither is a provider invoice. Costs are never duplicated on roots
+to make the filtered total nonzero.
+
+Historical previews can be repaired from hash-verified saved captures. The narrowly scoped
+offline maintenance utility is `evaluation/reporting/trace_backfill.py`; Phoenix 22's public
+span-ingestion API cannot update existing span IDs. A repair requires a stopped service, a
+consistent database backup, a reviewed plan, and unchanged source artifacts. It updates only
+display attributes and execution status/error counts, preserving original IDs, parents,
+timestamps, events, annotations, experiments, and cost records.
+
+The 2026-11-23 repair populated all 139 existing root spans (136 prompts and three judges):
+130 completed executions and nine recorded provider failures. Verification preserved all
+2,717 spans and all 66 other database tables, including the 20-example dataset and seven
+experiments. Backup, exact repair plan, and database/API verification receipts are stored under
+`.artifacts/phoenix/backfills/20261123T095948Z/`. No model calls were needed for the repair.
+
 ## Run the 20 conversations
 
 Configure `GEMINI_API_KEY` and Google Cloud application credentials as described in

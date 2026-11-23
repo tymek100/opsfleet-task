@@ -115,6 +115,13 @@ Synthetic evaluation capture is a separate opt-in observer. It records initial c
 
 Phoenix runs locally at `http://127.0.0.1:6006` with persistent SQLite storage. The [Compose configuration](../infra/phoenix/README.md) disables automatic telemetry and external-resource fetching. Synthetic traces may include evaluation content; normal chat remains metadata-only.
 
+The exporter derives Phoenix Input/Output previews from explicit sanitized application events.
+Evaluation context labels identify run, scenario, turn, and phase without entering model context.
+Runtime and judge spans expose standard execution statuses; quality verdicts remain separate.
+Provider/judge token counts and configured-rate estimates are recorded only when usage is known.
+Phoenix's native cost display uses its own registered pricing and span filters; root spans do
+not duplicate child model costs. Metadata-only tracing continues to omit business content.
+
 Prompt definitions are shared between inference and Phoenix publication through
 `src/retail_agent/prompt_catalog.py` and `evaluation/prompt_catalog.py`. Git remains the source
 of instructions. Evaluation startup publishes the analyst, reviewer (including its mandatory

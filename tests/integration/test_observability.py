@@ -13,7 +13,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from opentelemetry.trace import Status, StatusCode
 
 from retail_agent.contracts import DEMO_USERS
-from retail_agent.observability import configure_tracing, record_observation, span
+from retail_agent.observability import configure_tracing, record_observation, span, trace_context
 from retail_agent.runtime import Analyst
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
@@ -191,6 +191,149 @@ async def test_synthetic_capture_omits_delete_tokens_and_known_secrets(settings)
         )
     finally:
         app.reports.close()
+
+
+async def test_phoenix_prompt_preview_has_exact_answer_and_evaluation_context(settings):
+    exporter = InMemorySpanExporter()
+    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    app = Analyst(
+        settings,
+        DEMO_USERS["alice"],
+        observation_mode="synthetic",
+        model=ScriptedModel(script=[finish("Which quarter?", outcome="clarification")]),
+        reviewer_model=ScriptedModel(script=[verdict()]),
+    )
+    try:
+        with trace_context(
+            run_id="manual-recheck-test", case_id="manual-14", step_id="turn-1", phase="recheck"
+        ):
+            await app.ask("Describe sales. offline-placeholder")
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        root = next(s for s in exporter.get_finished_spans() if s.name == "retail.prompt")
+        assert root.attributes is not None
+        assert root.attributes["input.value"] == "Describe sales. [REDACTED]"
+        assert root.attributes["output.value"] == "Which quarter?"
+        assert root.status.status_code == StatusCode.OK
+        metadata = json.loads(str(root.attributes["metadata"]))
+        assert metadata["case_id"] == "manual-14" and metadata["turn"] == "Initial question"
+        assert (
+            metadata["run_id"] == "manual-recheck-test"
+            and metadata["execution_status"] == "approved"
+        )
+        with span("retail.prompt"):
+            pass
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        last = exporter.get_finished_spans()[-1]
+        assert last.attributes is not None
+        assert "case_id" not in json.loads(str(last.attributes["metadata"]))
+    finally:
+        app.reports.close()
+        tracing.close()
+
+
+async def test_phoenix_provider_outage_shows_question_and_error_without_fabricated_answer(settings):
+    from google.genai import errors
+
+    exporter = InMemorySpanExporter()
+    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    error = errors.ClientError(
+        402, {"error": {"message": "private-provider-error", "status": "RESOURCE_EXHAUSTED"}}
+    )
+    app = Analyst(
+        settings,
+        DEMO_USERS["alice"],
+        observation_mode="synthetic",
+        model=ScriptedModel(script=[error]),
+        reviewer_model=ScriptedModel(script=[]),
+    )
+    try:
+        result = await app.ask("Show Q1 revenue.")
+        assert result.answer is None and result.status == "unavailable"
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        root = next(s for s in exporter.get_finished_spans() if s.name == "retail.prompt")
+        assert root.attributes is not None
+        assert root.attributes["input.value"] == "Show Q1 revenue."
+        assert "No answer generated" in str(root.attributes["output.value"])
+        assert "HTTP 402" in str(root.attributes["output.value"])
+        assert root.status.status_code == StatusCode.ERROR
+        assert "private-provider-error" not in root.to_json()
+    finally:
+        app.reports.close()
+        tracing.close()
+
+
+def test_synthetic_preview_does_not_promote_automatic_raw_payloads():
+    exporter = InMemorySpanExporter()
+    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    try:
+        with span("retail.prompt") as current:
+            current.set_attribute("input.value", "raw-secret-canary")
+            current.set_attribute("metadata", '{"private":"raw-secret-canary"}')
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert "raw-secret-canary" not in exporter.get_finished_spans()[0].to_json()
+    finally:
+        tracing.close()
+
+
+def test_explicit_execution_error_cannot_be_overridden_by_approved_observation():
+    exporter = InMemorySpanExporter()
+    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    try:
+        with span("retail.prompt") as current:
+            record_observation(
+                {
+                    "event": "turn_result",
+                    "result": {"status": "approved", "answer": {"markdown": "Approved answer."}},
+                },
+                mode="synthetic",
+            )
+            current.set_status(Status(StatusCode.ERROR, "unsafe-error-details"))
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        root = exporter.get_finished_spans()[0]
+        assert root.status.status_code == StatusCode.ERROR
+        assert "unsafe-error-details" not in root.to_json()
+    finally:
+        tracing.close()
+
+
+async def test_preview_export_failure_does_not_abort_answer(settings, monkeypatch):
+    def broken(*args, **kwargs):
+        raise RuntimeError("Collector preview unavailable")
+
+    monkeypatch.setattr("retail_agent.runtime.record_observation", broken)
+    app = Analyst(
+        settings,
+        DEMO_USERS["alice"],
+        model=ScriptedModel(script=[finish("Which quarter?", outcome="clarification")]),
+        reviewer_model=ScriptedModel(script=[verdict()]),
+    )
+    try:
+        result = await app.ask("Describe sales.")
+        assert result.status == "approved" and app.observer_errors > 0
+    finally:
+        app.reports.close()
+
+
+async def test_metadata_observer_remains_private_inside_synthetic_session(settings):
+    exporter = InMemorySpanExporter()
+    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    app = Analyst(
+        settings,
+        DEMO_USERS["alice"],
+        observation_mode="metadata",
+        model=ScriptedModel(script=[finish("Private answer", outcome="clarification")]),
+        reviewer_model=ScriptedModel(script=[verdict()]),
+    )
+    try:
+        await app.ask("Private question")
+        assert tracing.provider.force_flush(timeout_millis=2000)
+        root = next(s for s in exporter.get_finished_spans() if s.name == "retail.prompt")
+        assert root.attributes is not None
+        assert "input.value" not in root.attributes and "output.value" not in root.attributes
+        assert root.status.status_code == StatusCode.OK
+    finally:
+        app.reports.close()
+        tracing.close()
 
 
 async def test_observer_failure_never_blocks_reviewed_result(settings):

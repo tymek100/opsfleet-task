@@ -152,6 +152,20 @@ async def test_reference_versions_preserve_examples_and_e2e_scores(
     assert output["initial"]["answer"] == "Revenue: 999."
     assert output["initial"]["runtime_status"] == "approved"
     assert output["evaluation"]["status"] == "FAIL"
+    spans = client.spans.get_spans(
+        project_identifier=state["project_id"],
+        trace_ids=[read_json(run / "cases/manual-15/turn-1.json")["trace_id"]],
+        name="retail.prompt",
+        limit=5,
+    )
+    assert len(spans) == 1
+    attrs = spans[0].get("attributes", {})
+    actual_input = attrs.get("input.value") or attrs.get("input", {}).get("value")
+    actual_output = attrs.get("output.value") or attrs.get("output", {}).get("value")
+    assert actual_input == scenarios["manual-15"].prompt
+    assert actual_output == "Revenue: 999."
+    assert spans[0]["status_code"] == "OK"  # Execution status is independent of FAIL quality.
+    assert attrs["retail.case_id"] == "manual-15" and attrs["retail.step_id"] == "turn-1"
     assert len(experiment["evaluation_runs"]) == 11
     assert all(
         isinstance(e.result, dict) and e.result.get("label") != "PENDING"

@@ -23,7 +23,7 @@ from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.manual import load_scenarios, run_manual
 from retail_agent.config import repository_root
-from retail_agent.observability import configure_tracing
+from retail_agent.observability import configure_tracing, trace_context
 from retail_agent.phoenix_prompts import sync_prompts
 from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
 from retail_agent.runtime import Analyst
@@ -189,7 +189,8 @@ async def run_authored(
         progress(
             f"{scenario.id}: checking independent numbers, evidence, operations and trajectory"
         )
-        grade = await grade_conversation(scenario, turns, snapshot, judge)
+        with trace_context(run_id=run.name, case_id=scenario.id, phase=phase):
+            grade = await grade_conversation(scenario, turns, snapshot, judge)
         grade["capture_sha256"] = {str(p.relative_to(run)): digest(p) for p in paths}
         write_json(run / "automatic" / f"{scenario.id}.json", grade)
         transcript = run / "cases" / scenario.id / "transcript.md"
