@@ -385,10 +385,34 @@ def _freeze_clock(tree: exp.Expr, as_of: dt.datetime | None) -> exp.Expr:
     return tree
 
 
-def _base_relation(name: str, brands: tuple[str, ...] | None, source_dataset: str) -> exp.Select:
+def source_table(
+    dataset: str, table: str, snapshot_at: dt.datetime | None = None, *, alias: str | None = None
+) -> str:
+    """Trusted physical source, optionally pinned to a warehouse version by the harness."""
+    _source_dataset(dataset)
+    if table not in {"products", "orders", "order_items", "users"}:
+        raise ValueError("Unknown physical source table")
+    source = f"`{dataset}.{table}`"
+    if alias is not None:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", alias):
+            raise ValueError("Invalid physical source alias")
+        source += f" AS {alias}"
+    if snapshot_at is not None:
+        if snapshot_at.utcoffset() is None:
+            raise ValueError("Warehouse snapshot timestamp must be timezone-aware")
+        source += f" FOR SYSTEM_TIME AS OF TIMESTAMP '{snapshot_at.astimezone(dt.UTC).isoformat()}'"
+    return source
+
+
+def _base_relation(
+    name: str,
+    brands: tuple[str, ...] | None,
+    source_dataset: str,
+    snapshot_at: dt.datetime | None = None,
+) -> exp.Select:
     scope = "TRUE" if brands is None else "p.brand IN UNNEST(@__scope_brands)"
     products = f"""SELECT p.id AS product_id, p.name AS product_name, p.brand, p.category
-        FROM `{source_dataset}.products` AS p WHERE {scope}"""
+        FROM {source_table(source_dataset, "products", snapshot_at, alias="p")} WHERE {scope}"""
     if name == "products":
         return cast(exp.Select, sqlglot.parse_one(products, read="bigquery"))
     statuses = (
@@ -400,10 +424,10 @@ def _base_relation(name: str, brands: tuple[str, ...] | None, source_dataset: st
     sql = f"""SELECT i.id AS item_id, i.order_id, i.user_id, i.product_id,
         i.sale_price, i.created_at AS purchased_at, p.brand, p.category,
         p.name AS product_name, i.status AS item_status, o.status AS order_status
-        FROM `{source_dataset}.order_items` AS i
-        JOIN `{source_dataset}.orders` AS o
+        FROM {source_table(source_dataset, "order_items", snapshot_at, alias="i")}
+        JOIN {source_table(source_dataset, "orders", snapshot_at, alias="o")}
           ON o.order_id = i.order_id AND o.user_id = i.user_id
-        JOIN `{source_dataset}.products` AS p ON p.id = i.product_id
+        JOIN {source_table(source_dataset, "products", snapshot_at, alias="p")} ON p.id = i.product_id
         WHERE {scope} {statuses}"""
     return cast(exp.Select, sqlglot.parse_one(sql, read="bigquery"))
 
@@ -415,6 +439,7 @@ def compile_query(
     *,
     source_dataset: str = DEFAULT_SOURCE_DATASET,
     as_of: dt.datetime | None = None,
+    snapshot_at: dt.datetime | None = None,
 ) -> str:
     """Replace every resolved physical logical source with a scoped projection."""
     tree, tables = _read_query(sql, RELATIONS)
@@ -424,7 +449,9 @@ def compile_query(
     for table in tables:
         alias = table.alias_or_name
         table.replace(
-            _base_relation(table.name.lower(), brands, source_dataset).subquery(alias=alias)
+            _base_relation(table.name.lower(), brands, source_dataset, snapshot_at).subquery(
+                alias=alias
+            )
         )
     return tree.sql(dialect="bigquery")
 
@@ -657,6 +684,7 @@ class QueryGateway:
         *,
         source_dataset: str = DEFAULT_SOURCE_DATASET,
         clock: Callable[[], dt.datetime] | None = None,
+        snapshot_at: dt.datetime | None = None,
     ):
         if backend not in {"bigquery", "fixture"}:
             raise ValueError("backend must be bigquery or fixture")
@@ -670,6 +698,7 @@ class QueryGateway:
         self.row_limit = row_limit
         self.source_dataset = _source_dataset(source_dataset)
         self.clock = clock
+        self.snapshot_at = snapshot_at
         self._client: Any = None
         self._job_ids: dict[str, str] = {}
         self._submitted: set[str] = set()
@@ -710,7 +739,12 @@ class QueryGateway:
             raise DataError("limit_reached", "The query deadline has expired.")
         as_of = self.clock() if self.clock is not None else None
         compiled = compile_query(
-            sql, self.brands, parameters, source_dataset=self.source_dataset, as_of=as_of
+            sql,
+            self.brands,
+            parameters,
+            source_dataset=self.source_dataset,
+            as_of=as_of,
+            snapshot_at=self.snapshot_at,
         )
         if self.backend == "fixture":
             if self.fixture_path is None or not self.fixture_path.is_file():
@@ -889,11 +923,11 @@ class QueryGateway:
         scope = "TRUE" if self.brands is None else "p.brand IN UNNEST(@__scope_brands)"
         sql = f"""SELECT u.state, COUNT(DISTINCT i.user_id) AS customers,
             COUNT(DISTINCT i.order_id) AS orders, SUM(i.sale_price) AS revenue
-            FROM `{self.source_dataset}.order_items` i
-            JOIN `{self.source_dataset}.orders` o
+            FROM {source_table(self.source_dataset, "order_items", self.snapshot_at, alias="i")}
+            JOIN {source_table(self.source_dataset, "orders", self.snapshot_at, alias="o")}
               ON o.order_id=i.order_id AND o.user_id=i.user_id
-            JOIN `{self.source_dataset}.products` p ON p.id=i.product_id
-            JOIN `{self.source_dataset}.users` u ON u.id=i.user_id
+            JOIN {source_table(self.source_dataset, "products", self.snapshot_at, alias="p")} ON p.id=i.product_id
+            JOIN {source_table(self.source_dataset, "users", self.snapshot_at, alias="u")} ON u.id=i.user_id
             WHERE {scope} AND {statuses[status_definition]}
               AND i.created_at >= TIMESTAMP '{start_date.isoformat()}'
               AND i.created_at < TIMESTAMP '{end_date.isoformat()}'

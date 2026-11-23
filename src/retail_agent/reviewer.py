@@ -1,7 +1,6 @@
 """A tool-free review call; feedback returns to the existing analyst conversation."""
 
 import json
-from pathlib import Path
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.run_config import RunConfig
@@ -14,6 +13,7 @@ from pydantic import ValidationError
 from retail_agent.budget import Budget
 from retail_agent.config import Settings
 from retail_agent.contracts import REVIEW_CATEGORIES, Review, ReviewIssue
+from retail_agent.prompt_catalog import reviewer_prompt
 from retail_agent.provider import AccountedModel, ProviderUnavailable
 from retail_agent.skills import SkillCatalog
 
@@ -44,22 +44,15 @@ async def evaluate(
         role="reviewer",
         **{key: guidance[key] for key in ("name", "version", "sha256")},
     )
-    instruction = (Path(__file__).parent / "prompts/reviewer.md").read_text()
-    instruction += "\n\n" + guidance["instructions"]
+    prompt_spec = reviewer_prompt(settings, guidance=guidance, model=model.model)
     reviewer = LlmAgent(
         name="completion_reviewer",
-        model=AccountedModel(model=model.model, delegate=model).bind(budget, emit, reviewer=True),
-        instruction=instruction,
-        tools=[],
-        generate_content_config=types.GenerateContentConfig(
-            temperature=0,
-            max_output_tokens=settings.review_output_tokens,
-            response_mime_type="application/json",
-            response_json_schema=Review.response_schema(),
-            thinking_config=types.ThinkingConfig(
-                thinking_level=types.ThinkingLevel(settings.review_thinking_level)
-            ),
+        model=AccountedModel(model=model.model, delegate=model).bind(
+            budget, emit, reviewer=True, prompt=prompt_spec
         ),
+        instruction=prompt_spec.instruction,
+        tools=[],
+        generate_content_config=prompt_spec.config,
     )
     sessions = InMemorySessionService()
     session = await sessions.create_session(app_name="retail_review", user_id="review")

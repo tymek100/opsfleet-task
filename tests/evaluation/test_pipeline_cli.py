@@ -20,7 +20,17 @@ def test_cli_uses_default_grading_and_immediate_progress(settings, monkeypatch):
     monkeypatch.setattr("evaluation.runners.pipeline.run_pipeline", execute)
     monkeypatch.setattr("evaluation.graders.judge.GeminiJudge", lambda *args, **kwargs: object())
     result = CliRunner().invoke(
-        cli, ["run", "--max-cost-usd", "1", "--deadline-seconds", "30", "--allow-unreviewed"]
+        cli,
+        [
+            "run",
+            "--max-cost-usd",
+            "1",
+            "--deadline-seconds",
+            "30",
+            "--allow-unreviewed",
+            "--phoenix-url",
+            "http://127.0.0.1:6007",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "Phoenix experiment:" in result.output

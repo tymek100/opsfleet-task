@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 from pydantic import SecretStr
@@ -13,6 +14,25 @@ from retail_agent.services.reports import ReportStore
 from retail_agent.services.warehouse import QueryGateway
 from tests.support.models import ScriptedModel
 from tests.support.warehouse import SQL
+
+
+@pytest.fixture(autouse=True)
+def isolated_phoenix_tests(request):
+    """Integration checks must never write into the user's evaluation workspace."""
+    if not request.node.get_closest_marker("phoenix"):
+        return
+    endpoint = os.environ.get("PHOENIX_TEST_ENDPOINT", "")
+    if not endpoint:
+        pytest.skip(
+            "Set PHOENIX_TEST_ENDPOINT to a disposable Phoenix instance (for example port 6007)"
+        )
+    if urlparse(endpoint).port in {None, 6006}:
+        pytest.fail("Phoenix integration tests require a disposable instance outside port 6006")
+
+
+@pytest.fixture
+def phoenix_url():
+    return os.environ["PHOENIX_TEST_ENDPOINT"].rstrip("/")
 
 
 @pytest.fixture(autouse=True)

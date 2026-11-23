@@ -18,11 +18,9 @@ from tests.support.models import ScriptedModel, calls, finish, verdict
 pytestmark = [pytest.mark.phoenix, pytest.mark.enable_socket]
 
 
-async def test_local_dataset_experiment_annotations_and_trace(settings, tmp_path):
+async def test_local_dataset_experiment_annotations_and_trace(settings, tmp_path, phoenix_url):
     project = "retail-integration-" + uuid4().hex[:8]
-    tracing = configure_tracing(
-        "http://127.0.0.1:6006/v1/traces", project=project, mode="synthetic"
-    )
+    tracing = configure_tracing(phoenix_url + "/v1/traces", project=project, mode="synthetic")
 
     def factory(config, identity, **kwargs):
         return Analyst(
@@ -61,7 +59,7 @@ async def test_local_dataset_experiment_annotations_and_trace(settings, tmp_path
     finally:
         assert tracing.close()
     grade = await grade_run(run, grade_candidates=False, progress=lambda _: None)
-    config = EvaluationSettings()
+    config = EvaluationSettings(phoenix_url=phoenix_url)
     state = publish(run, config, grade=grade)
     assert state["status"] == "published", state
     client = client_for(config)

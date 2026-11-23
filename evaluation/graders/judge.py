@@ -8,16 +8,17 @@ import re
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel, ValidationError
 
 from evaluation.models import TurnReference
+from evaluation.prompt_catalog import judge_prompt
 from evaluation.results import Judgment, Trial, TurnRecord
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import sanitize_capture
+from retail_agent.observability import prompt_attributes, sanitize_capture, span
 from retail_agent.provider import _usage_counts
 
 PROMPT_PATH = Path(__file__).parents[1] / "prompts/judge.md"
@@ -267,9 +268,11 @@ class GeminiJudge:
         schema: dict,
         step_id: str,
         parse: Callable[[dict], Structured],
-        kind: str = "answer",
+        kind: Literal["answer", "trajectory"] = "answer",
         excerpt_policy: str = EXCERPT_POLICY,
     ) -> Structured:
+        prompt_spec = judge_prompt(self.settings, kind, instruction=prompt)
+        attributes = prompt_attributes(prompt_spec)
         payload_text = json.dumps(
             sanitize_capture(payload, self._redaction_secrets), ensure_ascii=False
         )
@@ -289,6 +292,7 @@ class GeminiJudge:
             raise JudgeUnavailable("Judge budget exhausted")
         self.accounted_usd += reservation
         call = {
+            **attributes,
             "step_id": step_id,
             "kind": kind,
             "status": "unknown",
@@ -303,21 +307,19 @@ class GeminiJudge:
         self.calls.append(call)
         started = time.monotonic()
         try:
-            async with asyncio.timeout(remaining):
-                response = await self.client.aio.models.generate_content(
-                    model=self.settings.judge_model,
-                    contents=payload_text,
-                    config=types.GenerateContentConfig(
-                        system_instruction=prompt,
-                        temperature=0,
-                        max_output_tokens=self.settings.judge_max_output_tokens,
-                        response_mime_type="application/json",
-                        response_json_schema=schema,
-                        thinking_config=types.ThinkingConfig(
-                            thinking_level=types.ThinkingLevel.LOW
+            with span(
+                "retail.judge",
+                **attributes,
+                **{"openinference.span.kind": "LLM", "llm.model_name": prompt_spec.model},
+            ):
+                async with asyncio.timeout(remaining):
+                    response = await self.client.aio.models.generate_content(
+                        model=prompt_spec.model,
+                        contents=payload_text,
+                        config=prompt_spec.config.model_copy(
+                            update={"system_instruction": prompt, "response_json_schema": schema}
                         ),
-                    ),
-                )
+                    )
             counts = _usage_counts(response.usage_metadata)
             if counts is not None:
                 inputs, outputs, thinking = counts

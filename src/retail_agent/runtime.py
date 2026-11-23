@@ -8,7 +8,6 @@ import uuid
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
-from pathlib import Path
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.run_config import RunConfig
@@ -22,6 +21,7 @@ from retail_agent.config import Settings
 from retail_agent.contracts import Answer, Identity, TurnResult
 from retail_agent.observability import CaptureMode, Observer, observation, record_observation, span
 from retail_agent.privacy import screen
+from retail_agent.prompt_catalog import analyst_prompt
 from retail_agent.provider import AccountedModel, ProviderUnavailable, make_gemini
 from retail_agent.services.golden import GoldenStore
 from retail_agent.services.reports import ReportStore
@@ -152,22 +152,17 @@ class Analyst:
             if self.model is None:
                 self.model = make_gemini(self.settings)
             async with asyncio.timeout(self.settings.turn_timeout_seconds):
+                prompt_spec = analyst_prompt(self.settings, model=self.model.model)
                 agent = LlmAgent(
                     name="retail_analyst",
                     model=AccountedModel(model=self.model.model, delegate=self.model).bind(
-                        turn.budget, turn.emit
+                        turn.budget, turn.emit, prompt=prompt_spec
                     ),
-                    instruction=(Path(__file__).parent / "prompts/analyst.md").read_text(),
+                    instruction=prompt_spec.instruction,
                     tools=build_tools(turn),
                     before_model_callback=turn.observe_request,
                     after_model_callback=turn.observe_model,
-                    generate_content_config=types.GenerateContentConfig(
-                        temperature=0.2,
-                        max_output_tokens=self.settings.max_output_tokens,
-                        thinking_config=types.ThinkingConfig(
-                            thinking_level=types.ThinkingLevel(self.settings.thinking_level)
-                        ),
-                    ),
+                    generate_content_config=prompt_spec.config,
                 )
                 sessions = InMemorySessionService()
                 session = await sessions.create_session(

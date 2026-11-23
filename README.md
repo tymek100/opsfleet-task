@@ -36,93 +36,55 @@ Saving requires an explicit request. Deletion requires an exact preview and conf
 
 The local CLI uses simulated identities, in-memory conversation context and SQLite report storage. Nontechnical persona administration, inferred preference learning, production authentication and deployment infrastructure remain design-only. Evaluator approval does not guarantee correctness.
 
-## Independent evaluation
+## Evaluation and Phoenix
 
-`knowledge/golden/` contains optional runtime examples. `evaluation/datasets/golden/` contains
-independent evaluation tasks and references; the analyst receives only the user steps and
-its authorized environment. The pilot has 43 synthetic cases across nine fixtures, with
-independent Decimal/set calculations and 40 judge controls (20 valid/flawed pairs). References are code-verified;
-human review and judge calibration are still pending. There is no sealed holdout yet.
+The main Phoenix workspace contains one dataset, **Retail agent — 20 conversations**, and one
+trace project, `retail-conversations-20`. Each scenario has an initial question and a fixed
+follow-up. Six named experiments preserve three complete runs and three targeted retests,
+including failures, both answers, original traces, and existing assistant reviews.
 
-Run the complete evaluation with `GEMINI_API_KEY` configured and Docker running:
-
-```bash
-uv run --locked --group evaluation retail-eval run \
-  --suite smoke --repetitions 1 \
-  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
-```
-
-The runner validates the cases, connects to Phoenix or starts its pinned local container, and
-prints experiment and trace links before the first model call. Each trial is executed, published,
-and independently graded as the suite progresses. Enable trace streaming for completed spans;
-refresh the experiment view for new outputs and scores. There are no separate
-`sync`, `grade`, or `publish` steps for a normal run. The shared cost ceiling and deadline cover
-agent execution and independent judges. No BigQuery credentials are required: evaluation uses
-isolated synthetic fixtures. Agent and judge inference still calls Gemini.
-
-For a focused reliability experiment with three repetitions per case:
+Run new conversations with Gemini and BigQuery credentials configured and Docker running:
 
 ```bash
-uv run --locked --group evaluation retail-eval run \
-  --suite totals-q1,unsupported-cause --repetitions 3 \
-  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
+uv run --locked --group evaluation retail-eval run-conversations \
+  --max-cost-usd 6 --deadline-seconds 3600
 ```
 
-Each repetition gets an isolated report store and frozen clock. Follow-ups retain conversation
-context, while each prompt receives a fresh runtime budget. The experiment also has a total
-cost ceiling and deadline, including grading. One repetition is the default. Missing usage retains
-its reservation; remaining trials are marked `NOT_EXECUTED` when a limit prevents execution.
-No failed trial is automatically rerun.
+The command starts or connects to local Phoenix, captures independent references, and runs the
+agent against the same timestamp-pinned BigQuery tables. It prints experiment and trace links,
+then publishes both answers and automatic scores after each conversation. Dataset Output contains
+expected facts and criteria for both turns. Each scenario has isolated state; follow-ups retain
+its conversation. The total budget includes execution, reference queries, and independent judges.
 
-Answers, evidence, and versioned grades are saved under `.artifacts/evaluation/run-.../` as well
-as in Phoenix. The command prints the final `summary.md` path. To regrade an existing execution
-with a new judge configuration, use the printed run directory:
+Numeric values are checked by code against Decimal/set references. Separate LLM judgments check
+evidence, completeness, and tool use. Runtime approval is not an evaluation pass. Historical
+assistant reviews remain separate; neither those reviews nor automatic judges are human-calibrated.
+
+Republish the saved historical answers and reviews without inference:
 
 ```bash
-EVAL_RUN=.artifacts/evaluation/run-REPLACE-WITH-PRINTED-ID
-uv run --locked --group evaluation retail-eval grade --run "$EVAL_RUN" \
-  --max-cost-usd 3 --deadline-seconds 900 --phoenix
+uv run --locked --group evaluation retail-eval publish-conversations
 ```
 
-Regrading creates a new `grades/grade-.../` directory with `summary.md`, `summary.json`, individual
-findings and judge usage. It never reruns the agent. The default also grades first drafts and
-revisions against the evidence available at that moment. `--code-only` skips LLM judgment and
-marks unassessed semantic requirements as unresolved, rather than passing them.
+This requires the original local capture/review artifacts and Phoenix traces. Run artifacts
+live under `.artifacts/manual/`; questions and publication history live in
+`evaluation/scenarios/`. [Testing and evaluation](docs/evaluation.md) explains the dataset,
+scores, evidence checks, reference versions, and unresolved evaluations.
 
-| Check | Method |
-|---|---|
-| Numerical correctness | Extract entity/metric/period-bound facts; compare with independent Decimal references |
-| Grounding | Judge atomic claims against observed evidence; separate unsupported, contradicted and unjudgeable claims |
-| Task completion | Check every published turn, permitted outcome and frozen acceptance criteria |
-| Report operations | Verify exact saved content, ownership, confirmation receipts and final state |
-| Trajectory quality | Judge tool selection, argument use, evidence use, recovery, and progress; diagnostic scores are separate from task success |
-| Reliability | Preserve all repetitions, failures, incomplete groups, latency and accounted cost |
+The four repository prompt definitions remain available in
+[Phoenix Prompts](http://127.0.0.1:6006/prompts). Synchronize without model calls with
+`uv run --locked --group evaluation retail-eval sync-prompts`.
+Git remains authoritative; UI prompt edits do not change application behavior.
 
-Other commands:
+The separate controlled evaluation suite retains 43 synthetic cases, independent Decimal/set
+references, and 40 judge controls. Its automated answer/trajectory grading remains available
+through `retail-eval run`, using a separate Phoenix endpoint such as port 6007. Fixture publication
+and collector tests cannot use the main port 6006 workspace. The Phoenix pytest auto-publication
+plugin is disabled. See [Phoenix setup](infra/phoenix/README.md#disposable-test-instance).
 
-```bash
-uv run --locked --group evaluation retail-eval cases --suite smoke
-uv run --locked --group evaluation retail-eval calibrate --split validation \
-  --max-cost-usd 3 --deadline-seconds 900
-uv run --locked --group evaluation retail-eval publish --run "$EVAL_RUN"
-uv run --locked --group evaluation retail-eval compare \
-  --baseline /path/to/baseline/grades/grade-ID \
-  --candidate /path/to/candidate/grades/grade-ID
-```
+`knowledge/golden/` contains optional runtime methods; evaluation references never enter analyst
+context. Human reference review, judge calibration, and a sealed holdout remain pending.
 
-Comparisons require matching references, grader versions and repetition coverage. Synthetic
-control agreement is diagnostic; it does not establish human-calibrated accuracy or a release
-gate. Phoenix publication failures preserve local artifacts and can be retried with `publish`.
-Normal chat tracing is opt-in with `--phoenix` and captures metadata only. Evaluation includes
-sanitized synthetic content. See [Testing and evaluation](docs/evaluation.md) for the complete
-workflow and [Phoenix setup](infra/phoenix/README.md) for service management.
-
-The CLI workflow expects a source checkout: runtime knowledge assets, Git metadata and `uv.lock`
-are resolved from the repository. The wheel includes evaluation cases/fixtures and supports
-reference validation, but it is not a standalone distribution of the complete application.
-
-To check the local collector with scripted models and no paid inference:
-
-```bash
-uv run --locked --group evaluation pytest tests/integration/test_phoenix_service.py -m phoenix
-```
+The CLI workflow expects a source checkout: knowledge assets, Git metadata, and `uv.lock` are
+resolved from the repository. The wheel supports reference validation but is not a standalone
+distribution of the complete application.

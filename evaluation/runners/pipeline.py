@@ -11,13 +11,16 @@ from pathlib import Path
 
 from evaluation.data import validate_case
 from evaluation.graders.runner import grade_trial, prepare_grade, record_grade
+from evaluation.prompt_catalog import judge_prompt
 from evaluation.reporting.phoenix import PhoenixPublisher
-from evaluation.reporting.phoenix_service import ensure_phoenix
+from evaluation.reporting.phoenix_service import PhoenixUnavailable, ensure_phoenix
 from evaluation.reporting.summary import write_summary
 from evaluation.results import RunManifest, Trial
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.conversation import run_cases
 from retail_agent.observability import configure_tracing
+from retail_agent.phoenix_prompts import sync_prompts
+from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
 from retail_agent.runtime import Analyst
 
 
@@ -65,6 +68,7 @@ async def run_pipeline(
     publisher_factory=PhoenixPublisher,
     service=ensure_phoenix,
     tracing_factory=configure_tracing,
+    prompts_sync=sync_prompts,
     progress=print,
 ) -> PipelineResult:
     """All agent and judge calls share one cost ceiling and absolute deadline.
@@ -83,6 +87,24 @@ async def run_pipeline(
     async def started(run: Path, manifest: RunManifest) -> None:
         nonlocal publisher, tracing, directory, grade_directory
         directory = run
+        try:
+            prompts = await asyncio.to_thread(
+                prompts_sync,
+                [
+                    analyst_prompt(settings),
+                    reviewer_prompt(settings),
+                    judge_prompt(config, "answer"),
+                    judge_prompt(config, "trajectory"),
+                ],
+                config.phoenix_url,
+                deadline=deadline,
+            )
+        except Exception as exc:
+            raise PhoenixUnavailable(
+                f"Prompt synchronization failed ({type(exc).__name__}); no model calls were made."
+            ) from None
+        write_json(run / "prompts.json", prompts)
+        progress(f"Prompt library: {config.phoenix_url}/prompts")
         publisher = publisher_factory(run, config, deadline=deadline, project=manifest.id)
         state = await asyncio.to_thread(publisher.start)
         progress(f"Phoenix experiment: {state['url']}")
@@ -95,6 +117,7 @@ async def run_pipeline(
         tracing = tracing_factory(
             config.phoenix_url + "/v1/traces", project=manifest.id, mode="synthetic"
         )
+        tracing.register_prompts(prompts)
         grade_directory = prepare_grade(
             run, judge, grade_candidates=grade_candidates, grade_trajectory=True
         )
@@ -103,6 +126,7 @@ async def run_pipeline(
             "status": "running",
             "grade_id": grade_directory.name,
             "accounted_total_usd": 0,
+            "prompt_versions": prompts,
         }
         write_json(run / "manifest.json", manifest)
 

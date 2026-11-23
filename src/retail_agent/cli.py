@@ -28,14 +28,24 @@ app = typer.Typer(help="Autonomous retail analysis with reviewed answers.", no_a
 console = Console()
 
 
-def _start_tracing(enabled: bool) -> TracingSession | None:
+def _start_tracing(enabled: bool, settings: Settings) -> TracingSession | None:
     if not enabled:
         return None
     try:
-        return configure_tracing(mode="metadata")
+        session = configure_tracing(mode="metadata")
     except Exception:
         console.print("Phoenix tracing is unavailable; continuing without tracing.")
         return None
+    try:
+        from retail_agent.phoenix_prompts import sync_prompts
+        from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
+
+        session.register_prompts(
+            sync_prompts([analyst_prompt(settings), reviewer_prompt(settings)])
+        )
+    except Exception:
+        console.print("Phoenix prompt synchronization failed; using repository instructions.")
+    return session
 
 
 def _close_tracing(session: TracingSession | None) -> None:
@@ -171,7 +181,7 @@ def ask(
 ) -> None:
     """Answer one question; optionally capture its answer, evidence and metadata."""
     analyst = build(user, backend, golden_bootstrap)
-    tracing = _start_tracing(phoenix)
+    tracing = _start_tracing(phoenix, analyst.settings)
     try:
         result = asyncio.run(run_question(analyst, prompt))
         display(result)
@@ -281,7 +291,7 @@ def chat(
 ) -> None:
     """Start an interactive conversation with ephemeral history and persistent reports."""
     analyst = build(user, backend, golden_bootstrap)
-    tracing = _start_tracing(phoenix)
+    tracing = _start_tracing(phoenix, analyst.settings)
     try:
         asyncio.run(conversation(analyst))
     finally:

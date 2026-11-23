@@ -17,8 +17,9 @@ from pydantic import BaseModel, PrivateAttr
 
 from retail_agent.budget import Budget
 from retail_agent.config import Settings
-from retail_agent.observability import detached_span
+from retail_agent.observability import detached_span, prompt_attributes
 from retail_agent.privacy import screen
+from retail_agent.prompt_catalog import PromptSpec
 
 
 class ProviderUnavailable(Exception):
@@ -84,9 +85,18 @@ class AccountedModel(BaseLlm):
     _budget: Budget = PrivateAttr()
     _reviewer: bool = PrivateAttr(default=False)
     _emit: Callable = PrivateAttr()
+    _prompt: PromptSpec | None = PrivateAttr(default=None)
 
-    def bind(self, budget: Budget, emit: Callable, *, reviewer: bool = False) -> "AccountedModel":
+    def bind(
+        self,
+        budget: Budget,
+        emit: Callable,
+        *,
+        reviewer: bool = False,
+        prompt: PromptSpec | None = None,
+    ) -> "AccountedModel":
         self._budget, self._emit, self._reviewer = budget, emit, reviewer
+        self._prompt = prompt
         return self
 
     @property
@@ -163,6 +173,7 @@ class AccountedModel(BaseLlm):
                         "retail.attempt": attempt + 1,
                         "retail.provider_reservation": reservation,
                         "llm.model_name": self.model,
+                        **(prompt_attributes(self._prompt) if self._prompt else {}),
                     },
                 ) as provider_span:
                     async with asyncio.timeout(

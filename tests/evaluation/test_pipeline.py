@@ -148,6 +148,7 @@ def harness(settings, tmp_path, *, fail_upload=False, trajectory_fails=False):
         "publisher_factory": Publisher,
         "service": lambda *args, **kwargs: events.append("service"),
         "tracing_factory": partial(configure_tracing, exporter=InMemorySpanExporter()),
+        "prompts_sync": lambda *args, **kwargs: [],
         "progress": lambda text: events.append("link") if "Phoenix " in text else None,
     }
     return arguments, events, allowances, judge
@@ -226,6 +227,20 @@ async def test_unavailable_phoenix_stops_before_inference(settings, tmp_path):
     with pytest.raises(PhoenixUnavailable):
         await run_pipeline(**arguments)
     assert events == [] and judge.closed
+
+
+async def test_prompt_sync_failure_stops_before_inference_and_preserves_run(settings, tmp_path):
+    arguments, events, _, judge = harness(settings, tmp_path)
+
+    def unavailable(*args, **kwargs):
+        raise ConnectionError("Controlled prompt registry outage")
+
+    arguments["prompts_sync"] = unavailable
+    with pytest.raises(PhoenixUnavailable, match="Prompt synchronization failed"):
+        await run_pipeline(**arguments)
+    assert "agent" not in events and judge.calls == [] and judge.closed
+    manifest = next((tmp_path / "runs").glob("*/manifest.json"))
+    assert read_json(manifest)["pipeline"]["status"] == "interrupted"
 
 
 async def test_publication_failure_keeps_local_grades_and_returns_incomplete(settings, tmp_path):

@@ -291,12 +291,20 @@ def summarize(
     return result
 
 
-def queries(dataset: str) -> dict[str, str]:
+def queries(dataset: str, snapshot_at: datetime | None = None) -> dict[str, str]:
     if not re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_]+", dataset):
         raise ValueError("Invalid trusted source dataset")
-    joins = f"""FROM `{dataset}.order_items` i
-JOIN `{dataset}.orders` o ON o.order_id = i.order_id AND o.user_id = i.user_id
-JOIN `{dataset}.products` p ON p.id = i.product_id"""
+    # Independent SQL construction: do not reuse the agent's scoped query compiler.
+    if snapshot_at is not None and snapshot_at.utcoffset() is None:
+        raise ValueError("Snapshot time must be timezone-aware")
+    version = (
+        f" FOR SYSTEM_TIME AS OF TIMESTAMP '{snapshot_at.astimezone(UTC).isoformat()}'"
+        if snapshot_at is not None
+        else ""
+    )
+    joins = f"""FROM `{dataset}.order_items` AS i{version}
+JOIN `{dataset}.orders` AS o{version} ON o.order_id = i.order_id AND o.user_id = i.user_id
+JOIN `{dataset}.products` AS p{version} ON p.id = i.product_id"""
     return {
         "transactions": f"""SELECT i.id AS item_id, i.order_id, i.user_id, i.product_id,
 i.sale_price, i.created_at AS purchased_at, p.brand, p.category,
@@ -305,11 +313,11 @@ p.name AS product_name, i.status AS item_status, o.status AS order_status
 WHERE p.brand IN UNNEST(@brands)
 ORDER BY p.brand, i.id""",
         "products": f"""SELECT id AS product_id, name AS product_name, brand, category
-FROM `{dataset}.products` WHERE brand IN UNNEST(@brands) ORDER BY brand, id""",
+FROM `{dataset}.products`{version} WHERE brand IN UNNEST(@brands) ORDER BY brand, id""",
         "states": f"""SELECT p.brand, u.state, COUNT(DISTINCT i.user_id) AS customers,
 COUNT(DISTINCT i.order_id) AS orders, SUM(i.sale_price) AS revenue
 {joins}
-JOIN `{dataset}.users` u ON u.id = i.user_id
+JOIN `{dataset}.users` AS u{version} ON u.id = i.user_id
 WHERE p.brand IN UNNEST(@brands)
 AND i.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')
 AND i.created_at >= TIMESTAMP '2026-01-01' AND i.created_at < TIMESTAMP '2026-04-01'
@@ -336,7 +344,14 @@ def save(path: Path, value) -> str:
 
 
 def capture(
-    settings, directory: Path, *, brands=BRANDS, max_query_bytes=100_000_000, client: Any = None
+    settings,
+    directory: Path,
+    *,
+    brands=BRANDS,
+    max_query_bytes=100_000_000,
+    client: Any = None,
+    snapshot_at: datetime | None = None,
+    deadline: float | None = None,
 ) -> dict:
     from google.cloud import bigquery
 
@@ -351,8 +366,11 @@ def capture(
         "brands": list(brands),
         "query_byte_limit": max_query_bytes,
         "reference_implementation_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "point_in_time_consistent": False,
-        "limitation": "Sequential read-only queries observe the source at their execution times. Local captured files are immutable inputs, not a transactionally frozen warehouse.",
+        "point_in_time_consistent": snapshot_at is not None,
+        "snapshot_at": snapshot_at.isoformat() if snapshot_at is not None else None,
+        "limitation": "Table versions are pinned to the recorded timestamp; retained files support regrading after the BigQuery time-travel window expires."
+        if snapshot_at
+        else "Sequential read-only queries are not a transactionally frozen warehouse.",
         "human_reviewed": False,
         "jobs": {},
         "files_sha256": {},
@@ -362,11 +380,11 @@ def capture(
     client = client or bigquery.Client(project=settings.google_cloud_project or None)
     captured = {}
     try:
-        for name, sql in queries(settings.warehouse_source_dataset).items():
-            deadline = time.monotonic() + 60
+        for name, sql in queries(settings.warehouse_source_dataset, snapshot_at).items():
+            query_deadline = min(time.monotonic() + 60, deadline or float("inf"))
 
-            def remaining(deadline=deadline):
-                left = deadline - time.monotonic()
+            def remaining(query_deadline=query_deadline):
+                left = query_deadline - time.monotonic()
                 if left <= 0:
                     raise TimeoutError("Reference query exceeded its 60-second deadline")
                 return left

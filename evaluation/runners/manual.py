@@ -75,9 +75,7 @@ def _source_paths() -> list[Path]:
             *root.glob("src/retail_agent/**/*.py"),
             *root.glob("src/retail_agent/**/*.md"),
             *root.glob("knowledge/golden/*.json"),
-            root / "evaluation/runners/manual.py",
-            root / "evaluation/runners/conversation.py",
-            root / "evaluation/results.py",
+            *root.glob("evaluation/**/*.py"),
             root / "uv.lock",
         ]
     )
@@ -126,6 +124,10 @@ async def run_manual(
     phoenix_url: str = "http://127.0.0.1:6006",
     app_factory: Callable = Analyst,
     progress: Callable[[str], None] = lambda message: print(message, flush=True),
+    on_started=None,
+    on_case=None,
+    external_cost: Callable[[], float] = lambda: 0.0,
+    absolute_deadline: float | None = None,
 ) -> Path:
     if (
         not scenarios
@@ -142,7 +144,7 @@ async def run_manual(
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("The reporting clock must include its timezone")
     now = now.astimezone(UTC)
-    deadline = time.monotonic() + deadline_seconds
+    deadline = absolute_deadline or time.monotonic() + deadline_seconds
     directory = output_root / identifier(f"manual-{phase}")
     directory.mkdir(parents=True, exist_ok=False)
     root = repository_root()
@@ -203,32 +205,53 @@ async def run_manual(
     }
     progress(f"Manual run: {directory}")
     progress(f"Backend: {backend}; {len(scenarios)} conversations; {2 * len(scenarios)} turns")
-    progress(f"Shared limit: ${max_cost_usd:g}; {deadline_seconds:g}s. Independent review pending.")
+    progress(f"Shared limit: ${max_cost_usd:g}; {deadline_seconds:g}s.")
     secrets = (settings.gemini_api_key.get_secret_value(),)
     write_json(directory / "progress.json", state)
     tracing = None
     try:
+        if on_started is not None:
+            await on_started(directory)
         if phoenix:
+            from evaluation.reporting.conversations import (
+                PROJECT_NAME,
+                ensure_dataset,
+                ensure_project,
+            )
             from evaluation.reporting.phoenix import client_for
             from evaluation.reporting.phoenix_service import ensure_phoenix
             from evaluation.settings import EvaluationSettings
             from retail_agent.observability import configure_tracing
+            from retail_agent.phoenix_prompts import sync_prompts
+            from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
 
             phoenix_settings = EvaluationSettings(phoenix_url=phoenix_url)
             await asyncio.to_thread(
                 ensure_phoenix, phoenix_settings, deadline=deadline, progress=progress
             )
-            client = client_for(phoenix_settings, deadline=deadline)
-            project = await asyncio.to_thread(
-                client.projects.create,
-                name=directory.name,
-                description="Authored manual scenarios against the explicitly selected data source.",
+            prompts = await asyncio.to_thread(
+                sync_prompts,
+                [analyst_prompt(config), reviewer_prompt(config)],
+                phoenix_url,
+                deadline=deadline,
             )
+            write_json(directory / "prompts.json", prompts)
+            client = client_for(phoenix_settings, deadline=deadline)
+            canonical = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json")
+            known = {case.id: case for case in canonical}
+            if backend != "bigquery" or any(known.get(case.id) != case for case in scenarios):
+                raise ValueError(
+                    "The main Phoenix workspace accepts only the canonical 20 BigQuery conversations"
+                )
+            await asyncio.to_thread(ensure_dataset, client, canonical)
+            project = await asyncio.to_thread(ensure_project, client)
             url = phoenix_url + "/projects/" + quote(project["id"], safe="")
             state["phoenix"] = {"project_id": project["id"], "url": url}
             tracing = configure_tracing(
-                phoenix_url + "/v1/traces", project=directory.name, mode="synthetic"
+                phoenix_url + "/v1/traces", project=PROJECT_NAME, mode="synthetic"
             )
+            tracing.register_prompts(prompts)
+            progress(f"Prompt library: {phoenix_url}/prompts")
             progress(f"Phoenix traces: {url}")
             write_json(directory / "progress.json", state)
         for scenario in scenarios:
@@ -246,7 +269,7 @@ async def run_manual(
                 try:
                     for index, question in enumerate((scenario.prompt, scenario.follow_up), 1):
                         step_id = f"turn-{index}"
-                        remaining = max_cost_usd - state["accounted_usd"]
+                        remaining = max_cost_usd - state["accounted_usd"] - external_cost()
                         time_left = deadline - time.monotonic()
                         if remaining <= 0 or time_left < 1:
                             record = TurnRecord(
@@ -333,6 +356,8 @@ async def run_manual(
                 finally:
                     if app is not None:
                         app.reports.close()
+            if on_case is not None:
+                await on_case(directory, scenario, state)
         state["status"] = (
             "captured" if state["executed_turns"] == manifest["planned_turns"] else "incomplete"
         )
@@ -350,6 +375,20 @@ async def run_manual(
         state["finished_at"] = datetime.now(UTC).isoformat()
         write_json(directory / "progress.json", state)
         progress(f"Captured results: {directory}; status: {state['status']}")
+    if phoenix and state["status"] == "captured":
+        from evaluation.reporting.conversations import prepare_phase, publish_phase
+
+        spec = {
+            "name": f"{phase.title()} - {now:%Y-%m-%d %H:%M} UTC ({len(scenarios)} of 20)",
+            "runs": [directory.name],
+            "reviews": [],
+        }
+        prepared = prepare_phase(spec, output_root, canonical)
+        publication = await asyncio.to_thread(
+            publish_phase, prepared, canonical, phoenix_settings, directory / "phoenix.json"
+        )
+        progress(f"Phoenix experiment: {publication['url']}")
+        progress("Independent answer review: PENDING. Runtime approval is not an evaluation pass.")
     return directory
 
 

@@ -82,9 +82,9 @@ class ControlledJudge:
 
 
 async def test_pipeline_publishes_before_inference_and_annotations_during_execution(
-    settings, tmp_path
+    settings, tmp_path, phoenix_url
 ):
-    config = EvaluationSettings(artifact_root=tmp_path)
+    config = EvaluationSettings(artifact_root=tmp_path, phoenix_url=phoenix_url)
     checkpoints = []
     progress = []
 

@@ -12,8 +12,8 @@ import re
 import threading
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import Any, Literal
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
 
 from opentelemetry import trace
@@ -22,6 +22,9 @@ from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Status
+
+if TYPE_CHECKING:
+    from retail_agent.prompt_catalog import PromptSpec
 
 CaptureMode = Literal["metadata", "synthetic"]
 Observer = Callable[[dict[str, Any]], None]
@@ -89,6 +92,11 @@ _SAFE_ATTRIBUTES = frozenset(
         "retail.case_id",
         "retail.repetition",
         "retail.run_id",
+        "retail.prompt_name",
+        "retail.prompt_sha256",
+        "prompt.vendor",
+        "prompt.id",
+        "llm.prompt_template.version",
     }
 )
 _active: TracingSession | None = None
@@ -211,7 +219,12 @@ class SanitizingExporter(SpanExporter):
             name = (
                 span.name
                 if span.name
-                in {"retail.prompt", "retail.provider_attempt", "retail.evaluation_trial"}
+                in {
+                    "retail.prompt",
+                    "retail.provider_attempt",
+                    "retail.evaluation_trial",
+                    "retail.judge",
+                }
                 else f"adk.{kind}"
             )
             resource = Resource(
@@ -257,6 +270,10 @@ class TracingSession:
     project: str
     mode: CaptureMode
     closed: bool = False
+    prompt_versions: dict[str, str] = field(default_factory=dict)
+
+    def register_prompts(self, references: list[dict]) -> None:
+        self.prompt_versions.update({item["sha256"]: item["version_id"] for item in references})
 
     @property
     def failed_exports(self) -> int:
@@ -286,6 +303,21 @@ class TracingSession:
         worker.start()
         worker.join(max(0, timeout_seconds))
         return not worker.is_alive()
+
+
+def prompt_attributes(spec: PromptSpec) -> dict[str, str]:
+    """Attribute only an exact synchronized definition; unknown versions keep their hash."""
+    attributes = {"retail.prompt_name": spec.name, "retail.prompt_sha256": spec.sha256}
+    version_id = _active.prompt_versions.get(spec.sha256) if _active else None
+    if version_id:
+        attributes.update(
+            {
+                "prompt.vendor": "arize-phoenix",
+                "prompt.id": version_id,
+                "llm.prompt_template.version": version_id,
+            }
+        )
+    return attributes
 
 
 def configure_tracing(

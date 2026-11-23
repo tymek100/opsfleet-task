@@ -62,6 +62,7 @@ deletion confirmation tokens are excluded from model-visible observations.
 | Skills | Analytical and writing procedures, loaded on demand | [`src/retail_agent/skills/`](../src/retail_agent/skills/README.md) |
 | Golden Knowledge | Reusable question/SQL/answer examples | [`knowledge/golden/`](../knowledge/golden/README.md) |
 | Evaluation references | Frozen cases, criteria, numeric facts, and fixtures; never supplied to the analyst | [`evaluation/datasets/`](../evaluation/datasets/README.md) |
+| Authored conversations | 20 fixed questions and follow-ups, with acceptance criteria kept outside agent context | [`evaluation/scenarios/`](../evaluation/scenarios/README.md) |
 | Judge calibration | Labeled candidate answers for testing the independent evaluator | `evaluation/datasets/judge_calibration/` |
 
 The analyst receives skill metadata and selects relevant instructions. The reviewer always receives the analytical-review skill. Skills neither execute scripts nor grant permissions.
@@ -114,6 +115,16 @@ Synthetic evaluation capture is a separate opt-in observer. It records initial c
 
 Phoenix runs locally at `http://127.0.0.1:6006` with persistent SQLite storage. The [Compose configuration](../infra/phoenix/README.md) disables automatic telemetry and external-resource fetching. Synthetic traces may include evaluation content; normal chat remains metadata-only.
 
+Prompt definitions are shared between inference and Phoenix publication through
+`src/retail_agent/prompt_catalog.py` and `evaluation/prompt_catalog.py`. Git remains the source
+of instructions. Evaluation startup publishes the analyst, reviewer (including its mandatory
+review skill), answer judge and trajectory judge to Phoenix Prompts. Normal CLI and manual
+tracing publish the two runtime definitions. Content hashes prevent duplicate versions and
+associate provider/judge calls with the exact synchronized definition. `prompts.json` records
+version IDs alongside run artifacts. `retail-eval sync-prompts` publishes without inference.
+Playground edits do not alter the application; adopting a change requires updating the repository.
+Playground tests prompt variants but does not run the application's ADK tools or attribution checks.
+
 ## Modules
 
 Python paths below are relative to `src/retail_agent/`.
@@ -134,6 +145,25 @@ Repository-level `knowledge/` contains runtime examples and fixtures. `evaluatio
 ## Independent evaluation
 
 Status: the end-to-end evaluation runner, incremental local Phoenix publication, answer and trajectory graders, synthetic references, and offline test suite are implemented. Pilot references still require human review; judge calibration and a sealed holdout have not been approved. Code-only results do not establish semantic correctness or production reliability.
+
+The main Phoenix workspace holds the authored 20-conversation dataset and one shared trace
+project, `retail-conversations-20`. Three complete historical phases and three targeted retests
+retain both answers, original traces, and attributed assistant reviews. The latest full phase
+passed 39/40 answers; partial retests are not a new full-suite result.
+`retail-eval run-conversations` captures independent reference rows and pins every agent/reference
+source table to the same BigQuery timestamp. It publishes numerical, grounding, completion,
+operation, and trajectory scores after each conversation. Reference facts for both turns live in
+versioned dataset Output; observed answers live in experiment results. Conditional follow-ups bind
+to the entities actually shown initially, including valid alternative ties.
+`evaluation/runners/authored.py` coordinates capture, grading, and publication;
+`conversation_references.py` defines independent facts; `graders/conversations.py` grades the two
+turns; `reporting/conversation_experiment.py` publishes incremental results.
+`publish-conversations` preserves historical assistant reviews without relabeling them as
+automatic grades or overwriting their dataset versions.
+
+The controlled fixture workflow below uses a separate Phoenix instance, such as port 6007.
+Fixture publication rejects the main port 6006 endpoint. Collector tests require an explicit
+disposable endpoint; the SDK pytest plugin is disabled to prevent automatic test datasets.
 
 The runtime reviewer and offline evaluator have different responsibilities. The reviewer can request corrections before publication. The offline evaluator assesses saved executions independently, using references the analyst never sees.
 

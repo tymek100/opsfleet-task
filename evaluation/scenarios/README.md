@@ -27,3 +27,23 @@ reference snapshot where possible. The default public TheLook source is example 
 running real queries against it must not be described as testing actual company production
 traffic. Record query dates and any source-change limitations. Ordinary local fixture execution
 cannot exercise the live geographic aggregate capability equivalently.
+
+## Phoenix publication
+
+`retail-eval run-conversations --max-cost-usd 6 --deadline-seconds 3600` executes this set
+against BigQuery. It reuses the **Retail agent — 20 conversations** dataset and
+`retail-conversations-20` trace project. Each dataset row contains both questions; each experiment
+output contains both answers, automatic grades, and trace links. Dataset Output contains
+independent facts and acceptance criteria for both turns, with source timestamps and hashes.
+All source tables are pinned to the same timestamp for reference capture and agent queries.
+Code compares extracted numerical claims with these references; independent LLM judgments assess
+grounding, completeness, and trajectory. References never enter analyst context.
+
+`manual_history.json` maps six historical phases to frozen captures and assistant reviews under
+`.artifacts/manual/`. `retail-eval publish-conversations` verifies hashes, question identity,
+review attribution, coverage, and verdict counts before publication. Existing experiment IDs
+are reused on repeat publication. Original Phoenix traces are required, not reconstructed.
+
+Keep complete runs and targeted retests separate. Runtime approval is not independent quality
+approval. Historical assistant reviews are neither human validation nor calibrated judge scores.
+See [evaluation](../../docs/evaluation.md) for commands, artifact locations, and review semantics.
