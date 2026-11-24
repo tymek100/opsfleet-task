@@ -1,0 +1,77 @@
+{
+  "collection_id": "coordinator-methods-v1",
+  "purpose": "retrieval_methods",
+  "revision": 1,
+  "provenance": {
+    "authoring_method": "LLM-authored synthetic method examples",
+    "human_reviewed": false,
+    "live_model_run": false
+  },
+  "warning": "Optional methods, not current evidence or evaluation references.",
+  "examples": [
+    {
+      "id": "sales-stock-coverage",
+      "description": "Compare a defined demand window with modeled stock.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Delegate qualifying units and calendar-day boundaries to retail, then modeled stock at the cutoff to inventory. Use local result SQL for the ratio; zero demand is undefined.",
+      "illustrative_answer": "If recorded stock is 12 units and 6 qualifying units sold over 30 calendar days, the illustrative coverage is 60 days under constant demand. This is not a forecast or physical availability guarantee."
+    },
+    {
+      "id": "center-reconciliation",
+      "description": "Reconcile stock across centers including unknown attribution.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Ask distribution for inventory-item center groups, preserving null and unmatched center IDs. Compare their sum with inventory's same-scope total.",
+      "illustrative_answer": "A demonstration split of 4, 3 and 2 unknown units reconciles to 9 total units. Unknown attribution is a data gap, not a new physical facility."
+    },
+    {
+      "id": "product-prioritization",
+      "description": "Prioritize products using observed demand and stock.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Ask retail for product-level qualifying units and inventory for product-level modeled stock. Join by product ID, not product name. Define any prioritization rule explicitly.",
+      "illustrative_answer": "An illustrative product with 2 units and a measured rate of 0.5 units per day has 4 modeled days of coverage; replenishment priority still depends on lead time and service policy."
+    },
+    {
+      "id": "routing-limits",
+      "description": "Assess possible transfer routes without executing transfers.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Ask distribution to obtain current Maps routes only if configured, while keeping source/destination stock evidence separate. Require actual capacity and authorization before any operational claim.",
+      "illustrative_answer": "A returned driving duration could support a routing comparison; it cannot confirm truck clearance, carrier pricing, warehouse capacity or delivery."
+    },
+    {
+      "id": "metric-scope-check",
+      "description": "Reject incompatible metrics and population joins.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Check scope, grain, snapshot and time before combining specialist artifacts. Ask for a corrected aggregate if definitions differ.",
+      "illustrative_answer": "A revenue ranking cannot establish demand units or stock coverage. Distinct customers per category cannot be summed into a brand total without overlap accounting."
+    },
+    {
+      "id": "follow-up-reuse",
+      "description": "Use previous scoped evidence for a follow-up.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Read exact prior evidence or delegate a focused clarification when the question changes the period, cohort or denominator. Do not automatically repeat every specialist call.",
+      "illustrative_answer": "A follow-up asking for a concise interpretation can reuse unchanged counts, while a different business cutoff requires new stock evidence."
+    },
+    {
+      "id": "causality-boundary",
+      "description": "Separate observed changes from causal hypotheses.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Combine actual sales and inventory observations only at matching scope and dates. State missing stockout history, demand and operational data explicitly.",
+      "illustrative_answer": "Lower recorded stock and falling sales may coexist; those observations alone do not prove that stockouts caused the sales decline."
+    },
+    {
+      "id": "authorized-report",
+      "description": "Save a combined report only on the user's explicit request.",
+      "revision": 1,
+      "example_type": "delegation_method",
+      "method": "Finish the cross-domain analysis and stage only an authorized report save. Use the actual operation receipt and do not claim stock movements or purchases.",
+      "illustrative_answer": "The application can save a reviewed report. It cannot dispatch inventory, place a purchase order or promise that a proposed transfer occurred."
+    }
+  ]
+}

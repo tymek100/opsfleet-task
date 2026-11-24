@@ -1,12 +1,53 @@
 # Retail agent architecture
 
-Updated: 2026-11-22.
+Updated: 2026-11-24.
 
 ## Scope
 
-The application is a Python CLI built on Google ADK and Gemini for TheLook analytics in BigQuery, conversational follow-ups, and report management. A single analyst controls tool selection, SQL generation, and response composition. Application code enforces authorization, execution limits, and publication contracts; business questions have no predefined workflows.
+The application provides a retail-analysis CLI and a local A2A system with retail, inventory, distribution and coordinator agents. Each uses Google ADK and Gemini to select tools, investigate results and compose answers. Application code enforces authorization, execution limits and publication contracts; business questions have no predefined workflows.
 
-This document describes the current implementation. Requirements are recorded in the [client Q&A](task/q&a.md); setup and commands are in [Quick Start](../QUICK_START.md).
+This document describes the current implementation. Setup and commands are in [Quick Start](../QUICK_START.md) and the [local stack guide](../infra/agents/README.md).
+
+## Local A2A system
+
+```mermaid
+flowchart TD
+    UI[A2A Inspector or retail-stack chat] --> C[Coordinator]
+    C -->|A2A delegation| R[Retail analyst]
+    C -->|A2A delegation| I[Inventory analyst]
+    C -->|A2A delegation| D[Distribution analyst]
+    R --> B[Scoped BigQuery or fixture queries]
+    I --> B
+    D --> B
+    D --> M[Google Maps MCP]
+    C -.-> P[Local Phoenix]
+    R -.-> P
+    I -.-> P
+    D -.-> P
+```
+
+[`src/retail_agents/server.py`](../src/retail_agents/server.py) exposes the complete reviewed runtime through A2A 0.3 JSON-RPC, with Agent Cards at `/.well-known/agent-card.json`. The four Docker targets produce separate service images. The coordinator chooses approved specialists through `list_agents` and `delegate`; it can revisit a specialist and combine observations. Specialists do not delegate recursively. Each agent retains the analyst/reviewer completion protocol below.
+
+| Role | Data and capabilities |
+|---|---|
+| Retail | Existing scoped sales, customer, order, product and report tools |
+| Inventory | Scoped inventory records, modeled unsold units, recorded cost and stock age |
+| Distribution | Scoped center attribution, facility metadata, stock reconciliation and optional Maps observations |
+| Coordinator | Specialist delegation, evidence reconciliation, result calculations and combined reports; no direct warehouse queries |
+
+Role prompts, skills and tool registration live under [`src/retail_agents/`](../src/retail_agents/). Inventory and distribution use read-only logical relations over `inventory_items`, `products` and `distribution_centers`. Modeled unsold stock at T requires `created_at <= T` and an absent or later `sold_at`; it does not prove physical availability or reservations. Cost is not revenue or profit. Unknown centers remain explicit, and customer geography is not exposed. Warehouse snapshots and business cutoffs are distinct values.
+
+Distribution and the coordinator may reproduce public facility coordinate pairs supported by direct `centers` column observations. The exception follows matching scope, cutoff and specialist provenance through tool results, model requests and completion review. Invented coordinates, customer contact information and unrelated result fields retain the default privacy checks.
+
+Google Maps is the only external MCP integration. Distribution discovers allowlisted route/weather tools from the managed endpoint through the MCP client. Credentials stay outside prompts. Missing credentials or failed lookups return explicit unavailable observations; coordinates alone do not establish road travel time, truck feasibility or delivery commitments. Maps content and derived answers are ephemeral: persisted records retain provenance, and later requests must fetch fresh observations. Live Maps access has not been verified without a configured key.
+
+A shared approved [catalog](../infra/agents/catalog.json) supplies endpoints to the coordinator and Inspector. Short-lived HMAC-signed transport requests bind demo identity and audience; the GUI Bearer token permits Alice only. User text cannot grant another brand's access. Each service persists owned tasks and conversation context in its own SQLite volume. This extends persistence beyond the legacy CLI's in-memory conversation; interrupted work is not automatically resumed after a process restart.
+
+Persistent tasks, cached requests, conversation context, reports and diagnostic events share a source-specific directory, `/data/<backend>/<source-profile>/`. `retail-stack up` derives the profile from the backend, warehouse source dataset and, for fixtures, both source-file hashes. Normal fixtures, evaluation fixtures and BigQuery retain separate histories; returning to an identical profile restores its state. Existing images require rebuilding to adopt this layout, and legacy top-level data is not migrated automatically. Direct server/Compose launches must configure the profile explicitly to isolate same-backend source changes. This storage boundary does not freeze live data: each conversation separately fixes its business cutoff and optional warehouse snapshot.
+
+Every user prompt has a fresh budget shared with its reviews and delegated work. Child grants are reserved before dispatch, reported usage settles them once, and unknown usage retains its reservation. Delegations are bounded to two concurrent children. Transport propagates OpenTelemetry context to the `retail-multi-agent` Phoenix project. A2A streaming reports task events; it does not promise token-by-token answer streaming.
+
+The [Compose stack](../infra/agents/README.md) provides Inspector on port 8080 and reuses existing Phoenix on port 6006. It preserves historical experiments and agent volumes. Runtime images exclude evaluation references and credentials. The [implementation checklist](plans/MULTI_AGENT_IMPLEMENTATION.md) records validation and remaining limitations; the [original design](plans/LOCAL_A2A_RETAIL_AGENTS_PLAN.md) includes proposed extensions beyond the current release.
 
 ## Runtime and completion protocol
 
@@ -151,16 +192,18 @@ Python paths below are relative to `src/retail_agent/`.
 | `observability.py` | Optional tracing, export redaction, synthetic capture |
 | `config.py`, `contracts.py`, `privacy.py` | Configuration, shared types, privacy controls |
 
-Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests. Original assignment material remains in `docs/task/`.
+Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests.
 
 ## Independent evaluation
 
 Status: the end-to-end evaluation runner, incremental local Phoenix publication, answer and trajectory graders, synthetic references, and offline test suite are implemented. Pilot references still require human review; judge calibration and a sealed holdout have not been approved. Code-only results do not establish semantic correctness or production reliability.
 
-The main Phoenix workspace holds the authored 20-conversation dataset and one shared trace
-project, `retail-conversations-20`. Three complete historical phases and three targeted retests
-retain both answers, original traces, and attributed assistant reviews. The latest full phase
-passed 39/40 answers; partial retests are not a new full-suite result.
+The main Phoenix workspace retains the retail 20-conversation dataset and its shared trace
+project, `retail-conversations-20`. The latest recorded retail baseline produced 37 PASS and
+three ERROR answer grades, plus two unresolved trajectory checks. Historical local captures
+remain available; the [evaluation guide](evaluation.md) records the workspace reset and exact
+baseline artifacts. New inventory, distribution and coordinator suites have separate datasets
+and use `retail-multi-agent` for traces.
 `retail-eval run-conversations` captures independent reference rows and pins every agent/reference
 source table to the same BigQuery timestamp. It publishes numerical, grounding, completion,
 operation, and trajectory scores after each conversation. Reference facts for both turns live in
@@ -172,8 +215,8 @@ turns; `reporting/conversation_experiment.py` publishes incremental results.
 `publish-conversations` preserves historical assistant reviews without relabeling them as
 automatic grades or overwriting their dataset versions.
 
-The controlled fixture workflow below uses a separate Phoenix instance, such as port 6007.
-Fixture publication rejects the main port 6006 endpoint. Collector tests require an explicit
+The older 43-case controlled pilot below uses a separate Phoenix instance, such as port 6007.
+Pilot publication rejects the main port 6006 endpoint. Collector tests require an explicit
 disposable endpoint; the SDK pytest plugin is disabled to prevent automatic test datasets.
 
 The runtime reviewer and offline evaluator have different responsibilities. The reviewer can request corrections before publication. The offline evaluator assesses saved executions independently, using references the analyst never sees.
@@ -200,4 +243,4 @@ flowchart LR
 
 See [Testing and evaluation](evaluation.md) for offline checks, live runs, grading, and Phoenix commands. The [rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) and [review](plans/EVALUATION_REVIEW.md) retain the rollout and acceptance criteria.
 
-Outstanding production work includes real identity and authorization infrastructure, managed storage, persistent chat recovery, operational retention policies, Golden Knowledge publishing, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.
+Outstanding production work includes real identity and authorization infrastructure, managed storage, automatic recovery of interrupted tasks, operational retention policies, Golden Knowledge publishing, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.

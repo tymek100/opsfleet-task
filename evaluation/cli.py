@@ -381,5 +381,37 @@ def compare(
     echo(compare_grades(baseline, candidate))
 
 
+@app.command("run-multi-agent")
+def run_multi_agent(
+    suite: str = "all",
+    only: str | None = None,
+    max_cost_usd: float = typer.Option(20, min=0.01),
+    deadline_seconds: int = typer.Option(7200, min=1),
+    backend: str = "fixture",
+    concurrency: int = typer.Option(3, min=1, max=3),
+    phoenix_url: str = "http://127.0.0.1:6006",
+    publish_only: bool = False,
+    agent_budget_usd: float = typer.Option(2, min=0.01, max=10),
+) -> None:
+    """Run the inventory, distribution and coordinator conversations through A2A."""
+    from evaluation.multi_agent.runner import run
+
+    directory, code = asyncio.run(
+        run(
+            suite=suite,
+            only=only,
+            max_cost_usd=max_cost_usd,
+            deadline_seconds=deadline_seconds,
+            backend=backend,
+            concurrency=concurrency,
+            phoenix_url=phoenix_url,
+            publish_only=publish_only,
+            agent_budget_usd=agent_budget_usd,
+        )
+    )
+    typer.echo(f"Evaluation artifacts: {directory}")
+    raise typer.Exit(code)
+
+
 if __name__ == "__main__":
     app()

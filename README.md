@@ -1,6 +1,42 @@
 # Retail Insight Agent
 
-A Python CLI for retail analysis with a single Google ADK/Gemini agent loop. The model selects tools, writes scoped SQL, interprets results and generates Markdown, including tables when appropriate. A tool-free evaluator reviews each candidate; revision feedback returns to the same analyst conversation.
+A retail analytics application built on Google ADK and Gemini, with a standalone analyst CLI and a local A2A system: retail, inventory, distribution and coordinator agents. Models choose tools, investigate evidence and compose Markdown answers. A tool-free reviewer checks every analytical candidate and returns revision feedback to the same agent loop.
+
+## Local multi-agent stack
+
+With Docker running and `GEMINI_API_KEY` configured in `.env`:
+
+```bash
+uv run --locked retail-stack up --backend fixture
+uv run --locked retail-stack chat --user alice
+```
+
+This builds four separate agent images, starts the official A2A Inspector GUI and reuses local
+Phoenix. Inspector exposes all four Agent Cards; the coordinator delegates to specialists through
+A2A. Open the Inspector URL printed during startup and use `retail-stack token` for its Alice-only
+Bearer credential. Phoenix is at [localhost:6006](http://127.0.0.1:6006).
+
+Fixture mode still calls Gemini. Use `--backend bigquery` with Google Cloud application credentials
+for TheLook. Only distribution connects to Google Maps MCP; it needs `GOOGLE_MAPS_API_KEY` and
+reports unavailable access explicitly when the key is absent. See the [stack guide](infra/agents/README.md)
+for endpoints, authentication, persistence and shutdown.
+
+To run the independent 20-question-plus-follow-up suites for each new agent:
+
+```bash
+uv run --locked retail-stack up --backend fixture --evaluation-fixtures
+uv run --locked --group evaluation retail-eval run-multi-agent \
+  --suite all --max-cost-usd 40 --deadline-seconds 7200
+```
+
+The three suites contain 60 conversations and 120 answers. Phoenix receives separate inventory,
+distribution and coordinator datasets and a shared `retail-multi-agent` trace project. References
+come from independent raw-row calculations and never enter agent context. Live Maps validation,
+human reference review and judge calibration remain separate outstanding checks.
+
+See [evaluation instructions](docs/evaluation.md) and the [validation report](evaluation/multi_agent/RESULTS.md) for live BigQuery runs, observed failures, fixes and the limits of automatic grading. Maps is intentionally inactive in the current local deployment.
+
+## Standalone retail CLI
 
 ```bash
 uv sync --locked --python 3.12
@@ -34,14 +70,15 @@ uv run --locked --group evaluation pyright
 
 Saving requires an explicit request. Deletion requires an exact preview and confirmation in the same interactive chat. Report libraries are owner-private, including against CEO access. Existing user data is preserved; explicit legacy import copies owned reports without modifying the source.
 
-The local CLI uses simulated identities, in-memory conversation context and SQLite report storage. Nontechnical persona administration, inferred preference learning, production authentication and deployment infrastructure remain design-only. Evaluator approval does not guarantee correctness.
+The standalone CLI uses simulated identities, in-memory conversation context and SQLite report storage. A2A services persist owned tasks and conversation context in separate volumes. Nontechnical persona administration, inferred preference learning and production authentication remain unimplemented. Evaluator approval does not guarantee correctness.
 
 ## Evaluation and Phoenix
 
-The main Phoenix workspace contains one dataset, **Retail agent — 20 conversations**, and one
-trace project, `retail-conversations-20`. Each scenario has an initial question and a fixed
-follow-up. Six named experiments preserve three complete runs and three targeted retests,
-including failures, both answers, original traces, and existing assistant reviews.
+The existing **Retail agent — 20 conversations** dataset and `retail-conversations-20` trace
+project remain separate from the new multi-agent suites. Each scenario has an initial question
+and a fixed follow-up. The latest recorded retail baseline produced 37 PASS and three ERROR
+answer grades, plus two unresolved trajectory checks; see the [evaluation guide](docs/evaluation.md)
+for its capture and diagnosis. Historical local captures remain preserved.
 
 Run new conversations with Gemini and BigQuery credentials configured and Docker running:
 
@@ -60,14 +97,7 @@ Numeric values are checked by code against Decimal/set references. Separate LLM 
 evidence, completeness, and tool use. Runtime approval is not an evaluation pass. Historical
 assistant reviews remain separate; neither those reviews nor automatic judges are human-calibrated.
 
-Republish the saved historical answers and reviews without inference:
-
-```bash
-uv run --locked --group evaluation retail-eval publish-conversations
-```
-
-This requires the original local capture/review artifacts and Phoenix traces. Run artifacts
-live under `.artifacts/manual/`; questions and publication history live in
+Retail run artifacts live under `.artifacts/manual/`; questions and publication history live in
 `evaluation/scenarios/`. [Testing and evaluation](docs/evaluation.md) explains the dataset,
 scores, evidence checks, reference versions, and unresolved evaluations.
 
@@ -76,10 +106,10 @@ The four repository prompt definitions remain available in
 `uv run --locked --group evaluation retail-eval sync-prompts`.
 Git remains authoritative; UI prompt edits do not change application behavior.
 
-The separate controlled evaluation suite retains 43 synthetic cases, independent Decimal/set
+The separate controlled pilot retains 43 synthetic cases, independent Decimal/set
 references, and 40 judge controls. Its automated answer/trajectory grading remains available
-through `retail-eval run`, using a separate Phoenix endpoint such as port 6007. Fixture publication
-and collector tests cannot use the main port 6006 workspace. The Phoenix pytest auto-publication
+through `retail-eval run`, using a separate Phoenix endpoint such as port 6007. Pilot publication
+and collector integration tests cannot use the main port 6006 workspace. The Phoenix pytest auto-publication
 plugin is disabled. See [Phoenix setup](infra/phoenix/README.md#disposable-test-instance).
 
 `knowledge/golden/` contains optional runtime methods; evaluation references never enter analyst

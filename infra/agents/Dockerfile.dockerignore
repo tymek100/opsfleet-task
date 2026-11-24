@@ -1,0 +1,16 @@
+**
+!pyproject.toml
+!uv.lock
+!src/
+!src/**
+!knowledge/
+!knowledge/**
+!infra/
+!infra/agents/
+!infra/agents/entrypoint.py
+**/__pycache__/
+**/*.pyc
+**/.env
+**/.env.*
+**/*.db
+**/*.sqlite*

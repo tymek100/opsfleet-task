@@ -1,8 +1,102 @@
 # Testing and evaluation
 
-The main Phoenix workspace contains **20 authored retail conversations**, each with an initial
-question and a fixed follow-up. Controlled fixture evaluations and collector integration tests
-use a separate instance. Run commands from the repository root.
+The main Phoenix workspace retains **20 authored retail conversations** and adds separate
+20-conversation suites for inventory, distribution and coordinator agents. Every scenario has
+an initial question and a fixed follow-up. The older 43-case pilot and collector integration
+tests use a separate instance. Run commands from the repository root.
+
+## Run the multi-agent suites
+
+Start Docker and configure `GEMINI_API_KEY` in `.env`. The fixture evaluation needs no BigQuery
+credentials and does not require a Maps key for its missing-data and unavailable-provider cases.
+
+```bash
+uv run --locked retail-stack up --backend fixture --evaluation-fixtures
+uv run --locked --group evaluation retail-eval run-multi-agent \
+  --suite smoke --max-cost-usd 5 --deadline-seconds 1200
+```
+
+`smoke` runs scenarios 01 and 02 in each new suite: six conversations and twelve answers. For
+all 60 conversations and 120 answers:
+
+```bash
+uv run --locked --group evaluation retail-eval run-multi-agent \
+  --suite all --max-cost-usd 40 --deadline-seconds 7200
+```
+
+Choose `--suite inventory`, `distribution` or `coordinator` for one agent. Add
+`--only scenario-01,scenario-03` for fixed targeted cases. The existing retail suite continues
+to use `run-conversations`; `all` here refers to the three new suites.
+
+For different cases per role, use `--only inventory/scenario-05,coordinator/scenario-08`.
+To evaluate the public synthetic TheLook source instead of the fixture:
+
+```bash
+RETAIL_STACK_TRACE_MODE=synthetic uv run --locked retail-stack up --backend bigquery
+uv run --locked --group evaluation retail-eval run-multi-agent \
+  --backend bigquery --only scenario-01 --max-cost-usd 5 --deadline-seconds 1200
+```
+
+This runs three two-turn conversations against one independently captured BigQuery snapshot.
+Full observation capture is appropriate here because TheLook is synthetic; ordinary startup
+uses metadata-only tracing. Warehouse and Maps credentials never enter the trace payloads.
+
+The runner calls actual A2A endpoints in the four agent containers. Each scenario gets a new
+conversation; its follow-up reuses only that scenario's context. Independent raw fixture rows
+are mounted into warehouse adapters, while expected values and grading criteria stay on the
+host. Runtime Golden examples use separate fixture values and remain optional methods.
+
+Expected facts are calculated with independent Decimal arithmetic and sets. A separate LLM
+extracts answer claims and assesses grounding against observed tool results; code compares
+extracted numerical facts to references. A trajectory judge evaluates observable tool calls,
+delegation, review feedback and recovery. Neither an approved runtime answer nor a confident
+specialist message supplies an evaluation pass. Missing judgments, unavailable evidence and
+budget exhaustion remain explicit errors.
+
+Phoenix receives three stable datasets:
+
+- **Inventory agent - 20 conversations**
+- **Distribution agent - 20 conversations**
+- **Coordinator agent - 20 conversations**
+
+Each dataset has scenario IDs `scenario-01`–`scenario-20`, questions, follow-ups, independent
+reference facts, behavioral criteria and illustrative reference prose for both turns. Actual
+answers and scores appear in experiments. Existing retail history is preserved. Experiment
+links print before execution; completed traces arrive in **retail-multi-agent**, and each
+completed conversation publishes both answers and its scores. Refresh the experiment to see
+new rows; Phoenix does not stream model tokens.
+
+Local captures are stored under `.artifacts/multi-agent/a2a-<timestamp>-<id>/`:
+
+```text
+manifest.json                        # Scope, source hashes, limits, status and results
+snapshot.json                        # Frozen independent warehouse rows
+scenarios.json, references.json       # Inputs and grader-only expected facts
+inventory/scenario-01/turn-1.json      # Actual first answer, evidence and observed execution
+inventory/scenario-01/turn-2.json      # Actual follow-up answer
+inventory/scenario-01/grade-1.json     # Independent first-answer assessment
+inventory/scenario-01/judge-1.json     # Saved judge calls
+inventory/scenario-01/trajectory.json  # Conversation trajectory assessment
+```
+
+The same structure applies to distribution and coordinator. The run budget includes agent
+work and independent judges; each user prompt still has a fresh bounded agent allowance.
+Listed budgets are caps, not completion estimates. Fixture references are code-verified
+development data, not production conversations or a sealed holdout. Human reference review
+and judge calibration remain pending. A full-suite quality result is recorded only after
+execution and grading finish; successful startup or smoke checks do not establish that result.
+
+See the [validation report](../evaluation/multi_agent/RESULTS.md) for every baseline, focused
+recheck, independent judge control and manual finding. Automated passes have missed unsupported
+assertions, so the report separates numerical correctness, automatic grades and assistant review.
+
+Maps responses and derived text are ephemeral and excluded from persistent traces/captures.
+The current suite can assess supported warehouse reasoning and honest unavailability; it does
+not establish live Maps correctness without credentials and a separate live validation.
+
+See the [stack guide](../infra/agents/README.md) for Inspector, Agent Cards, authentication and
+returning to ordinary fixture or BigQuery data. Do not restart or switch the stack's data
+profile while an evaluation is running.
 
 ## What is in Phoenix
 

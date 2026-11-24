@@ -16,7 +16,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from retail_agent.budget import LimitReached
+from retail_agent.budget import Budget, LimitReached
 from retail_agent.config import Settings
 from retail_agent.contracts import Answer, Identity, TurnResult
 from retail_agent.observability import CaptureMode, Observer, observation, record_observation, span
@@ -32,6 +32,22 @@ from retail_agent.turn import Turn
 
 
 class Analyst:
+    agent_name = "retail_analyst"
+    prompt_span_name = "retail.prompt"
+
+    def prompt_spec(self):
+        assert self.model is not None, "Initialize the model before building its prompt"
+        return analyst_prompt(self.settings, model=self.model.model)
+
+    def build_tools(self, turn):
+        return build_tools(turn)
+
+    def new_budget(self):
+        return Budget(self.settings)
+
+    def extra_context(self) -> dict:
+        return {}
+
     def __init__(
         self,
         settings: Settings,
@@ -45,8 +61,10 @@ class Analyst:
         clock: Callable[[], datetime] | None = None,
         observer: Observer | None = None,
         observation_mode: CaptureMode = "metadata",
+        screener: Callable[[str], str] = screen,
     ):
         self.settings, self.identity = settings, identity
+        self.screen = screener
         if observation_mode not in ("metadata", "synthetic"):
             raise ValueError("Capture mode must be metadata or synthetic")
         self.clock = clock or (lambda: datetime.now(UTC))
@@ -87,7 +105,7 @@ class Analyst:
         self.turn_id = uuid.uuid4().hex
         self.observer_errors = 0
         with span(
-            "retail.prompt",
+            self.prompt_span_name,
             **{
                 "session.id": self.conversation_id,
                 "retail.turn_id": self.turn_id,
@@ -149,7 +167,7 @@ class Analyst:
     async def _ask(self, question: str) -> TurnResult:
         started = time.monotonic()
         try:
-            question = screen(question.strip())
+            question = self.screen(question.strip())
             if not question or len(question) > 6000:
                 raise ValueError("Ask a question containing 1-6,000 characters.")
         except ValueError as exc:
@@ -167,14 +185,14 @@ class Analyst:
             if self.model is None:
                 self.model = make_gemini(self.settings)
             async with asyncio.timeout(self.settings.turn_timeout_seconds):
-                prompt_spec = analyst_prompt(self.settings, model=self.model.model)
+                prompt_spec = self.prompt_spec()
                 agent = LlmAgent(
-                    name="retail_analyst",
+                    name=self.agent_name,
                     model=AccountedModel(model=self.model.model, delegate=self.model).bind(
-                        turn.budget, turn.emit, prompt=prompt_spec
+                        turn.budget, turn.emit, prompt=prompt_spec, screener=self.screen
                     ),
                     instruction=prompt_spec.instruction,
-                    tools=build_tools(turn),
+                    tools=self.build_tools(turn),
                     before_model_callback=turn.observe_request,
                     after_model_callback=turn.observe_model,
                     generate_content_config=prompt_spec.config,
@@ -189,6 +207,7 @@ class Analyst:
                     "trusted_scope": self.identity.scope,
                     "now_utc": now.isoformat(),
                     "today_utc": now.date().isoformat(),
+                    **self.extra_context(),
                     "prior_approved_conversation": self.context_history(),
                     "available_results": self.result_manifest(),
                     "available_skills": self.skills.list(role="analyst"),

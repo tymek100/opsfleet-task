@@ -1,0 +1,23 @@
+# Only raw warehouse rows enter the containers. Grader references remain on the host.
+services:
+  retail:
+    environment:
+      FIXTURE_PATH: /app/fixtures/retail.sql
+      TRACE_CONTENT_MODE: synthetic
+    volumes:
+      - ../../evaluation/multi_agent/retail_fixture.sql:/app/fixtures/retail.sql:ro
+  inventory:
+    environment:
+      DOMAIN_FIXTURE_PATH: /app/fixtures/domains.json
+      TRACE_CONTENT_MODE: synthetic
+    volumes:
+      - ../../evaluation/multi_agent/fixture.json:/app/fixtures/domains.json:ro
+  distribution:
+    environment:
+      DOMAIN_FIXTURE_PATH: /app/fixtures/domains.json
+      TRACE_CONTENT_MODE: synthetic
+    volumes:
+      - ../../evaluation/multi_agent/fixture.json:/app/fixtures/domains.json:ro
+  coordinator:
+    environment:
+      TRACE_CONTENT_MODE: synthetic

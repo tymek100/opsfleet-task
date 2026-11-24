@@ -147,6 +147,22 @@ class Budget:
         self.reserve(self.settings.max_query_bytes / 2**40 * self.settings.bigquery_usd_per_tib)
         self.queries += 1
 
+    def settle_external(self, reservation: int, accounted_usd: float) -> bool:
+        """Settle a delegated allowance once; unknown usage must keep its reservation."""
+        if (
+            reservation not in self._reservations
+            or reservation in self._model_reservations
+            or not math.isfinite(accounted_usd)
+            or accounted_usd < 0
+        ):
+            return False
+        self._reservations.pop(reservation)
+        self.reserved_usd = sum(self._reservations.values())
+        self.spent_usd += accounted_usd
+        if self.accounted_usd > self.settings.question_budget_usd:
+            raise LimitReached("cost_budget")
+        return True
+
     def tool(self, *, completion: bool = False) -> None:
         self.remaining()
         limit = self.settings.max_tool_calls - (0 if completion else 1)

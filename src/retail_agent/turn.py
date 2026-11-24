@@ -9,9 +9,8 @@ import json
 import time
 from typing import TYPE_CHECKING
 
-from retail_agent.budget import Budget, LimitReached
+from retail_agent.budget import LimitReached
 from retail_agent.contracts import Answer
-from retail_agent.privacy import screen
 
 if TYPE_CHECKING:
     from retail_agent.runtime import Analyst
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 class Turn:
     def __init__(self, app: Analyst, question: str):
         self.app, self.question = app, question
-        self.budget = Budget(app.settings)
+        self.budget = app.new_budget()
         self.trace: list[dict] = []
         self.answer: Answer | None = None
         self.new_results: list[str] = []
@@ -86,7 +85,7 @@ class Turn:
             result = action()
             if inspect.isawaitable(result):
                 result = await result
-            screen(json.dumps(result, default=str))
+            self.app.screen(json.dumps(result, default=str))
             result.setdefault("status", "ok")
             if result["status"] not in ("ok", "empty"):
                 self.failed_actions[digest] = self.failed_actions.get(digest, 0) + 1
@@ -112,8 +111,8 @@ class Turn:
             self.active -= 1
 
     def artifact(self, result: dict, purpose: str, parents: list[str] | None = None) -> dict:
-        screen(purpose)
-        screen(json.dumps(result, default=str))
+        self.app.screen(purpose)
+        self.app.screen(json.dumps(result, default=str))
         self.app._result_counter += 1
         key = f"E{self.app._result_counter}"
         artifact = {

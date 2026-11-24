@@ -179,7 +179,12 @@ def display_fields(
         result[key + ".value"] = rendered
         result[key + ".mime_type"] = mime_type
 
-    if operation == "retail.prompt":
+    if operation in {
+        "retail.prompt",
+        "inventory.prompt",
+        "distribution.prompt",
+        "coordinator.prompt",
+    }:
         for event in events:
             if event.get("event") == "prompt_input":
                 preview("input", event.get("question"))
@@ -410,6 +415,9 @@ class SanitizingExporter(SpanExporter):
                 if span.name
                 in {
                     "retail.prompt",
+                    "inventory.prompt",
+                    "distribution.prompt",
+                    "coordinator.prompt",
                     "retail.provider_attempt",
                     "retail.evaluation_trial",
                     "retail.judge",
@@ -422,7 +430,10 @@ class SanitizingExporter(SpanExporter):
             if display["status_code"] != "UNSET" and span.status.status_code != StatusCode.ERROR:
                 status = Status(StatusCode[display["status_code"]], display["status_message"])
             resource = Resource(
-                {"service.name": "retail-agent", "openinference.project.name": self.project}
+                {
+                    "service.name": span.resource.attributes.get("service.name", "retail-agent"),
+                    "openinference.project.name": self.project,
+                }
             )
             cleaned.append(
                 ReadableSpan(
@@ -520,13 +531,20 @@ def configure_tracing(
     project: str = "retail-agent",
     mode: CaptureMode = "metadata",
     exporter: SpanExporter | None = None,
+    allowed_hosts: frozenset[str] = frozenset(),
+    service_name: str = "retail-agent",
 ) -> TracingSession:
     """Explicit opt-in; import/install optional instrumentors only on activation."""
     global _active
     if mode not in ("metadata", "synthetic"):
         raise ValueError("Capture mode must be metadata or synthetic")
     parsed = urlparse(endpoint)
-    if parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1", "::1"}:
+    if parsed.scheme != "http" or parsed.hostname not in {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+        *allowed_hosts,
+    }:
         raise ValueError("Phoenix tracing requires a localhost HTTP endpoint")
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise ValueError("Trace endpoints cannot contain credentials or query parameters")
@@ -547,7 +565,7 @@ def configure_tracing(
             shutdown_on_exit=False,
             resource=Resource(
                 {
-                    "service.name": "retail-agent",
+                    "service.name": service_name,
                     "openinference.project.name": project,
                 }
             ),

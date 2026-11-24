@@ -86,6 +86,18 @@ def response_schema(turn: TurnRecord, reference: TurnReference) -> dict:
     for name in ("ExtractedFact", "Claim"):
         definitions[name]["properties"]["span"]["enum"] = excerpts
     definitions["CriterionFinding"]["properties"]["spans"]["items"]["enum"] = excerpts
+    # The multi-agent adapter declares exact observed source occurrences, including
+    # schema/skill responses without business E IDs. Other callers retain their
+    # existing source contract unless they explicitly supply this catalog.
+    source_ids = turn.context.get("evaluation_source_ids")
+    if source_ids is not None:
+        if not isinstance(source_ids, list) or any(not isinstance(i, str) for i in source_ids):
+            raise JudgmentValidationError("Invalid evaluation source catalog")
+        evidence_field = definitions["Claim"]["properties"]["evidence_ids"]
+        if source_ids:
+            evidence_field["items"]["enum"] = sorted(set(source_ids))
+        else:
+            evidence_field["maxItems"] = 0
     for key, name, ids in (
         ("facts", "ExtractedFact", [fact.id for fact in reference.facts]),
         (

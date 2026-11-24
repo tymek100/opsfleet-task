@@ -1,6 +1,7 @@
 """A tool-free review call; feedback returns to the existing analyst conversation."""
 
 import json
+from collections.abc import Callable
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.run_config import RunConfig
@@ -13,6 +14,7 @@ from pydantic import ValidationError
 from retail_agent.budget import Budget
 from retail_agent.config import Settings
 from retail_agent.contracts import REVIEW_CATEGORIES, Review, ReviewIssue
+from retail_agent.privacy import screen
 from retail_agent.prompt_catalog import reviewer_prompt
 from retail_agent.provider import AccountedModel, ProviderUnavailable
 from retail_agent.skills import SkillCatalog
@@ -26,6 +28,7 @@ async def evaluate(
     emit,
     *,
     review_skill: dict | None = None,
+    screener: Callable[[str], str] = screen,
 ) -> Review:
     content = json.dumps(payload, ensure_ascii=False, default=str)
     if len(content.encode()) > settings.max_review_bytes:
@@ -48,7 +51,7 @@ async def evaluate(
     reviewer = LlmAgent(
         name="completion_reviewer",
         model=AccountedModel(model=model.model, delegate=model).bind(
-            budget, emit, reviewer=True, prompt=prompt_spec
+            budget, emit, reviewer=True, prompt=prompt_spec, screener=screener
         ),
         instruction=prompt_spec.instruction,
         tools=[],

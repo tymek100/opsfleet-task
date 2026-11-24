@@ -1,0 +1,97 @@
+{
+  "collection_id": "inventory-methods-v1",
+  "purpose": "retrieval_methods",
+  "revision": 1,
+  "schema_version": "scoped-inventory-v1",
+  "provenance": {
+    "authoring_method": "LLM-authored analytical examples with fixture-verified numeric examples",
+    "human_reviewed": false,
+    "live_model_run": false,
+    "fixture": "src/retail_agents/domains/fixtures.json",
+    "business_as_of": "2026-04-01T00:00:00+00:00"
+  },
+  "warning": "Optional synthetic methods, never current facts or authorization. Adapt or ignore; query current scoped data.",
+  "examples": [
+    {
+      "id": "unsold_snapshot",
+      "description": "Count modeled unsold units at a business cutoff.",
+      "example_sql": "SELECT COUNT(DISTINCT inventory_id) AS units FROM stock",
+      "illustrative_answer": "At the demonstration cutoff, the authorized records contain 5 modeled unsold units. This is not a statement about physical availability or reservations.",
+      "method_notes": [
+        "stock applies the trusted as_of; use inventory for a different explicit cutoff.",
+        "Keep physical snapshot_at separate from business as_of."
+      ]
+    },
+    {
+      "id": "product_balance",
+      "description": "Compare recorded stock across products.",
+      "example_sql": "SELECT product_id, product_name, COUNT(DISTINCT inventory_id) AS units FROM stock GROUP BY product_id, product_name ORDER BY units DESC, product_id",
+      "illustrative_answer": "Demo Linen Shirt and Demo Wool Jacket each have 2 modeled unsold units; Demo Canvas Bag has 1. These counts alone do not identify excess stock or unmet demand.",
+      "method_notes": [
+        "Count inventory IDs, not duplicated sales rows.",
+        "Use stable tie ordering."
+      ]
+    },
+    {
+      "id": "stock_age",
+      "description": "Identify older recorded stock.",
+      "example_sql": "SELECT COUNT(DISTINCT inventory_id) AS aged_units FROM stock WHERE created_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 90 DAY)",
+      "illustrative_answer": "Two modeled unsold units were created at least 90 days before the demonstration cutoff. Age identifies records to investigate; it does not establish damage or obsolescence.",
+      "method_notes": [
+        "Define threshold inclusivity and age from created_at.",
+        "Do not treat missing timestamps as zero age."
+      ]
+    },
+    {
+      "id": "cost_coverage",
+      "description": "Report inventory cost with missing-value coverage.",
+      "example_sql": "SELECT SUM(cost) AS known_cost, COUNT(cost) AS costed_units, COUNT(*) AS units FROM stock",
+      "illustrative_answer": "Known recorded cost totals 97.50 across 4 of 5 modeled unsold units. One unit has no cost, so a complete valuation is unavailable; the source does not specify currency.",
+      "method_notes": [
+        "Report SUM(cost) alongside non-null count and total.",
+        "Do not replace missing cost with zero or equate cost with profit."
+      ]
+    },
+    {
+      "id": "historical_balance",
+      "description": "Reconstruct a historical modeled balance.",
+      "example_sql": "SELECT COUNT(DISTINCT inventory_id) AS units FROM inventory WHERE created_at <= TIMESTAMP '2026-03-01 00:00:00+00' AND (sold_at IS NULL OR sold_at > TIMESTAMP '2026-03-01 00:00:00+00') AND (sold_at IS NULL OR sold_at >= created_at)",
+      "illustrative_answer": "The current demonstration records reconstruct 4 modeled unsold units as of March 1. This does not prove what the warehouse knew at that historical time.",
+      "method_notes": [
+        "Apply both creation and sale cutoffs.",
+        "A sale exactly at the cutoff is excluded."
+      ]
+    },
+    {
+      "id": "timestamp_quality",
+      "description": "Surface missing or inconsistent inventory timestamps.",
+      "example_sql": "SELECT COUNTIF(created_at IS NULL) AS missing_created, COUNTIF(sold_at < created_at) AS invalid_chronology FROM inventory",
+      "illustrative_answer": "One authorized record lacks a creation timestamp and another records sale before creation. Neither can establish valid available stock; investigate the underlying records.",
+      "method_notes": [
+        "Query inventory rather than prefiltered stock for quality checks.",
+        "Explain denominator and invalid-record treatment."
+      ]
+    },
+    {
+      "id": "coverage_assumptions",
+      "description": "Estimate coverage only with compatible sales evidence.",
+      "example_sql": null,
+      "illustrative_answer": "A coverage estimate requires a scoped sales artifact with sold units, a complete observation interval and matching product IDs. With those inputs, divide modeled unsold units by units per calendar day; zero observed demand gives undefined coverage.",
+      "method_notes": [
+        "Require authorized demand data, never use example numbers as demand.",
+        "Label continued-demand assumptions and exclude replenishment claims."
+      ]
+    },
+    {
+      "id": "procurement_limits",
+      "description": "Separate recorded stock analysis from procurement decisions.",
+      "example_sql": null,
+      "illustrative_answer": "The available inventory records can support a stock review, but they do not establish an order quantity without supplier lead times, reservations, incoming orders and a chosen service-level policy. No purchase order has been placed.",
+      "method_notes": [
+        "Request missing operational inputs.",
+        "All transfer/procurement outcomes are proposals, not executed actions."
+      ]
+    }
+  ]
+}
+

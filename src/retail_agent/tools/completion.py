@@ -11,7 +11,6 @@ from google.adk.tools import ToolContext
 
 from retail_agent.budget import LimitReached
 from retail_agent.contracts import Answer
-from retail_agent.privacy import screen
 from retail_agent.provider import ProviderUnavailable
 from retail_agent.reviewer import evaluate
 
@@ -42,7 +41,7 @@ class CompletionTools:
                 "message": "Provide nonempty Markdown and a supported outcome.",
             }
         try:
-            screen(markdown)
+            self.turn.app.screen(markdown)
         except ValueError:
             return {"status": "denied", "message": "Remove personal contact information."}
         if any(i not in self.turn.app.results for i in evidence_ids):
@@ -71,6 +70,7 @@ class CompletionTools:
             "scope": self.turn.app.identity.scope,
             "now_utc": now.isoformat(),
             "today_utc": now.date().isoformat(),
+            **self.turn.app.extra_context(),
             "conversation": self.turn.app.context_history(),
             "candidate": {"markdown": markdown, "outcome": outcome},
             "evidence": evidence,
@@ -97,6 +97,7 @@ class CompletionTools:
             self.turn.app.settings,
             self.turn.emit,
             review_skill=self.turn.app.skills.review_skill(),
+            screener=self.turn.app.screen,
         )
         self.turn.app.observe("review_result", review=review.model_dump())
         self.turn.emit(

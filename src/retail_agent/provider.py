@@ -5,6 +5,7 @@ import base64
 import json
 import time
 from collections.abc import AsyncGenerator, Callable
+from contextlib import aclosing
 from typing import cast
 
 import httpx
@@ -131,6 +132,7 @@ class AccountedModel(BaseLlm):
     _reviewer: bool = PrivateAttr(default=False)
     _emit: Callable = PrivateAttr()
     _prompt: PromptSpec | None = PrivateAttr(default=None)
+    _screener: Callable[[str], str] = PrivateAttr()
 
     def bind(
         self,
@@ -139,9 +141,11 @@ class AccountedModel(BaseLlm):
         *,
         reviewer: bool = False,
         prompt: PromptSpec | None = None,
+        screener: Callable[[str], str] = screen,
     ) -> "AccountedModel":
         self._budget, self._emit, self._reviewer = budget, emit, reviewer
         self._prompt = prompt
+        self._screener = screener
         return self
 
     @property
@@ -187,7 +191,7 @@ class AccountedModel(BaseLlm):
             )
             llm_request.append_instructions([hint])
         encoded = request_json(llm_request)
-        screen(encoded)
+        self._screener(encoded)
         output_limit = (
             llm_request.config.max_output_tokens or self._budget.settings.max_output_tokens
         )
@@ -224,12 +228,23 @@ class AccountedModel(BaseLlm):
                 ) as provider_span:
                     _provider_event(provider_span, "provider_input", role=role)
                     try:
-                        async with asyncio.timeout(
-                            self._budget.work_remaining(reviewer=self._reviewer)
-                        ):
-                            async for response in self.delegate.generate_content_async(
-                                llm_request, stream
-                            ):
+                        async with aclosing(
+                            self.delegate.generate_content_async(llm_request, stream)
+                        ) as responses:
+                            while True:
+                                try:
+                                    # Time only provider IO. ADK runs tools, including
+                                    # the completion reviewer, while suspended at yield.
+                                    # Their own budgets govern that work and must retain
+                                    # the time explicitly reserved for review.
+                                    async with asyncio.timeout(
+                                        self._budget.work_remaining(
+                                            reviewer=self._reviewer or complete_response
+                                        )
+                                    ):
+                                        response = await anext(responses)
+                                except StopAsyncIteration:
+                                    break
                                 complete_response = response.partial is not True
                                 response_failed = bool(response.error_code)
                                 last_usage = response.usage_metadata if complete_response else None
@@ -261,6 +276,10 @@ class AccountedModel(BaseLlm):
                                     provider_span.end()
                                 emitted = True
                                 yield response
+                                if complete_response and (
+                                    not stream or response.finish_reason or response.turn_complete
+                                ):
+                                    break
                         if complete_response:
                             # Streaming metadata is cumulative, not an increment per chunk.
                             # Legacy streams may mark completion only through exhaustion.
