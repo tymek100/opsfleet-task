@@ -116,6 +116,10 @@ Synthetic evaluation capture is a separate opt-in observer. It records initial c
 Phoenix runs locally at `http://127.0.0.1:6006` with persistent SQLite storage. The [Compose configuration](../infra/phoenix/README.md) disables automatic telemetry and external-resource fetching. Synthetic traces may include evaluation content; normal chat remains metadata-only.
 
 The exporter derives Phoenix Input/Output previews from explicit sanitized application events.
+In synthetic evaluations, judge spans include System/User messages, the specialized response
+schema and generation parameters, and the full visible model response. Summaries and validation
+diagnostics remain in metadata. Sanitized requests/responses and exact span IDs are also saved
+in `judge_calls.json`; automatic ADK payloads and hidden reasoning remain excluded.
 Evaluation context labels identify run, scenario, turn, and phase without entering model context.
 Runtime and judge spans expose standard execution statuses; quality verdicts remain separate.
 Provider/judge token counts and configured-rate estimates are recorded only when usage is known.

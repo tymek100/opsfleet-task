@@ -24,7 +24,7 @@ from retail_agent.config import Settings
 @pytest.fixture
 def captured(tmp_path):
     scenario = Scenario(
-        id="manual-01",
+        id="scenario-01",
         prompt="Show Q1 revenue.",
         follow_up="Compare with Q4.",
         intent="Period comparison",
@@ -44,7 +44,7 @@ def captured(tmp_path):
     )
     hashes = {}
     for i, question in enumerate((scenario.prompt, scenario.follow_up), 1):
-        path = run / f"cases/manual-01/turn-{i}.json"
+        path = run / f"cases/scenario-01/turn-{i}.json"
         write_json(
             path,
             {
@@ -85,7 +85,7 @@ def captured(tmp_path):
 
 def test_runtime_approval_does_not_override_independent_failed_review(captured):
     phase = prepare_phase(*captured)
-    annotations = quality_annotations(phase["records"]["manual-01"])
+    annotations = quality_annotations(phase["records"]["scenario-01"])
     assert [a["label"] for a in annotations] == ["PASS", "FAIL", "FAIL"]
     assert annotations[-1]["score"] == 0
     assert phase["reviewer_kind"] == "assistant_review_not_human_validation"
@@ -96,13 +96,13 @@ def test_pending_reviews_are_never_reported_as_passes(captured):
     spec.pop("expected_verdicts")
     spec["reviews"] = []
     phase = prepare_phase(spec, root, cases)
-    annotation = quality_annotations(phase["records"]["manual-01"])[0]
+    annotation = quality_annotations(phase["records"]["scenario-01"])[0]
     assert annotation["label"] == "PENDING" and "score" not in annotation
 
 
 def test_modified_capture_is_rejected_before_publication(captured):
     _, root, _ = captured
-    (root / "capture/cases/manual-01/turn-2.json").write_text("{}")
+    (root / "capture/cases/scenario-01/turn-2.json").write_text("{}")
     with pytest.raises(ValueError, match="Changed or unregistered capture"):
         prepare_phase(*captured)
 
@@ -136,7 +136,7 @@ def test_missing_follow_up_trace_cannot_be_silently_published(captured):
 
 def test_capture_without_trace_identifiers_cannot_pass_verification(captured):
     phase = prepare_phase(*captured)
-    phase["records"]["manual-01"]["turns"][1]["trace_id"] = None
+    phase["records"]["scenario-01"]["turns"][1]["trace_id"] = None
     with pytest.raises(MissingTraces, match="no original trace"):
         collect_roots(MagicMock(), phase, "project")
 

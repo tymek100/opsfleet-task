@@ -171,7 +171,7 @@ uv run --locked --group evaluation python -m evaluation.runners.manual \
 ```
 
 This runs real model and warehouse requests; the runner captures results but does not replace
-the independent response review described here. Use `--only manual-08,manual-18` for a focused
+the independent response review described here. Use `--only scenario-08,scenario-18` for a focused
 capture. Source data can change, so reuse an old reference only after checking that the
 relevant observations still match it. The broader automated evaluation workflow is documented
 in [evaluation.md](../evaluation.md).

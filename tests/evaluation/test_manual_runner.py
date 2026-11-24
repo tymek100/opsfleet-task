@@ -11,7 +11,7 @@ from retail_agent.runtime import Analyst
 from tests.support.models import ScriptedModel, finish, verdict
 
 
-def scenario(name="manual-01"):
+def scenario(name="scenario-01"):
     return Scenario(
         id=name,
         prompt="What was our revenue?",
@@ -49,7 +49,7 @@ async def test_capture_preserves_followup_context_but_isolates_cases_and_referen
         InitialReport(owner="bob", title="Private", markdown="Other owner's report"),
     ]
     run = await run_manual(
-        [first, scenario("manual-02")],
+        [first, scenario("scenario-02")],
         settings,
         output_root=tmp_path / "runs",
         backend="fixture",
@@ -61,9 +61,9 @@ async def test_capture_preserves_followup_context_but_isolates_cases_and_referen
     state = read_json(run / "progress.json")
     assert state["status"] == "captured" and state["executed_turns"] == 4
     assert len(set(directories)) == 2 and all(not path.exists() for path in directories)
-    first_turn = read_json(run / "cases/manual-01/turn-1.json")
-    followup = read_json(run / "cases/manual-01/turn-2.json")
-    next_case = read_json(run / "cases/manual-02/turn-1.json")
+    first_turn = read_json(run / "cases/scenario-01/turn-1.json")
+    followup = read_json(run / "cases/scenario-01/turn-2.json")
+    next_case = read_json(run / "cases/scenario-02/turn-1.json")
     assert first_turn["context"]["prior_approved_conversation"] == []
     assert len(followup["context"]["prior_approved_conversation"]) == 1
     assert next_case["context"]["prior_approved_conversation"] == []
@@ -75,7 +75,7 @@ async def test_capture_preserves_followup_context_but_isolates_cases_and_referen
     sent = json.dumps([model.requests for model in models])
     assert "HARNESS_ONLY" not in sent
     assert "offline-placeholder" not in (run / "manifest.json").read_text()
-    assert (run / "cases/manual-01/transcript.md").read_text().count("**User:**") == 2
+    assert (run / "cases/scenario-01/transcript.md").read_text().count("**User:**") == 2
     manifest = read_json(run / "manifest.json")
     assert manifest["data_source"]["fixture_sha256"] == digest(run / "data/warehouse.sql")
 
@@ -99,7 +99,7 @@ async def test_expired_shared_deadline_records_all_unexecuted_turns(settings, tm
     assert state["captured_turns"] == 2 and state["executed_turns"] == 0
     assert all(
         read_json(path)["status"] == "NOT_EXECUTED"
-        for path in (run / "cases/manual-01").glob("turn-*.json")
+        for path in (run / "cases/scenario-01").glob("turn-*.json")
     )
 
 
@@ -133,5 +133,5 @@ async def test_interruption_preserves_partial_capture_and_unknown_usage_reservat
     run = next((tmp_path / "runs").iterdir())
     state = read_json(run / "progress.json")
     assert state["status"] == "interrupted" and state["accounted_usd"] == 1
-    turn = read_json(run / "cases/manual-01/turn-1.json")
+    turn = read_json(run / "cases/scenario-01/turn-1.json")
     assert turn["status"] == "ERROR" and turn["usage"]["usage_unknown"]

@@ -22,7 +22,7 @@ from evaluation.runners.manual import Scenario
 def captured_database(tmp_path):
     database = tmp_path / "phoenix.sqlite"
     scenario = Scenario(
-        id="manual-01",
+        id="scenario-01",
         prompt="Show Q1 revenue.",
         follow_up="Explain the change.",
         intent="Comparison",
@@ -42,7 +42,7 @@ def captured_database(tmp_path):
     )
     hashes = {}
     for number, prompt in enumerate((scenario.prompt, scenario.follow_up), 1):
-        path = run / f"cases/manual-01/turn-{number}.json"
+        path = run / f"cases/scenario-01/turn-{number}.json"
         write_json(
             path,
             {
@@ -67,7 +67,7 @@ def captured_database(tmp_path):
         run / "judge_calls.json",
         [
             {
-                "step_id": "manual-01",
+                "step_id": "scenario-01",
                 "kind": "trajectory",
                 "status": "ERROR",
                 "provider_code": 402,
@@ -142,7 +142,7 @@ def test_repair_has_readable_values_correct_failures_and_preserves_evidence(
     first = json.loads(changed[0]["attributes"])
     assert first["input"]["value"] == "Show Q1 revenue."
     assert first["output"]["value"] == "Revenue: 100."
-    assert first["metadata"]["case_id"] == "manual-01"
+    assert first["metadata"]["case_id"] == "scenario-01"
     assert "See model spans" in first["metadata"]["historical_cost_capture"]
     assert changed[0]["status_code"] == "OK"
     second, judge = (json.loads(row["attributes"]) for row in changed[1:])
@@ -158,7 +158,7 @@ def test_repair_has_readable_values_correct_failures_and_preserves_evidence(
 
 def test_modified_capture_is_rejected(captured_database):
     database, artifacts, canonical, run = captured_database
-    path = run / "cases/manual-01/turn-1.json"
+    path = run / "cases/scenario-01/turn-1.json"
     data = json.loads(path.read_text())
     data["markdown"] = "Invented revised answer."
     write_json(path, data)

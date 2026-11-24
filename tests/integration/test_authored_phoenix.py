@@ -125,7 +125,7 @@ async def test_reference_versions_preserve_examples_and_e2e_scores(
 
     judge = ControlledJudge()
     run, summary = await run_authored(
-        [scenarios["manual-15"]],
+        [scenarios["scenario-15"]],
         settings,
         config,
         max_cost_usd=1,
@@ -140,7 +140,7 @@ async def test_reference_versions_preserve_examples_and_e2e_scores(
     assert summary["exit_code"] == 1 and summary["publication_status"] == "published"
     assert summary["accounted_total_usd"] >= 0.03
     assert "510" not in json.dumps(models[0].requests)
-    grade = read_json(run / "automatic/manual-15.json")
+    grade = read_json(run / "automatic/scenario-15.json")
     assert grade["turns"][0]["status"] == "FAIL"
     assert any(
         s["name"] == "numeric_fact" and s["status"] == "FAIL" for s in grade["turns"][0]["scores"]
@@ -154,7 +154,7 @@ async def test_reference_versions_preserve_examples_and_e2e_scores(
     assert output["evaluation"]["status"] == "FAIL"
     spans = client.spans.get_spans(
         project_identifier=state["project_id"],
-        trace_ids=[read_json(run / "cases/manual-15/turn-1.json")["trace_id"]],
+        trace_ids=[read_json(run / "cases/scenario-15/turn-1.json")["trace_id"]],
         name="retail.prompt",
         limit=5,
     )
@@ -162,10 +162,10 @@ async def test_reference_versions_preserve_examples_and_e2e_scores(
     attrs = spans[0].get("attributes", {})
     actual_input = attrs.get("input.value") or attrs.get("input", {}).get("value")
     actual_output = attrs.get("output.value") or attrs.get("output", {}).get("value")
-    assert actual_input == scenarios["manual-15"].prompt
+    assert actual_input == scenarios["scenario-15"].prompt
     assert actual_output == "Revenue: 999."
     assert spans[0]["status_code"] == "OK"  # Execution status is independent of FAIL quality.
-    assert attrs["retail.case_id"] == "manual-15" and attrs["retail.step_id"] == "turn-1"
+    assert attrs["retail.case_id"] == "scenario-15" and attrs["retail.step_id"] == "turn-1"
     assert len(experiment["evaluation_runs"]) == 11
     assert all(
         isinstance(e.result, dict) and e.result.get("label") != "PENDING"

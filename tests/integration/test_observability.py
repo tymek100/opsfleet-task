@@ -205,7 +205,7 @@ async def test_phoenix_prompt_preview_has_exact_answer_and_evaluation_context(se
     )
     try:
         with trace_context(
-            run_id="manual-recheck-test", case_id="manual-14", step_id="turn-1", phase="recheck"
+            run_id="manual-recheck-test", case_id="scenario-14", step_id="turn-1", phase="recheck"
         ):
             await app.ask("Describe sales. offline-placeholder")
         assert tracing.provider.force_flush(timeout_millis=2000)
@@ -215,7 +215,7 @@ async def test_phoenix_prompt_preview_has_exact_answer_and_evaluation_context(se
         assert root.attributes["output.value"] == "Which quarter?"
         assert root.status.status_code == StatusCode.OK
         metadata = json.loads(str(root.attributes["metadata"]))
-        assert metadata["case_id"] == "manual-14" and metadata["turn"] == "Initial question"
+        assert metadata["case_id"] == "scenario-14" and metadata["turn"] == "Initial question"
         assert (
             metadata["run_id"] == "manual-recheck-test"
             and metadata["execution_status"] == "approved"

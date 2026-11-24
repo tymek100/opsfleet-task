@@ -9,7 +9,7 @@ use a separate instance. Run commands from the repository root.
 Open [Datasets & Experiments](http://127.0.0.1:6006/datasets) and select
 **Retail agent — 20 conversations**. Each of its 20 rows contains:
 
-- Input: scenario ID, identity, initial question, and follow-up.
+- Input: scenario ID (`scenario-01` through `scenario-20`), identity, initial question, and follow-up.
 - Output: independent reference facts and behavioral criteria for the initial question and
   follow-up, plus source timestamps and hashes. These define expected answers without requiring
   identical wording or tables. For example, a revenue fact identifies the expected value,
@@ -17,45 +17,48 @@ Open [Datasets & Experiments](http://127.0.0.1:6006/datasets) and select
 - Metadata: scenario intent and provenance.
 
 Experiment output contains the actual two answers, runtime status, trace links, and automatic
-grades. Historical experiments retain their original assistant reviews and dataset versions.
-Observed model answers are never copied into reference truth.
+grades. Observed model answers are never copied into reference truth.
 
 Questions come from [manual_20.json](../evaluation/scenarios/manual_20.json). They are authored
 scenarios executed against the configured BigQuery warehouse, originally public TheLook sample
 data. They are not captured production traffic.
 
-| Experiment | Conversations | Answers | PASS / PARTIAL / FAIL |
-|---|---:|---:|---:|
-| 01 Baseline | 20 | 40 | 29 / 6 / 5 |
-| 02 First recheck | 20 | 40 | 27 / 10 / 3 |
-| 03 Second recheck | 20 | 40 | 39 / 0 / 1 |
-| 04 Targeted retest: rankings and categories | 2 | 4 | 4 / 0 / 0 |
-| 05 Targeted retest: rankings and unsold products | 2 | 4 | 4 / 0 / 0 |
-| 06 Targeted retest: rankings | 1 | 2 | 2 / 0 / 0 |
+On 2026-11-23 the workspace was reset at the user's request: eight experiments and their old
+trace project were deleted, and the 20 case IDs changed from `manual-NN` to `scenario-NN`.
+Dataset/example IDs and the four registered prompts were preserved. Earlier dataset versions
+retain their original content. A full database backup and migration receipts are under
+`.artifacts/phoenix/cleanup/20261123-scenarios/`; earlier local run artifacts remain unchanged.
+The [historical review report](plans/manual-conversation-review.md) describes the archived runs.
 
-These are existing **assistant reviews**, supported by saved evidence and independent numerical
-checks. They are not human validation or calibrated judge scores. Targeted retests do not establish
-a new 40/40 result. See the [review report](plans/manual-conversation-review.md).
+The fresh [20-conversation baseline](http://127.0.0.1:6006/datasets/RGF0YXNldDo5/compare?experimentId=RXhwZXJpbWVudDox)
+published all 40 answers: 37 answer grades are PASS and three are ERROR. The report-evidence
+validator omits singular `evidence_id` fields, incorrectly rejecting observed IDs in
+`scenario-17` follow-up and both `scenario-18` turns. Separately, the trajectory judge returned
+incomplete event coverage for `scenario-05` and `scenario-13`. The run therefore exits 2 with
+five unresolved checks; it is not a complete quality pass. Accounted cost was $5.1886.
+Captures, diagnoses and API verification are under
+`.artifacts/manual/conversations-baseline-20261123T161732Z-296c97ba/`.
 
-Historical experiment annotations show `Initial answer`, `Follow-up answer`, and `Conversation quality`.
-Conversation quality takes the worse verdict. Score 1 means PASS; PARTIAL and FAIL score 0
-and retain distinct labels. Missing independent review is `PENDING`, without a score.
-Runtime approval never supplies an independent quality score.
-
-**Tracing** uses one project, `retail-conversations-20`. It retains the 130 original prompt traces
-and receives new runs in the same project. Historical roots have `Scenario`, `Evaluation phase`,
-and `Answer review`; new roots have `Scenario` and `Automatic answer evaluation` annotations.
-Each experiment output links to both turn traces. Earlier failures remain visible.
+**Tracing** uses one project, `retail-conversations-20`, recreated for fresh evaluations.
+Roots have `Scenario` and `Automatic answer evaluation` annotations. Each experiment output
+links to both turn traces. Runtime approval never supplies an independent quality score.
 Phoenix also retains its empty, protected `default` system project; it contains no evaluations.
 
 ### Reading the trace list
 
 Evaluation spans expose standard Phoenix Input and Output fields. `retail.prompt` shows the
 question and the approved Markdown answer, or an explicit failure summary when no answer was
-generated. `retail.judge` shows the question/task and a compact assessment or provider error.
+generated. In synthetic evaluation capture, `retail.judge` shows the actual system instruction
+and JSON evaluation input as System/User messages, together with the generation configuration
+and specialized response schema. Prompt Template contains a readable System/User representation
+of the registered template and its `context` variable, holding the sanitized JSON evaluation input.
+Output contains the complete visible model response, including
+JSON that failed validation. The compact assessment and validation diagnostics remain in metadata;
+a provider failure without a response displays an explicit error summary. Raw model source IDs
+are preserved in the output; the resolved assessment is saved separately in `judge_calls.json`.
 Provider spans show safe request/result summaries and reported token usage. Their metadata
-includes the run, scenario, phase, and initial/follow-up label where applicable. Raw system
-prompts and hidden reasoning are not copied into these previews. Normal chat tracing remains
+includes the run, scenario, phase, and initial/follow-up label where applicable. Hidden reasoning
+and credentials are excluded. Automatic ADK payloads remain hidden. Normal chat tracing remains
 metadata-only; visible evaluation content requires the existing synthetic capture mode.
 
 The standard span status describes **execution**: OK means the operation completed; ERROR
@@ -77,11 +80,8 @@ consistent database backup, a reviewed plan, and unchanged source artifacts. It 
 display attributes and execution status/error counts, preserving original IDs, parents,
 timestamps, events, annotations, experiments, and cost records.
 
-The 2026-11-23 repair populated all 139 existing root spans (136 prompts and three judges):
-130 completed executions and nine recorded provider failures. Verification preserved all
-2,717 spans and all 66 other database tables, including the 20-example dataset and seven
-experiments. Backup, exact repair plan, and database/API verification receipts are stored under
-`.artifacts/phoenix/backfills/20261123T095948Z/`. No model calls were needed for the repair.
+Repairs made before the workspace reset are archived under `.artifacts/phoenix/backfills/`.
+New runs record judge messages, template variables, and responses directly.
 
 ## Run the 20 conversations
 
@@ -91,7 +91,7 @@ Configure `GEMINI_API_KEY` and Google Cloud application credentials as described
 ```bash
 uv sync --locked --python 3.12 --group evaluation
 uv run --locked --group evaluation retail-eval run-conversations \
-  --max-cost-usd 6 --deadline-seconds 3600
+  --max-cost-usd 10 --deadline-seconds 3600
 ```
 
 The command performs the complete evaluation:
@@ -120,7 +120,7 @@ For a targeted retest, keep the questions fixed and select IDs:
 
 ```bash
 uv run --locked --group evaluation retail-eval run-conversations \
-  --only manual-01,manual-03 --phase recheck \
+  --only scenario-01,scenario-03 --phase recheck \
   --max-cost-usd 2 --deadline-seconds 600
 ```
 
@@ -138,20 +138,20 @@ grading. Limits are caps, not estimates or completion guarantees.
 Local artifacts survive interruptions and publication failures; incomplete capture is not
 silently published as a complete experiment.
 
-## Saved answers and historical publication
+## Saved answers
 
 ```text
-.artifacts/manual/manual-<phase>-<timestamp>-<id>/
+.artifacts/manual/conversations-<phase>-<timestamp>-<id>/
 ├── manifest.json                 # Model, source hashes, clock, data source, limits
 ├── scenarios.json                # Frozen questions and criteria
 ├── progress.json                 # Execution status, usage, captured-file hashes
 ├── prompts.json                  # Synchronized prompt version IDs
 ├── reference/                    # Frozen independent source rows, summary, manifest
 ├── references.json               # Both-turn reference specifications for all 20 cases
-├── cases/manual-01/turn-1.json    # Initial answer and observed execution
-├── cases/manual-01/turn-2.json    # Follow-up answer and observed execution
-├── automatic/manual-01.json      # Scores, extracted claims, resolved follow-up facts
-├── judge_calls.json              # Independent model usage and diagnostics
+├── cases/scenario-01/turn-1.json    # Initial answer and observed execution
+├── cases/scenario-01/turn-2.json    # Follow-up answer and observed execution
+├── automatic/scenario-01.json      # Scores, extracted claims, resolved follow-up facts
+├── judge_calls.json              # Sanitized judge requests/responses, span IDs, usage, diagnostics
 ├── summary.json                  # Machine-readable result and exit code
 ├── summary.md                    # Per-conversation results
 └── phoenix-auto.json             # Dataset version, experiment URL, publication state
@@ -165,21 +165,9 @@ Exit code 0 means all required work resolved without failures; 1 means resolved 
 trajectory failures; 2 means unresolved checks, incomplete execution, or publication failure.
 Trajectory remains a separate diagnostic and does not redefine answer correctness.
 
-Republish the preserved six historical phases without model calls:
-
-```bash
-uv run --locked --group evaluation retail-eval publish-conversations
-```
-
-[manual_history.json](../evaluation/scenarios/manual_history.json) maps phases to capture and
-review files. Publication verifies frozen questions, file hashes, review attribution, coverage,
-and verdict counts. It reuses saved experiment/run IDs and upserts annotations. Original traces
-must exist in the shared Phoenix project; the publisher neither moves nor synthesizes them.
-Historical local artifacts are Git-ignored and required by this command.
-
-For newly reviewed captures, supply `--history path/to/history.json` using the same manifest
-format. Preserve every attempt and identify review sources. Reviews accept PASS, PARTIAL, and
-FAIL and must cover both turns of every included conversation.
+The legacy [manual_history.json](../evaluation/scenarios/manual_history.json) is an archive index.
+Its experiments were removed from Phoenix; their frozen local captures keep the original IDs.
+Do not republish that manifest into the reset workspace. New evaluations use `run-conversations`.
 
 `run-conversations` collects and attaches references automatically. To attach an already captured
 reference bundle without running models:

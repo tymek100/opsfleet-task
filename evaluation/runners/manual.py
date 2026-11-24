@@ -145,7 +145,7 @@ async def run_manual(
         raise ValueError("The reporting clock must include its timezone")
     now = now.astimezone(UTC)
     deadline = absolute_deadline or time.monotonic() + deadline_seconds
-    directory = output_root / identifier(f"manual-{phase}")
+    directory = output_root / identifier(f"conversations-{phase}")
     directory.mkdir(parents=True, exist_ok=False)
     root = repository_root()
     sources = _source_paths()
@@ -203,7 +203,7 @@ async def run_manual(
         "executed_turns": 0,
         "turn_hashes": {},
     }
-    progress(f"Manual run: {directory}")
+    progress(f"Conversation run: {directory}")
     progress(f"Backend: {backend}; {len(scenarios)} conversations; {2 * len(scenarios)} turns")
     progress(f"Shared limit: ${max_cost_usd:g}; {deadline_seconds:g}s.")
     secrets = (settings.gemini_api_key.get_secret_value(),)

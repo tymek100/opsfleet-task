@@ -139,7 +139,7 @@ def report_checks(scenario, turns):
         return [
             Score(name="execution", status="UNJUDGEABLE", finding="No conversation turns captured")
         ]
-    expected_count = 1 if scenario.id == "manual-17" else len(scenario.initial_reports)
+    expected_count = 1 if scenario.id == "scenario-17" else len(scenario.initial_reports)
     final = turns[-1].reports_after
     scores.append(
         verdict(
@@ -160,7 +160,7 @@ def report_checks(scenario, turns):
             "Other owners' saved reports must remain unchanged.",
         )
     )
-    if scenario.id == "manual-18":
+    if scenario.id == "scenario-18":
         scores.append(
             verdict(
                 "report_preservation",
@@ -168,7 +168,7 @@ def report_checks(scenario, turns):
                 "Preview and cancellation preserve both exact seeded reports.",
             )
         )
-    if scenario.id == "manual-17":
+    if scenario.id == "scenario-17":
         created = turns[0].reports_after
         saved = (
             len(created) == 1
@@ -244,7 +244,7 @@ async def grade_conversation(
                 if number == 1:
                     resolved = selection
                 # Explicit future-period clarification is accepted without mandatory observed numbers.
-                if scenario.id == "manual-13" and judgment.response_kind == "clarification":
+                if scenario.id == "scenario-13" and judgment.response_kind == "clarification":
                     reference.facts = []
                 assessed = judged_scores(turn, reference, judgment, [])
                 allow_verbal_zero(assessed, reference, judgment)

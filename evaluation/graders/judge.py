@@ -36,8 +36,10 @@ class JudgmentValidationError(ValueError):
     """A fixed diagnostic from our attribution checks, never provider exception text."""
 
 
-def visible_response_record(text: str, secrets: tuple[str, ...]) -> dict:
-    """Bound diagnostic output after excluding thought parts and credential fields."""
+def visible_response_record(
+    text: str, secrets: tuple[str, ...], *, max_bytes: int | None = MAX_VISIBLE_RESPONSE_BYTES
+) -> dict:
+    """Sanitize visible output and optionally bound its diagnostic representation."""
     try:
         value = json.loads(text)
     except json.JSONDecodeError:
@@ -46,9 +48,9 @@ def visible_response_record(text: str, secrets: tuple[str, ...]) -> dict:
     rendered = cleaned if isinstance(cleaned, str) else json.dumps(cleaned, ensure_ascii=False)
     encoded = rendered.encode()
     return {
-        "visible_response": encoded[:MAX_VISIBLE_RESPONSE_BYTES].decode(errors="ignore"),
+        "visible_response": encoded[:max_bytes].decode(errors="ignore"),
         "visible_response_bytes": len(encoded),
-        "visible_response_truncated": len(encoded) > MAX_VISIBLE_RESPONSE_BYTES,
+        "visible_response_truncated": max_bytes is not None and len(encoded) > max_bytes,
     }
 
 
@@ -308,6 +310,9 @@ class GeminiJudge:
     ) -> Structured:
         prompt_spec = judge_prompt(self.settings, kind, instruction=prompt)
         attributes = prompt_attributes(prompt_spec)
+        request_config = prompt_spec.config.model_copy(
+            update={"system_instruction": prompt, "response_json_schema": schema}
+        )
         payload_text = json.dumps(
             sanitize_capture(payload, self._redaction_secrets), ensure_ascii=False
         )
@@ -317,6 +322,18 @@ class GeminiJudge:
             raise JudgeUnavailable(
                 "Judge context and response schema exceed 250 KB; no evidence was silently truncated"
             )
+        captured_request = sanitize_capture(
+            {
+                "messages": [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": payload_text},
+                ],
+                "generation_config": request_config.model_dump(
+                    mode="json", exclude_none=True, exclude={"system_instruction"}
+                ),
+            },
+            self._redaction_secrets,
+        )
         # Byte-based upper bound includes schema/instructions and output. Output allowance includes thinking tokens.
         reservation = (
             input_bound * self.settings.input_usd_per_million
@@ -338,6 +355,7 @@ class GeminiJudge:
             "response_schema_sha256": hashlib.sha256(schema_json.encode()).hexdigest(),
             "admitted_input_bytes": input_bound,
             "source_excerpt_policy": excerpt_policy,
+            "request": captured_request,
         }
         self.calls.append(call)
         started = time.monotonic()
@@ -351,6 +369,9 @@ class GeminiJudge:
                 "retail.step_id": step_id,
             },
         ) as current:
+            context = current.get_span_context()
+            if context.is_valid:
+                call.update(trace_id=f"{context.trace_id:032x}", span_id=f"{context.span_id:016x}")
             record_observation(
                 sanitize_capture(
                     {
@@ -358,6 +379,7 @@ class GeminiJudge:
                         "kind": kind,
                         "question": _trace_question(payload, kind),
                         "step_id": step_id,
+                        "request": captured_request,
                     },
                     self._redaction_secrets,
                 ),
@@ -368,9 +390,7 @@ class GeminiJudge:
                     response = await self.client.aio.models.generate_content(
                         model=prompt_spec.model,
                         contents=payload_text,
-                        config=prompt_spec.config.model_copy(
-                            update={"system_instruction": prompt, "response_json_schema": schema}
-                        ),
+                        config=request_config,
                     )
                 counts = _usage_counts(response.usage_metadata)
                 if counts is not None:
@@ -402,7 +422,9 @@ class GeminiJudge:
                     if p.text and not p.thought
                 ]
                 visible = "".join(parts)
-                call.update(visible_response_record(visible, self._redaction_secrets))
+                call.update(
+                    visible_response_record(visible, self._redaction_secrets, max_bytes=None)
+                )
                 decoded = json.loads(visible)
                 result = parse(decoded)
                 call["resolved_judgment"] = sanitize_capture(
@@ -470,6 +492,8 @@ class GeminiJudge:
                         "summary": _trace_summary(call),
                         "provider_code": call.get("provider_code"),
                         "error_stage": call.get("error_stage"),
+                        "response": call.get("visible_response"),
+                        "validation_error": call.get("validation_error"),
                     },
                     mode="synthetic",
                 )

@@ -47,7 +47,7 @@ Run new conversations with Gemini and BigQuery credentials configured and Docker
 
 ```bash
 uv run --locked --group evaluation retail-eval run-conversations \
-  --max-cost-usd 6 --deadline-seconds 3600
+  --max-cost-usd 10 --deadline-seconds 3600
 ```
 
 The command starts or connects to local Phoenix, captures independent references, and runs the

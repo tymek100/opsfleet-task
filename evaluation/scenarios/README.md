@@ -1,7 +1,8 @@
 # Authored conversation scenarios
 
-`manual_20.json` contains 20 English retail conversations, each with one initial prompt and
-one fixed follow-up. These are newly authored user-like scenarios, not imported production
+`manual_20.json` contains 20 English retail conversations, identified as `scenario-01` through
+`scenario-20`, each with one initial prompt and one fixed follow-up. These are authored user-like
+scenarios, not imported production
 conversations or a representative traffic sample. They are intended for real-model execution,
 inspection of every answer and observed tool result, and independently checked numerical facts.
 
@@ -11,7 +12,7 @@ successful answers. Checks describe acceptable behavior and remain outside the a
 They allow equivalent correct methods and explicitly supported limitations.
 
 Nineteen conversations use Alice's Calvin Klein scope; one uses Bob's Levi's scope. Each starts
-with isolated conversation and report state. Only `manual-18` seeds reports, using two clearly
+with isolated conversation and report state. Only `scenario-18` seeds reports, using two clearly
 authored records to verify owner isolation and deletion cancellation. Those records must never
 be added to an ordinary user's report library.
 
@@ -30,7 +31,7 @@ cannot exercise the live geographic aggregate capability equivalently.
 
 ## Phoenix publication
 
-`retail-eval run-conversations --max-cost-usd 6 --deadline-seconds 3600` executes this set
+`retail-eval run-conversations --max-cost-usd 10 --deadline-seconds 3600` executes this set
 against BigQuery. It reuses the **Retail agent — 20 conversations** dataset and
 `retail-conversations-20` trace project. Each dataset row contains both questions; each experiment
 output contains both answers, automatic grades, and trace links. Dataset Output contains
@@ -39,10 +40,10 @@ All source tables are pinned to the same timestamp for reference capture and age
 Code compares extracted numerical claims with these references; independent LLM judgments assess
 grounding, completeness, and trajectory. References never enter analyst context.
 
-`manual_history.json` maps six historical phases to frozen captures and assistant reviews under
-`.artifacts/manual/`. `retail-eval publish-conversations` verifies hashes, question identity,
-review attribution, coverage, and verdict counts before publication. Existing experiment IDs
-are reused on repeat publication. Original Phoenix traces are required, not reconstructed.
+`manual_history.json` indexes archived captures and assistant reviews under `.artifacts/manual/`.
+Their Phoenix experiments and traces were removed on 2026-11-23. Frozen artifacts retain their
+original `manual-NN` identifiers; new runs use `scenario-NN`. Do not republish the archived manifest
+into the reset workspace.
 
 Keep complete runs and targeted retests separate. Runtime approval is not independent quality
 approval. Historical assistant reviews are neither human validation nor calibrated judge scores.

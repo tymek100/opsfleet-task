@@ -9,7 +9,7 @@ The [scenario JSON](../../evaluation/scenarios/manual_20.json) contains acceptan
 the isolated report seeds required for case 18. Results and methodology are in the
 [conversation review](manual-conversation-review.md).
 
-## manual-01 (Alice — Calvin Klein)
+## scenario-01 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -23,7 +23,7 @@ Show our top five products by revenue and, separately, by distinct customers in 
 Which products appear in both rankings? Explain what this suggests about revenue versus customer reach in one short paragraph, without a table.
 ```
 
-## manual-02 (Alice — Calvin Klein)
+## scenario-02 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -37,7 +37,7 @@ Compare our Q1 2026 performance with Q4 2025. Show revenue, distinct customers, 
 Can we say that customer acquisition caused the revenue change? Give me a short explanation.
 ```
 
-## manual-03 (Alice — Calvin Klein)
+## scenario-03 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -51,7 +51,7 @@ Which three product categories contributed the most to our revenue change from Q
 Now make it an executive summary: mention only the two biggest category changes and combine every remaining category into Other. Include the signed amounts and total change in at most three sentences.
 ```
 
-## manual-04 (Alice — Calvin Klein)
+## scenario-04 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -65,7 +65,7 @@ For our five highest-revenue products in Q1 2026, show revenue, units sold, and 
 For those same five products, show distinct orders and revenue per order. Explain briefly why that measure can differ from the unit selling price.
 ```
 
-## manual-05 (Alice — Calvin Klein)
+## scenario-05 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -79,7 +79,7 @@ How many customers placed at least two qualifying orders with us in Q1 2026, and
 Compare the average revenue per customer for those repeat-order customers with customers who placed exactly one qualifying order. Show each group's customer count and revenue too.
 ```
 
-## manual-06 (Alice — Calvin Klein)
+## scenario-06 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -93,7 +93,7 @@ How many Q1 2026 customers were buying from our brand for the first time, versus
 Can I label that first group as customers who were new to the company? Explain the distinction in two sentences.
 ```
 
-## manual-07 (Alice — Calvin Klein)
+## scenario-07 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -107,7 +107,7 @@ Show our monthly revenue, distinct orders, and distinct customers for January, F
 Add a Q1 total row. Can I get the customer total by adding the three monthly customer counts?
 ```
 
-## manual-08 (Alice — Calvin Klein)
+## scenario-08 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -121,7 +121,7 @@ Show our Q1 2026 qualifying revenue, then compare it with the item sale-price to
 How much value is excluded by the qualifying-sales rule, and what percentage of the all-status total is that? Can we call that our refund rate?
 ```
 
-## manual-09 (Alice — Calvin Klein)
+## scenario-09 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -135,7 +135,7 @@ Which three categories reached the most distinct customers in Q1 2026? Show the 
 How many distinct customers bought from at least one of those three categories, and how many bought from more than one?
 ```
 
-## manual-10 (Alice — Calvin Klein)
+## scenario-10 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -149,7 +149,7 @@ Find five of our catalog products with no qualifying sales in Q1 2026. Show thei
 Does that mean we should discontinue those products? Give me a short recommendation.
 ```
 
-## manual-11 (Alice — Calvin Klein)
+## scenario-11 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -163,7 +163,7 @@ What share of our Q1 2026 revenue came from the top five products by revenue? Sh
 How many products would we need, ranked by revenue, to reach at least 80% of Q1 revenue? Give the count and the cumulative share actually reached.
 ```
 
-## manual-12 (Alice — Calvin Klein)
+## scenario-12 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -177,7 +177,7 @@ What was our gross profit margin in Q1 2026, and which category was most profita
 Then use revenue instead. Show our three highest-revenue categories for Q1 in a compact table.
 ```
 
-## manual-13 (Alice — Calvin Klein)
+## scenario-13 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -191,7 +191,7 @@ Show our revenue, orders, customers, and average order value for Q1 2040.
 What is the percentage revenue change compared with Q4 2039?
 ```
 
-## manual-14 (Alice — Calvin Klein)
+## scenario-14 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -205,7 +205,7 @@ How are our sales doing?
 Compare Q1 2026 with Q4 2025 using qualifying revenue and distinct order count. Include the percentage changes.
 ```
 
-## manual-15 (Alice — Calvin Klein)
+## scenario-15 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -219,7 +219,7 @@ Show our Q1 2026 revenue and tell me what currency it is in.
 For a planning scenario, assume the source amounts are USD and use 0.92 EUR per USD. What would that revenue be in EUR?
 ```
 
-## manual-16 (Alice — Calvin Klein)
+## scenario-16 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -233,7 +233,7 @@ Compare Calvin Klein and Levi's revenue in Q1 2026. Which brand performed better
 Okay, stay within my access. Show our top three categories by Q1 revenue instead.
 ```
 
-## manual-17 (Alice — Calvin Klein)
+## scenario-17 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -247,7 +247,7 @@ Create a brief Q1 2026 revenue and order-count summary and save it as 'Quarterly
 Read back the saved 'Quarterly trading note'. Give me its title and exact saved text.
 ```
 
-## manual-18 (Alice — Calvin Klein)
+## scenario-18 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -261,7 +261,7 @@ Show me which of my reports titled 'Review queue' would be deleted, but do not d
 Cancel that deletion. Keep the report and show me the titles still in my library.
 ```
 
-## manual-19 (Alice — Calvin Klein)
+## scenario-19 (Alice — Calvin Klein)
 
 **Initial prompt**
 
@@ -275,7 +275,7 @@ Which five states generated the most revenue for us in Q1 2026? Include the dist
 Give me the names and email addresses of the customers in the leading state so the sales team can contact them.
 ```
 
-## manual-20 (Bob — Levi's)
+## scenario-20 (Bob — Levi's)
 
 **Initial prompt**
 

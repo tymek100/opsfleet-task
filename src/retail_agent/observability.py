@@ -163,19 +163,21 @@ def display_fields(
             metadata["step_id"], metadata["step_id"]
         )
 
-    def preview(key: str, value: Any) -> None:
+    def preview(
+        key: str, value: Any, *, mime_type: str = "text/plain", max_bytes: int | None = 64_000
+    ) -> None:
         if mode != "synthetic" or value is None:
             return
         rendered = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
         rendered = sanitize_capture(rendered)
-        if len(rendered.encode()) > 64_000:
+        if max_bytes is not None and len(rendered.encode()) > max_bytes:
             rendered = (
-                rendered.encode()[:64_000].decode(errors="ignore")
+                rendered.encode()[:max_bytes].decode(errors="ignore")
                 + "\n[Preview truncated; see captured events.]"
             )
             metadata[key + "_truncated"] = True
         result[key + ".value"] = rendered
-        result[key + ".mime_type"] = "text/plain"
+        result[key + ".mime_type"] = mime_type
 
     if operation == "retail.prompt":
         for event in events:
@@ -224,8 +226,48 @@ def display_fields(
                 preview("input", task)
                 if event.get("kind"):
                     metadata["judge_kind"] = event["kind"]
+                if operation == "retail.judge" and mode == "synthetic":
+                    request = event.get("request")
+                    if isinstance(request, dict):
+                        # Only explicit application observations can supply model messages.
+                        # The judge already bounds its entire request before sending it.
+                        preview("input", request, mime_type="application/json", max_bytes=None)
+                        for index, model_message in enumerate(request.get("messages", [])):
+                            for key in ("role", "content"):
+                                result[f"llm.input_messages.{index}.message.{key}"] = model_message[
+                                    key
+                                ]
+                        result["llm.invocation_parameters"] = json.dumps(
+                            request.get("generation_config", {}), ensure_ascii=False
+                        )
+                        messages = request.get("messages", [])
+                        if [message.get("role") for message in messages] == ["system", "user"]:
+                            # Readable representation of the registered two-message template.
+                            # Variables retain the exact sanitized JSON sent as user content.
+                            result["llm.prompt_template.template"] = (
+                                f"System:\n{messages[0]['content']}\n\nUser:\n{{{{context}}}}"
+                            )
+                            result["llm.prompt_template.variables"] = json.dumps(
+                                {"context": messages[1]["content"]}, ensure_ascii=False
+                            )
+                        metadata["input_capture"] = "sanitized_request"
             elif event.get("event") == prefix + "_result":
                 preview("output", event.get("summary"))
+                if operation == "retail.judge" and mode == "synthetic":
+                    metadata["evaluation_summary"] = event.get("summary")
+                    if event.get("validation_error"):
+                        metadata["validation_error"] = event["validation_error"]
+                    response = event.get("response")
+                    if isinstance(response, str):
+                        try:
+                            json.loads(response)
+                            mime = "application/json"
+                        except ValueError:
+                            mime = "text/plain"
+                        preview("output", response, mime_type=mime, max_bytes=None)
+                        result["llm.output_messages.0.message.role"] = "assistant"
+                        result["llm.output_messages.0.message.content"] = response
+                        metadata["output_capture"] = "sanitized_model_response"
                 status = "OK" if event.get("status") in {"completed", "ok", "OK"} else "ERROR"
                 message = None if status == "OK" else "Model request or result validation failed."
                 metadata["execution_status"] = event.get("status")

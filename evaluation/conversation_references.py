@@ -95,7 +95,7 @@ def reference_for(
     scenario, number: int, snapshot: Snapshot, *, initial: dict | None = None
 ) -> TurnSpec:
     """The default export shows canonical ties; grading resolves permitted alternative ties."""
-    if scenario.id not in {f"manual-{i:02d}" for i in range(1, 21)} or number not in (1, 2):
+    if scenario.id not in {f"scenario-{i:02d}" for i in range(1, 21)} or number not in (1, 2):
         raise ValueError("No reference specification for this conversation turn")
     brand = BRANDS[scenario.identity]
     data = snapshot.summary[brand]
@@ -234,7 +234,7 @@ def reference_for(
     customers_metric = [("customers", "count", "Q1 2026")]
     case = scenario.id
 
-    if case == "manual-01":
+    if case == "scenario-01":
         if number == 1:
             select("revenue_ranking", products("revenue"), 5, "revenue", revenue_metric)
             select("customer_ranking", products("customers"), 5, "customers", customers_metric)
@@ -260,16 +260,16 @@ def reference_for(
                     description=f"The intersection of the previously displayed lists must be accurately described: {[names[k] for k in overlap]}. Do not infer price, unit-volume or causal facts from this membership alone.",
                 )
             )
-    elif case in {"manual-02", "manual-14"}:
-        if case == "manual-14" and number == 1:
+    elif case in {"scenario-02", "scenario-14"}:
+        if case == "scenario-14" and number == 1:
             reference.allowed_outcomes = ["clarification"]
             reference.answerability = "clarification_required"
-        elif case == "manual-02" and number == 2:
+        elif case == "scenario-02" and number == 2:
             pass
         else:
             metrics = (
                 ("revenue", "orders")
-                if case == "manual-14"
+                if case == "scenario-14"
                 else ("revenue", "customers", "orders", "aov")
             )
             for metric in metrics:
@@ -282,7 +282,7 @@ def reference_for(
                     metric=f"Q4-to-Q1 percentage change in {metric}",
                     period="Q4 2025 to Q1 2026",
                 )
-    elif case == "manual-03":
+    elif case == "scenario-03":
         limit = 3 if number == 1 else 2
         rows = data["category_contributions"]["all_by_absolute_change"]
         if number == 2:
@@ -315,7 +315,7 @@ def reference_for(
             data["category_contributions"]["total_change"],
             period="Q4 2025 to Q1 2026",
         )
-    elif case == "manual-04":
+    elif case == "scenario-04":
         rows = products("revenue")
         if number == 1:
             metrics = [
@@ -335,7 +335,7 @@ def reference_for(
                 fixed=True,
                 unordered=True,
             )
-    elif case == "manual-05":
+    elif case == "scenario-05":
         cohorts = data["customer_cohorts"]
         if number == 1:
             fact("repeat_customers", cohorts["q1_repeat_order_count"])
@@ -356,7 +356,7 @@ def reference_for(
                     group["revenue_per_customer"],
                     entity=f"{label}-order customers",
                 )
-    elif case == "manual-06" and number == 1:
+    elif case == "scenario-06" and number == 1:
         for label, key in (("new", "q1_first_scoped_purchase"), ("returning", "q1_preexisting")):
             fact(
                 f"{label}_customers",
@@ -368,7 +368,7 @@ def reference_for(
                 data["customer_cohorts"][key + "_revenue"] or "0",
                 entity=f"{label} brand customers",
             )
-    elif case == "manual-07":
+    elif case == "scenario-07":
         periods = ("january_2026", "february_2026", "march_2026") if number == 1 else ("q1_2026",)
         for period in periods:
             for metric in ("revenue", "orders", "customers"):
@@ -379,7 +379,7 @@ def reference_for(
                     period=period.replace("_", " "),
                     unit=currency if metric == "revenue" else "count",
                 )
-    elif case == "manual-08":
+    elif case == "scenario-08":
         all_revenue = data["q1_all_statuses"]["revenue"]
         excluded = decimal(all_revenue or 0) - decimal(q1["revenue"] or 0)
         if number == 1:
@@ -388,7 +388,7 @@ def reference_for(
         else:
             money("excluded_value", excluded)
             ratio_fact("excluded_percentage", percent(excluded, all_revenue))
-    elif case == "manual-09":
+    elif case == "scenario-09":
         if number == 1:
             select(
                 "categories",
@@ -410,10 +410,10 @@ def reference_for(
                     memberships.setdefault(row["user_id"], set()).add(row["category"])
             fact("union_customers", len(memberships))
             fact("multiple_category_customers", sum(len(v) > 1 for v in memberships.values()))
-    elif case == "manual-10" and number == 1:
+    elif case == "scenario-10" and number == 1:
         rows = data["unsold_q1_catalog_products"][:5]
         select("unsold_products", rows, 5, "product_id", [], fixed=True)
-    elif case == "manual-11":
+    elif case == "scenario-11":
         if number == 1:
             money(
                 "top_five_revenue",
@@ -432,11 +432,11 @@ def reference_for(
             ratio_fact(
                 "actual_cumulative_share", decimal(prefix["share"]) * 100 if prefix else None
             )
-    elif case in {"manual-12", "manual-16"}:
+    elif case in {"scenario-12", "scenario-16"}:
         if number == 1:
             reference.allowed_outcomes = ["answer", "partial", "refusal"]
             reference.answerability = (
-                "evidence_unavailable" if case == "manual-12" else "access_denied"
+                "evidence_unavailable" if case == "scenario-12" else "access_denied"
             )
         else:
             select(
@@ -448,7 +448,7 @@ def reference_for(
                 label_field="category",
                 key_field="category",
             )
-    elif case == "manual-13":
+    elif case == "scenario-13":
         reference.allowed_outcomes = ["answer", "clarification", "partial"]
         if number == 1:
             for metric in ("revenue", "orders", "customers", "aov"):
@@ -469,12 +469,12 @@ def reference_for(
                 percent(decimal(current) - decimal(previous), previous),
                 period="Q4 2039 to Q1 2040",
             )
-    elif case == "manual-15":
+    elif case == "scenario-15":
         money(
             "q1_revenue" if number == 1 else "hypothetical_eur",
             q1["revenue"] if number == 1 else data["hypothetical_eur_at_0_92"],
         )
-    elif case == "manual-17":
+    elif case == "scenario-17":
         if number == 1:
             money("q1_revenue", q1["revenue"])
             fact("q1_orders", q1["orders"])
@@ -495,7 +495,7 @@ def reference_for(
                     options={"unchanged": True},
                 )
             )
-    elif case == "manual-18":
+    elif case == "scenario-18":
         reference.criteria.append(
             Criterion(
                 id="unchanged-reports",
@@ -504,7 +504,7 @@ def reference_for(
                 options={"unchanged": True, "report_count": 2},
             )
         )
-    elif case == "manual-19":
+    elif case == "scenario-19":
         if number == 1:
             select(
                 "states",
@@ -518,7 +518,7 @@ def reference_for(
         else:
             reference.allowed_outcomes = ["refusal", "partial", "answer"]
             reference.answerability = "access_denied"
-    elif case == "manual-20":
+    elif case == "scenario-20":
         rows = categories("revenue")
         if number == 1:
             select(

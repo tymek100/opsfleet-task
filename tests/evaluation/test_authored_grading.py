@@ -73,16 +73,16 @@ def test_all_twenty_cases_have_two_independent_reference_records(snapshot, scena
     definitions = bundle(list(scenarios.values()), snapshot)
     assert len(definitions["cases"]) == 20
     assert all(set(c) == {"turn-1", "turn-2"} for c in definitions["cases"].values())
-    revenue = reference_for(scenarios["manual-15"], 1, snapshot).reference.facts[0]
+    revenue = reference_for(scenarios["scenario-15"], 1, snapshot).reference.facts[0]
     assert revenue.value == "510"
-    hypothetical = reference_for(scenarios["manual-15"], 2, snapshot).reference.facts[0]
+    hypothetical = reference_for(scenarios["scenario-15"], 2, snapshot).reference.facts[0]
     assert hypothetical.value == "469.20"
-    empty = reference_for(scenarios["manual-13"], 2, snapshot).reference.facts[0]
+    empty = reference_for(scenarios["scenario-13"], 2, snapshot).reference.facts[0]
     assert empty.value is None and empty.value_type == "null"
 
 
 def test_tied_product_selection_binds_its_own_units_and_price(snapshot, scenarios):
-    spec = reference_for(scenarios["manual-04"], 1, snapshot)
+    spec = reference_for(scenarios["scenario-04"], 1, snapshot)
     facts = [
         ExtractedFact(id=f"products_{rank}_entity", value=str(product), span=f"Product {product}")
         for rank, product in enumerate((1, 2, 3, 4, 6), 1)
@@ -93,13 +93,13 @@ def test_tied_product_selection_binds_its_own_units_and_price(snapshot, scenario
     expected = {f.id: f.value for f in resolved.facts}
     assert expected["products_5_units"] == "2"
     assert expected["products_5_average_realized_unit_price"] == "30"
-    follow_up = reference_for(scenarios["manual-04"], 2, snapshot, initial=selected)
+    follow_up = reference_for(scenarios["scenario-04"], 2, snapshot, initial=selected)
     assert follow_up.selections[0]["rows"][-1]["key"] == "6"
     assert follow_up.selections[0]["rows"][-1]["metrics"]["aov"] == "60"
 
 
 def test_duplicate_or_lower_ranked_product_cannot_pass(snapshot, scenarios):
-    spec = reference_for(scenarios["manual-04"], 1, snapshot)
+    spec = reference_for(scenarios["scenario-04"], 1, snapshot)
     facts = [
         ExtractedFact(id=f"products_{rank}_entity", value=str(product), span=f"Product {product}")
         for rank, product in enumerate((1, 2, 3, 4, 4), 1)
@@ -112,7 +112,7 @@ def test_followup_keeps_the_selected_set_without_inventing_an_order_requirement(
     snapshot, scenarios
 ):
     spec = reference_for(
-        scenarios["manual-04"], 2, snapshot, initial={"products": ["1", "2", "3", "4", "6"]}
+        scenarios["scenario-04"], 2, snapshot, initial={"products": ["1", "2", "3", "4", "6"]}
     )
     facts = [
         ExtractedFact(id=f"products_{rank}_entity", value=str(product), span=f"Product {product}")
@@ -134,7 +134,7 @@ async def test_provider_failure_is_unresolved_and_does_not_call_judges(snapshot,
             raise AssertionError("Do not grade an unavailable provider as a reasoning error")
 
     turns = [TurnRecord(step_id=f"turn-{n}", status="unavailable") for n in (1, 2)]
-    result = await grade_conversation(scenarios["manual-15"], turns, snapshot, ForbiddenJudge())
+    result = await grade_conversation(scenarios["scenario-15"], turns, snapshot, ForbiddenJudge())
     assert result["status"] == "ERROR"
     assert all(t["status"] == "ERROR" for t in result["turns"])
     assert final_summary([result], 1)["exit_code"] == 2
@@ -155,7 +155,7 @@ def test_reference_hash_and_recalculation_are_both_checked(snapshot):
 
 
 def test_extraction_judge_never_receives_expected_values_or_selection_catalogs(snapshot, scenarios):
-    spec = reference_for(scenarios["manual-04"], 1, snapshot)
+    spec = reference_for(scenarios["scenario-04"], 1, snapshot)
     payload = judge_input(
         TurnRecord(step_id="turn-1", prompt="Rank products", status="approved", markdown="Unknown"),
         spec.reference,
@@ -207,7 +207,7 @@ async def test_supported_but_wrong_number_fails_independent_reference(snapshot, 
         for i, text in enumerate(("Revenue: 999.", "Hypothetical EUR: 469.20."), 1)
     ]
     result = await grade_conversation(
-        scenarios["manual-15"], turns, snapshot, ControlledJudge(), trajectory_enabled=False
+        scenarios["scenario-15"], turns, snapshot, ControlledJudge(), trajectory_enabled=False
     )
     assert result["status"] == "FAIL"
     scores = {s["name"]: s["status"] for s in result["turns"][0]["scores"]}
@@ -229,7 +229,7 @@ async def test_judge_failure_stays_unresolved(snapshot, scenarios):
         for n in (1, 2)
     ]
     result = await grade_conversation(
-        scenarios["manual-15"], turns, snapshot, Unavailable(), trajectory_enabled=False
+        scenarios["scenario-15"], turns, snapshot, Unavailable(), trajectory_enabled=False
     )
     assert result["status"] == "ERROR"
     assert final_summary([result], 1)["exit_code"] == 2

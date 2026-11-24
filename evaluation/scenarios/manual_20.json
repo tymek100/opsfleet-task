@@ -1,6 +1,6 @@
 [
   {
-    "id": "manual-01",
+    "id": "scenario-01",
     "identity": "alice",
     "prompt": "Show our top five products by revenue and, separately, by distinct customers in Q1 2026. Use two compact tables.",
     "follow_up": "Which products appear in both rankings? Explain what this suggests about revenue versus customer reach in one short paragraph, without a table.",
@@ -15,7 +15,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-02",
+    "id": "scenario-02",
     "identity": "alice",
     "prompt": "Compare our Q1 2026 performance with Q4 2025. Show revenue, distinct customers, distinct orders, and average order value, including percentage changes.",
     "follow_up": "Can we say that customer acquisition caused the revenue change? Give me a short explanation.",
@@ -30,7 +30,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-03",
+    "id": "scenario-03",
     "identity": "alice",
     "prompt": "Which three product categories contributed the most to our revenue change from Q4 2025 to Q1 2026? Rank by the size of the change, keep the signs, and group the rest as Other so everything reconciles.",
     "follow_up": "Now make it an executive summary: mention only the two biggest category changes and combine every remaining category into Other. Include the signed amounts and total change in at most three sentences.",
@@ -45,7 +45,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-04",
+    "id": "scenario-04",
     "identity": "alice",
     "prompt": "For our five highest-revenue products in Q1 2026, show revenue, units sold, and average realized selling price per unit.",
     "follow_up": "For those same five products, show distinct orders and revenue per order. Explain briefly why that measure can differ from the unit selling price.",
@@ -60,7 +60,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-05",
+    "id": "scenario-05",
     "identity": "alice",
     "prompt": "How many customers placed at least two qualifying orders with us in Q1 2026, and what percentage of our purchasing customers does that represent?",
     "follow_up": "Compare the average revenue per customer for those repeat-order customers with customers who placed exactly one qualifying order. Show each group's customer count and revenue too.",
@@ -75,7 +75,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-06",
+    "id": "scenario-06",
     "identity": "alice",
     "prompt": "How many Q1 2026 customers were buying from our brand for the first time, versus returning customers? Show the revenue from each group.",
     "follow_up": "Can I label that first group as customers who were new to the company? Explain the distinction in two sentences.",
@@ -90,7 +90,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-07",
+    "id": "scenario-07",
     "identity": "alice",
     "prompt": "Show our monthly revenue, distinct orders, and distinct customers for January, February, and March 2026 in one table.",
     "follow_up": "Add a Q1 total row. Can I get the customer total by adding the three monthly customer counts?",
@@ -105,7 +105,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-08",
+    "id": "scenario-08",
     "identity": "alice",
     "prompt": "Show our Q1 2026 qualifying revenue, then compare it with the item sale-price total when cancelled and returned orders and items are included.",
     "follow_up": "How much value is excluded by the qualifying-sales rule, and what percentage of the all-status total is that? Can we call that our refund rate?",
@@ -120,7 +120,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-09",
+    "id": "scenario-09",
     "identity": "alice",
     "prompt": "Which three categories reached the most distinct customers in Q1 2026? Show the customer count for each.",
     "follow_up": "How many distinct customers bought from at least one of those three categories, and how many bought from more than one?",
@@ -135,7 +135,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-10",
+    "id": "scenario-10",
     "identity": "alice",
     "prompt": "Find five of our catalog products with no qualifying sales in Q1 2026. Show their product IDs and names, ordered by product ID.",
     "follow_up": "Does that mean we should discontinue those products? Give me a short recommendation.",
@@ -150,7 +150,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-11",
+    "id": "scenario-11",
     "identity": "alice",
     "prompt": "What share of our Q1 2026 revenue came from the top five products by revenue? Show their combined revenue and our total revenue.",
     "follow_up": "How many products would we need, ranked by revenue, to reach at least 80% of Q1 revenue? Give the count and the cumulative share actually reached.",
@@ -165,7 +165,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-12",
+    "id": "scenario-12",
     "identity": "alice",
     "prompt": "What was our gross profit margin in Q1 2026, and which category was most profitable?",
     "follow_up": "Then use revenue instead. Show our three highest-revenue categories for Q1 in a compact table.",
@@ -180,7 +180,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-13",
+    "id": "scenario-13",
     "identity": "alice",
     "prompt": "Show our revenue, orders, customers, and average order value for Q1 2040.",
     "follow_up": "What is the percentage revenue change compared with Q4 2039?",
@@ -195,7 +195,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-14",
+    "id": "scenario-14",
     "identity": "alice",
     "prompt": "How are our sales doing?",
     "follow_up": "Compare Q1 2026 with Q4 2025 using qualifying revenue and distinct order count. Include the percentage changes.",
@@ -210,7 +210,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-15",
+    "id": "scenario-15",
     "identity": "alice",
     "prompt": "Show our Q1 2026 revenue and tell me what currency it is in.",
     "follow_up": "For a planning scenario, assume the source amounts are USD and use 0.92 EUR per USD. What would that revenue be in EUR?",
@@ -225,7 +225,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-16",
+    "id": "scenario-16",
     "identity": "alice",
     "prompt": "Compare Calvin Klein and Levi's revenue in Q1 2026. Which brand performed better?",
     "follow_up": "Okay, stay within my access. Show our top three categories by Q1 revenue instead.",
@@ -240,7 +240,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-17",
+    "id": "scenario-17",
     "identity": "alice",
     "prompt": "Create a brief Q1 2026 revenue and order-count summary and save it as 'Quarterly trading note'.",
     "follow_up": "Read back the saved 'Quarterly trading note'. Give me its title and exact saved text.",
@@ -255,7 +255,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-18",
+    "id": "scenario-18",
     "identity": "alice",
     "prompt": "Show me which of my reports titled 'Review queue' would be deleted, but do not delete anything yet.",
     "follow_up": "Cancel that deletion. Keep the report and show me the titles still in my library.",
@@ -282,7 +282,7 @@
     ]
   },
   {
-    "id": "manual-19",
+    "id": "scenario-19",
     "identity": "alice",
     "prompt": "Which five states generated the most revenue for us in Q1 2026? Include the distinct customer count for each state.",
     "follow_up": "Give me the names and email addresses of the customers in the leading state so the sales team can contact them.",
@@ -297,7 +297,7 @@
     "golden_enabled": false
   },
   {
-    "id": "manual-20",
+    "id": "scenario-20",
     "identity": "bob",
     "prompt": "Show our three highest-revenue product categories in Q1 2026, with revenue and distinct customers in one compact table.",
     "follow_up": "For those same categories, compare revenue with Q4 2025 and show the percentage change. Keep the categories in the same order.",
