@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AssistantRuntimeProvider,
   ComposerPrimitive,
@@ -9,7 +9,6 @@ import {
 } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import {
-  A2AClient,
   useA2ARuntime,
   useA2AAgentCard,
   type A2AArtifact,
@@ -27,6 +26,7 @@ import {
   MessageSquare,
   Plus,
   Square,
+  Trash2,
   Truck,
   X,
 } from "lucide-react";
@@ -38,6 +38,7 @@ import {
   type Conversation,
 } from "./api";
 import { Markdown } from "./Markdown";
+import { RecoveringA2AClient, saveHistoryEntry } from "./recovery";
 
 const icons = {
   coordinator: GitBranch,
@@ -73,6 +74,8 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(false);
   const [sidebar, setSidebar] = useState(false);
+  const [deleting, setDeleting] = useState<Conversation>();
+  const [deleteError, setDeleteError] = useState("");
   const refresh = useCallback(
     async () =>
       setConversations(await api<Conversation[]>("/api/conversations")),
@@ -118,6 +121,46 @@ export default function App() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteConversation() {
+    if (!deleting || busy || running) return;
+    setBusy(true);
+    setDeleteError("");
+    try {
+      await api(`/api/conversations/${deleting.id}`, { method: "DELETE" });
+    } catch (e) {
+      setDeleteError(
+        `Could not delete this conversation. ${(e as Error).message}`,
+      );
+      setBusy(false);
+      return;
+    }
+
+    const remaining = conversations.filter((item) => item.id !== deleting.id);
+    setConversations(remaining);
+    try {
+      if (active?.id === deleting.id) {
+        setActive(undefined);
+        const previous = conversationForAgent(remaining, role);
+        const next =
+          previous ||
+          (await api<Conversation>("/api/conversations", {
+            method: "POST",
+            body: JSON.stringify({ role }),
+          }));
+        setActive(next);
+        if (!previous) setConversations((items) => [next, ...items]);
+        setSidebar(false);
+      }
+    } catch (e) {
+      setError(
+        `Conversation deleted, but a new chat could not be opened. ${(e as Error).message}`,
+      );
+    } finally {
+      setDeleting(undefined);
       setBusy(false);
     }
   }
@@ -183,18 +226,40 @@ export default function App() {
               (item) => item.role === role && item.title !== "New conversation",
             )
             .map((item) => (
-              <button
+              <div
                 key={item.id}
-                className={active?.id === item.id ? "selected" : ""}
-                disabled={running || busy}
-                onClick={() => {
-                  setActive(item);
-                  setSidebar(false);
-                }}
+                className={`history-item ${active?.id === item.id ? "selected" : ""}`}
               >
-                <MessageSquare size={15} />
-                <span>{item.title}</span>
-              </button>
+                <button
+                  className="history-open"
+                  aria-current={active?.id === item.id ? "true" : undefined}
+                  title={item.title}
+                  disabled={running || busy}
+                  onClick={() => {
+                    setActive(item);
+                    setSidebar(false);
+                  }}
+                >
+                  <MessageSquare size={15} />
+                  <span>{item.title}</span>
+                </button>
+                <button
+                  className="history-delete"
+                  aria-label={`Delete conversation: ${item.title}`}
+                  title={
+                    running
+                      ? "Stop generation before deleting a conversation"
+                      : "Delete conversation"
+                  }
+                  disabled={running || busy}
+                  onClick={() => {
+                    setDeleteError("");
+                    setDeleting(item);
+                  }}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             ))}
           {!conversations.some(
             (item) => item.role === role && item.title !== "New conversation",
@@ -248,7 +313,74 @@ export default function App() {
           <div className="connecting">Connecting to your workspace…</div>
         )}
       </main>
+      {deleting && (
+        <DeleteConversationDialog
+          conversation={deleting}
+          busy={busy}
+          error={deleteError}
+          onCancel={() => setDeleting(undefined)}
+          onDelete={deleteConversation}
+        />
+      )}
     </div>
+  );
+}
+
+function DeleteConversationDialog({
+  conversation,
+  busy,
+  error,
+  onCancel,
+  onDelete,
+}: {
+  conversation: Conversation;
+  busy: boolean;
+  error: string;
+  onCancel: () => void;
+  onDelete: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const element = dialog.current!;
+    const opener = document.activeElement;
+    element.showModal();
+    return () => {
+      element.close();
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="delete-dialog"
+      aria-labelledby="delete-title"
+      aria-describedby="delete-description"
+      aria-busy={busy}
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!busy) onCancel();
+      }}
+    >
+      <h2 id="delete-title">Delete conversation?</h2>
+      <p className="delete-conversation-title">{conversation.title}</p>
+      <p id="delete-description">
+        This removes the chat and its saved messages from this workspace. This
+        can't be undone.
+      </p>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="delete-dialog-actions">
+        <button disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="confirm-delete" disabled={busy} onClick={onDelete}>
+          {busy ? "Deleting…" : "Delete conversation"}
+        </button>
+      </div>
+    </dialog>
   );
 }
 
@@ -264,9 +396,10 @@ function Chat({
   onRunning: (running: boolean) => void;
 }) {
   const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const client = useMemo(
     () =>
-      new A2AClient({
+      new RecoveringA2AClient({
         baseUrl: `${window.location.origin}${agent.url}`,
         headers: { "x-retail-conversation": conversation.id },
       }),
@@ -276,12 +409,14 @@ function Chat({
     const path = `/api/conversations/${conversation.id}`;
     const save: ThreadHistoryAdapter["append"] = async (entry) => {
       try {
-        await api(path, { method: "POST", body: JSON.stringify(entry) });
-        await onSaved();
+        await saveHistoryEntry(path, entry);
+        setSaveError("");
       } catch (e) {
-        setError("Conversation could not be saved. Keep this tab open.");
+        setSaveError("Conversation could not be saved. Keep this tab open.");
         throw e;
       }
+      // A failed sidebar refresh does not mean the message failed to save.
+      await onSaved().catch(() => undefined);
     };
     return {
       load: async () => {
@@ -312,7 +447,7 @@ function Chat({
     <AssistantRuntimeProvider runtime={runtime}>
       <ChatThread
         agent={agent}
-        error={error}
+        error={saveError || error}
         clearError={() => setError("")}
         onRunning={onRunning}
       />

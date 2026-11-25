@@ -1,6 +1,7 @@
 """Browser gateway contracts without model calls or credentials in browser responses."""
 
 import json
+import sqlite3
 
 import httpx
 from starlette.testclient import TestClient
@@ -60,6 +61,50 @@ def test_catalog_history_and_browser_agent_isolation(tmp_path):
     ) as browser:
         browser.cookies.set("retail_assistant_session", cookie)
         assert browser.get(path).status_code == 404
+        assert browser.delete(path).status_code == 404
+
+
+def test_delete_history_checks_ownership_and_removes_only_selected_chat(tmp_path):
+    with TestClient(make_app(tmp_path), base_url="http://localhost:8080") as browser:
+        deleted = browser.post("/api/conversations", json={"role": "coordinator"}).json()["id"]
+        kept = browser.post("/api/conversations", json={"role": "inventory"}).json()["id"]
+        cookie = browser.cookies.get("retail_assistant_session")
+        for identifier in (deleted, kept):
+            assert browser.post(
+                "/api/conversations/" + identifier,
+                json={
+                    "parentId": None,
+                    "message": {
+                        "id": "u1",
+                        "role": "user",
+                        "content": [{"type": "text", "text": "Saved question"}],
+                    },
+                },
+            ).status_code == 200
+        path = "/api/conversations/" + deleted
+        browser.cookies.clear()
+        assert browser.delete(path).status_code == 404
+        browser.cookies.set("retail_assistant_session", cookie)
+        assert browser.get(path).status_code == 200
+        assert browser.delete(path).status_code == 204
+        assert browser.get(path).status_code == 404
+        assert browser.post(path, json={}).status_code == 404
+        assert browser.delete(path).status_code == 404
+        assert (
+            browser.post(
+                "/api/agents/coordinator/message:stream",
+                json={},
+                headers={"x-retail-conversation": deleted},
+            ).status_code == 403
+        )
+        assert [item["id"] for item in browser.get("/api/conversations").json()] == [kept]
+        assert len(browser.get("/api/conversations/" + kept).json()["messages"]) == 1
+    with sqlite3.connect(tmp_path / "conversations.sqlite3") as db:
+        assert db.execute("SELECT conversation FROM messages").fetchall() == [(kept,)]
+    with TestClient(make_app(tmp_path), base_url="http://localhost:8080") as browser:
+        browser.cookies.set("retail_assistant_session", cookie)
+        assert browser.get(path).status_code == 404
+        assert [item["id"] for item in browser.get("/api/conversations").json()] == [kept]
 
 
 def test_maps_derived_history_is_redacted_before_disk_write(tmp_path):

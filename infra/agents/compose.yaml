@@ -125,6 +125,8 @@ services:
       RETAIL_DATA_PROFILE: ${RETAIL_STACK_DATA_PROFILE:-default}
     ports: ["127.0.0.1:${INSPECTOR_PORT:-8080}:8080"]
     restart: unless-stopped
+    # Let in-flight streams finish within the gateway's 180-second task allowance.
+    stop_grace_period: 240s
     init: true
     read_only: true
     cap_drop: [ALL]

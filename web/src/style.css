@@ -196,6 +196,70 @@ button {
 .history-list .selected {
   background: #22313e;
 }
+.history-item {
+  display: flex;
+  align-items: center;
+  border-radius: 7px;
+}
+.history-list .history-open {
+  flex: 1;
+  min-width: 0;
+}
+.history-list .history-delete {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  color: #91a3b4;
+}
+.history-list .history-delete:hover:not(:disabled) {
+  color: #ffb4ab;
+  background: #422c34;
+}
+.delete-dialog {
+  width: min(440px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid #dce4e9;
+  border-radius: 16px;
+  color: #192635;
+  background: #f8fafb;
+  box-shadow: 0 20px 60px #111c2740;
+}
+.delete-dialog::backdrop {
+  background: #111c2780;
+}
+.delete-dialog h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+.delete-dialog p {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.delete-conversation-title {
+  font-weight: 600;
+}
+.delete-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.delete-dialog-actions button {
+  padding: 10px 14px;
+  border: 1px solid #c9d4dc;
+  border-radius: 8px;
+  background: white;
+  color: #192635;
+  font-size: 14px;
+}
+.delete-dialog-actions .confirm-delete {
+  border-color: #b12c37;
+  background: #b12c37;
+  color: white;
+}
 .sidebar-footer {
   display: flex;
   align-items: center;

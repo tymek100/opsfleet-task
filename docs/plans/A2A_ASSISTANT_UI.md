@@ -133,6 +133,7 @@ Exit: all four services and existing Python callers work with protocol 1.0 in of
 
 - Answer streaming means A2A task progress followed by the reviewed artifact. Unreviewed model tokens are not published.
 - Completed conversations resume after reload. Keep the tab open while a request runs, or use Stop before leaving; recovering an in-flight browser stream after reload is not implemented. Server deadlines still bound the work.
+- An open tab recovers interrupted streams by fetching the existing task, without resubmitting the question. Recovery is bounded to 210 seconds from submission; history saves retry transient failures for 30 seconds. GUI shutdown allows 240 seconds for existing streams to finish.
 - GUI history uses its own browser cookie and volume. Clearing cookies loses browser access to those conversations. Old Inspector UI sessions are not imported; existing agent contexts, reports and tasks remain stored.
 - The full model/warehouse evaluation suites were deliberately not rerun. Verification used scripted model boundaries and real protocol/gateway/browser execution. **No paid model or warehouse queries were made for this migration.**
 - The production bundle is approximately 260 KB gzipped; Vite reports an advisory chunk-size warning. Two existing Python dependency warnings remain (Starlette TestClient's httpx deprecation and ADK's experimental function-schema feature).
