@@ -1,4 +1,4 @@
--- Synthetic evaluation data; separate from runtime Golden Knowledge.
+-- Synthetic evaluation data for independent reference checks.
 CREATE TABLE fixture_products (product_id INTEGER, brand VARCHAR, category VARCHAR, product_name VARCHAR);
 INSERT INTO fixture_products VALUES
 (1001, 'Calvin Klein', 'Outerwear', 'Harbor Wool Coat'),

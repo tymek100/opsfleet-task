@@ -37,7 +37,6 @@ def provenance():
         p
         for folder in (
             Path("src/retail_insight"),
-            Path("knowledge/golden"),
             HERE,
         )
         for p in folder.rglob("*")

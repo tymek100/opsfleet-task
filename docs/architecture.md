@@ -63,7 +63,7 @@ flowchart TD
     A -->|Limit reached| X
 ```
 
-[`Analyst.ask`](../src/retail_insight/runtime/analyst.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context records all-brand access, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
+[`Analyst.ask`](../src/retail_insight/runtime/analyst.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context records all-brand access, the UTC instant and date, prior answer handles, result counts, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
 
 The analyst executes an iterative tool loop and submits Markdown through `finish_answer`, referencing supporting evidence. It selects prose, lists, or tables according to the request.
 
@@ -84,7 +84,7 @@ The retail [tool registration](../src/retail_insight/agents/retail/tools.py) exp
 | Data discovery and queries | `describe_data`, `query_data`, `query_state_summary` |
 | Result inspection and calculation | `read_result`, `analyze_results` |
 | Runtime guidance | `load_skill`, `load_skill_resource` |
-| Golden Knowledge | `list_golden`, `read_golden` |
+| Conversation context | `read_context` |
 | Report and answer retrieval | `search_reports`, `read_report`, `read_answer` |
 | Report operations | `stage_report_save`, `preview_report_deletion`, `cancel_report_deletion` |
 | Reviewed completion | `finish_answer` |
@@ -96,21 +96,16 @@ typed evidence. The analyst can submit those evidence handles to the reviewer wi
 warehouse query. Historical report contents do not become current business facts, and private
 deletion confirmation tokens are excluded from model-visible observations.
 
-## Knowledge and evaluation assets
+## Skills and evaluation assets
 
 | Resource | Role | Location |
 |---|---|---|
 | Skills | Analytical and writing procedures, loaded on demand | Agent `skills/` directories, shared `runtime/skills/library/`, and `review/skills/`; [authoring guide](../src/retail_insight/runtime/skills/README.md) |
-| Golden Knowledge | Reusable question/SQL/answer examples | [`knowledge/golden/`](../knowledge/golden/README.md) |
 | Evaluation references | Frozen cases, criteria, numeric facts, and fixtures; never supplied to the analyst | [`evaluation/datasets/`](../evaluation/datasets/README.md) |
 | Authored conversations | 20 fixed questions and follow-ups, with acceptance criteria kept outside agent context | [`evaluation/scenarios/`](../evaluation/scenarios/README.md) |
 | Judge calibration | Labeled candidate answers for testing the independent evaluator | `evaluation/datasets/judge_calibration/` |
 
-The analyst receives skill metadata and selects relevant instructions. The reviewer always receives the analytical-review skill. Skills neither execute scripts nor grant permissions.
-
-`list_golden` returns up to 20 summaries per page with a continuation offset. The analyst selects examples for `read_golden` or proceeds without them. Eligibility checks enforce approval, visibility, scope, schema/metric compatibility, and content integrity before disclosure.
-
-`--golden-bootstrap` enables 11 synthetic examples. These provide methods, not current business facts or company-approved reports; current facts require query evidence. Evaluation references remain outside the runtime catalog.
+Runtime example retrieval has been removed. The analyst receives skill metadata and selects relevant instructions. The reviewer always receives the analytical-review skill. Skills neither execute scripts nor grant permissions.
 
 ## Data and authorization
 
@@ -222,7 +217,7 @@ retail_insight/
 
 Each agent owns its definition while reusing the same reviewed execution loop. The four Docker services select their agent through the registry; separate deployments do not require duplicated runtimes. `retail-agent`, `retail-stack` and `retail-eval` keep their existing command names.
 
-Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests. Evaluation references remain outside the application package and agent images.
+Local demo data lives in `src/retail_insight/integrations/bigquery/`; agents obtain current answers through their data tools. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests. Evaluation references remain outside the application package and agent images.
 
 ## Independent evaluation
 
@@ -273,4 +268,4 @@ flowchart LR
 
 See [Testing and evaluation](evaluation.md) for offline checks, live runs, grading, and Phoenix commands. The [rebuild plan](plans/EVALUATION_REBUILD_PLAN.md) and [review](plans/EVALUATION_REVIEW.md) retain the rollout and acceptance criteria.
 
-Outstanding production work includes real identity and authorization infrastructure, managed storage, automatic recovery of interrupted tasks, operational retention policies, Golden Knowledge publishing, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.
+Outstanding production work includes real identity and authorization infrastructure, managed storage, automatic recovery of interrupted tasks, operational retention policies, and validated release thresholds. Synthetic tests and a mandatory reviewer reduce specific failure modes; they do not guarantee absence of hallucinations.

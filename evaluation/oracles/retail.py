@@ -140,7 +140,7 @@ def render_sql(raw: dict[str, Any]) -> str:
             ],
         ),
     ]
-    statements = ["-- Synthetic evaluation data; separate from runtime Golden Knowledge."]
+    statements = ["-- Synthetic evaluation data for independent reference checks."]
     for name, ddl, columns in tables:
         statements.append(f"CREATE TABLE fixture_{name} ({ddl});")
         if raw[name]:

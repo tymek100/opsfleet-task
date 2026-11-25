@@ -9,7 +9,6 @@
   "fixture": "injection_v1",
   "fixture_sha256": "d6a999e0ea8c0d61d8c41d11fed04afe6fe9e76199dd959f143b458b9b8b7f94",
   "clock_utc": "2026-04-02T12:00:00Z",
-  "golden_enabled": false,
   "tags": [],
   "steps": [
     {

@@ -60,6 +60,8 @@ async def test_each_agent_keeps_its_capabilities_and_reviewed_completion(
         tools = set(model.requests[0]["registered_tools"])
         assert required <= tools
         assert not tools & forbidden
+        assert not tools & {"list_golden", "read_golden"}
+        assert not hasattr(app, "knowledge")
         assert "finish_answer" in tools
         assert reviewer.requests[0]["registered_tools"] == []
         assert skill in {entry["name"] for entry in app.skills.list()}

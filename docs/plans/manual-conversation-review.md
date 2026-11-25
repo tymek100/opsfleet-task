@@ -7,7 +7,7 @@
 On 22 November 2026, we ran the same 20 authored retail conversations, each with one fixed
 follow-up, in **three complete phases: 120 real-model turns** against BigQuery's public
 `bigquery-public-data.thelook_ecommerce` sample. The model was `gemini-3.8-flash`; the reporting
-clock was fixed at `2026-11-22T18:56:20+00:00`. Runtime golden examples were disabled.
+clock was fixed at `2026-11-22T18:56:20+00:00`.
 
 These are realistic, assistant-authored questions, **not captured production conversations**.
 The source is public sample data, not an actual company's production warehouse. Nineteen

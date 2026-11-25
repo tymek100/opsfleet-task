@@ -425,7 +425,6 @@ def main():
             ),
             "turn_timeout_seconds": float(os.getenv("TURN_TIMEOUT_SECONDS", "240")),
             "question_budget_usd": float(os.getenv("QUESTION_BUDGET_USD", "2")),
-            "golden_bootstrap": os.getenv("GOLDEN_BOOTSTRAP", "true").lower() == "true",
         }
     )
     secret = Path(os.environ["A2A_SIGNING_KEY_FILE"]).read_text().strip()

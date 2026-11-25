@@ -15,7 +15,7 @@ The updated plan addresses the findings below. P1 items should precede reliance 
 
 **Gap:** ordinary incorrect-answer calibration does not test instructions embedded in candidate text or evidence. A manipulated judge can approve a numerically wrong answer while returning valid JSON.
 
-**Amendment:** test product values, tool errors, retrieved reports, Golden examples, reviewer candidates, and offline grader inputs. Keep rubrics/reference facts outside candidate-controlled fields. Validate labels, spans, and evidence IDs in code; deterministic failures override model grades. Offline judges have no tools or mutation authority.
+**Amendment:** test product values, tool errors, retrieved reports, reviewer candidates, and offline grader inputs. Keep rubrics/reference facts outside candidate-controlled fields. Validate labels, spans, and evidence IDs in code; deterministic failures override model grades. Offline judges have no tools or mutation authority.
 
 **Acceptance:** wrapping an audited wrong answer in an approval instruction cannot turn it into a pass. Benign quotations remain gradeable. Report blocked attempts, actual data/action violations, and grader manipulation separately. OpenAI documents attempts to influence monitors and graders through generated content; our surface-specific tests are an application adaptation. [OpenAI monitoring research, 2026-03-19](https://openai.com/index/how-we-monitor-internal-coding-agents-misalignment/)
 

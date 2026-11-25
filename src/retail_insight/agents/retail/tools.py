@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from retail_insight.review.completion import CompletionTools
 from retail_insight.tools.analytics import DataTools
-from retail_insight.tools.knowledge import KnowledgeTools
 from retail_insight.tools.reports import ReportTools
 from retail_insight.tools.skills import SkillTools
 
@@ -17,7 +16,6 @@ if TYPE_CHECKING:
 def build_tools(turn: Turn) -> list:
     """Bind domain tools to one shared question state and accounting boundary."""
     data = DataTools(turn)
-    knowledge = KnowledgeTools(turn)
     reports = ReportTools(turn)
     completion = CompletionTools(turn)
     skills = SkillTools(turn)
@@ -25,8 +23,6 @@ def build_tools(turn: Turn) -> list:
         data.describe_data,
         skills.load_skill,
         skills.load_skill_resource,
-        knowledge.list_golden,
-        knowledge.read_golden,
         data.query_data,
         data.read_result,
         data.analyze_results,

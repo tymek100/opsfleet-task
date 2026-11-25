@@ -5,7 +5,6 @@ from pathlib import Path
 
 from retail_insight.agents.retail.tools import build_tools
 from retail_insight.integrations.bigquery.retail import QueryGateway
-from retail_insight.integrations.knowledge import GoldenStore
 from retail_insight.runtime.prompts import analyst_prompt
 from retail_insight.runtime.service import ServiceAnalyst
 from retail_insight.runtime.skills import SkillCatalog
@@ -26,13 +25,6 @@ class RetailAnalyst(ServiceAnalyst):
 
     def build_skills(self):
         return SkillCatalog()
-
-    def build_knowledge(self):
-        return GoldenStore(
-            self.settings.golden_path,
-            None,
-            bootstrap=self.settings.golden_bootstrap,
-        )
 
     def build_gateway(self, clock):
         return QueryGateway(

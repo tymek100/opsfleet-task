@@ -15,7 +15,6 @@
       "product_rankings_q1",
       "ranking_overlap"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -35,7 +34,6 @@
       "quarter_changes",
       "first_scoped_purchase"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -55,7 +53,6 @@
       "category_remainders",
       "quarter_changes"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -74,7 +71,6 @@
       "product_rankings_q1",
       "product_units_prices_orders_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -92,7 +88,6 @@
     "oracle_topics": [
       "repeat_order_cohorts_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -111,7 +106,6 @@
       "first_scoped_purchase",
       "new_returning_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -131,7 +125,6 @@
       "quarter_totals",
       "cross_month_customer_overlap"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -151,7 +144,6 @@
       "all_status_q1",
       "excluded_status_value_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -170,7 +162,6 @@
       "category_customer_rankings_q1",
       "selected_category_customer_overlap_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -188,7 +179,6 @@
     "oracle_topics": [
       "catalog_without_qualifying_sales_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -206,7 +196,6 @@
     "oracle_topics": [
       "product_revenue_concentration_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -225,7 +214,6 @@
       "available_schema",
       "category_revenue_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -244,7 +232,6 @@
       "empty_future_periods",
       "zero_denominator"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -264,7 +251,6 @@
       "quarter_changes",
       "clarification"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -283,7 +269,6 @@
       "quarter_totals",
       "hypothetical_currency_conversion"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -302,7 +287,6 @@
       "brand_scope",
       "category_revenue_q1"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -321,7 +305,6 @@
       "quarter_totals",
       "report_save_and_read"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -340,7 +323,6 @@
       "report_delete_preview_cancel",
       "report_owner_isolation"
     ],
-    "golden_enabled": false,
     "initial_reports": [
       {
         "owner": "workspace",
@@ -371,7 +353,6 @@
       "state_aggregates_q1",
       "contact_data_boundary"
     ],
-    "golden_enabled": false,
     "requested_brand": "Calvin Klein"
   },
   {
@@ -390,7 +371,6 @@
       "requested_brand_category_revenue_q1",
       "requested_brand_selected_category_changes"
     ],
-    "golden_enabled": false,
     "requested_brand": "Levi's"
   }
 ]

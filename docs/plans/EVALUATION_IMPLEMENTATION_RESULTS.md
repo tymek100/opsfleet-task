@@ -5,7 +5,7 @@
 ## Delivered
 
 - Replaced the old `evals/`, historical runners and test implementations with `evaluation/` and a reconstructed offline suite.
-- Added 43 canonical cases, nine independent fixtures and 40 paired judge controls. Runtime Golden Knowledge remains separate from evaluation references.
+- Added 43 canonical cases, nine independent fixtures and 40 paired judge controls. Evaluation references remain outside agent context.
 - Added isolated conversations, frozen clocks, typed confirmation/cancellation, scheduled faults, per-prompt budgets, run-wide limits and frozen artifact hashes.
 - Added independent Decimal/set references, bound-fact checks, observed-evidence grading, exact report-state checks and versioned grader outputs.
 - Added local Phoenix traces, datasets, experiments and annotations. Publication imports saved results rather than executing agent tasks again.
@@ -15,7 +15,7 @@ Canonical pilot v3 clarifies previously implicit acceptance requirements. Its 43
 
 ## Verification
 
-The completed offline suite passed **249 tests**; the optional Phoenix service test passed separately. Ruff, formatting and Pyright passed. The runtime Golden validator also passed all 11 examples, 14 queries and 23 explicit reference facts.
+The completed offline suite passed **249 tests**; the optional Phoenix service test passed separately. Ruff, formatting and Pyright passed.
 
 The checks cover scope, SQL restrictions, metric grain, statuses, UTC boundaries, NULLs, zero denominators, category reconciliation, pagination, budgets, provider settlement/retry, exact publication, private reports, deletion confirmation, context bounds, CLI behavior, reference isolation, grading failures and capture redaction. Offline tests block ambient dotenv and Google credential discovery.
 

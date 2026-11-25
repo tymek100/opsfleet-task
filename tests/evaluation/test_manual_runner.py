@@ -21,6 +21,13 @@ def scenario(name="scenario-01"):
     )
 
 
+def test_archived_scenario_ignores_retired_retrieval_setting():
+    archived = {**scenario().model_dump(), "golden_enabled": True}
+    loaded = Scenario.model_validate(archived)
+    assert loaded.prompt == scenario().prompt
+    assert "golden_enabled" not in loaded.model_dump()
+
+
 async def test_capture_preserves_followup_context_but_isolates_cases_and_reference_metadata(
     settings, tmp_path
 ):

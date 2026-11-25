@@ -219,7 +219,7 @@ async def test_parallel_finish_cannot_approve_before_other_tool_finishes(make_ag
     assert len(app.reviewer_model.requests) == 1
 
 
-async def test_runtime_skills_and_golden_methods_are_not_numerical_evidence(make_agent):
+async def test_runtime_skills_are_not_numerical_evidence(make_agent):
     app = make_agent(
         [
             calls(("load_skill", {"name": "revenue-driver-analysis"})),
@@ -229,20 +229,14 @@ async def test_runtime_skills_and_golden_methods_are_not_numerical_evidence(make
                     {"name": "revenue-driver-analysis", "path": "references/measurement-guide.md"},
                 )
             ),
-            calls(("list_golden", {})),
-            calls(("read_golden", {"example_id": "average_scoped_order_value"})),
             finish("Which period should I query?", outcome="clarification"),
         ],
         [verdict()],
-        golden_bootstrap=True,
     )
     result = await app.ask("How would you investigate a revenue change?")
     assert result.answer is not None
     assert app.results == {} and result.evidence == []
-    requests = json.dumps(app.model.requests)
-    assert "not current analytical evidence" in requests
     reviewer = json.dumps(app.reviewer_model.requests)
-    assert "average_scoped_order_value" in reviewer
     assert "revenue-driver-analysis" in reviewer
     assert "confirm_delete" not in app.model.requests[0]["registered_tools"]
 

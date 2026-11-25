@@ -38,7 +38,7 @@ def launcher(tmp_path, monkeypatch):
     )
     for relative in (
         "src/retail_insight/integrations/bigquery/fixtures.json",
-        "knowledge/fixtures/retail_seed_v1.sql",
+        "src/retail_insight/integrations/bigquery/retail_demo.sql",
     ):
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)

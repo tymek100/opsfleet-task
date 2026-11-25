@@ -11,7 +11,7 @@ Status: implemented and running on BigQuery. The full fixture baseline, targeted
 - The coordinator chooses specialist calls dynamically. Specialists do not recursively delegate. All model calls, tool calls and reviews have bounded execution.
 - Only distribution uses external MCP: Google's managed Maps Experience endpoint, with route/weather tools and explicit failure when credentials or data are unavailable.
 - A2A Inspector supplies the GUI, Agent Cards and protocol inspection. Phoenix supplies traces, evaluation datasets and experiments.
-- Each new role receives 20 independent two-turn evaluation scenarios. References and grading code stay outside agent images and prompts; runtime Golden examples remain separate method demonstrations.
+- Each new role receives 20 independent two-turn evaluation scenarios. References and grading code stay outside agent images and prompts.
 - Initial reproducible evaluations use independently calculated fixture references. Live BigQuery and Maps checks are reported separately; synthetic success is not a claim of live integration success.
 
 ## Execution checklist
@@ -41,7 +41,7 @@ Status: implemented and running on BigQuery. The full fixture baseline, targeted
 - [x] Distribution: scoped center attribution, inventory distribution, missing-center reconciliation and facility locations.
 - [x] Maps: MCP discovery, allowlist, argument validation, timeout, attribution and explicit unavailable results. Provider content remains ephemeral.
 - [x] Coordinator: role discovery, dynamic delegation, evidence combination and explicit limitations.
-- [x] Add role instructions, runtime skills and eight optional Golden method examples for each new agent.
+- [x] Add role instructions, runtime skills for each new agent.
 
 ### 4. Evaluation
 

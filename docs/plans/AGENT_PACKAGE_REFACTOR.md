@@ -24,7 +24,7 @@ The wheel build and editable installation pass offline. The wheel includes all f
 
 Each agent selects its own prompt, skills and tools. `runtime/` handles the ADK loop, state and budgets. `review/` implements the shared completion protocol. `integrations/` owns BigQuery, Maps MCP, Phoenix and local storage. `a2a/` exposes the selected agent as a service. `interfaces/` supplies the CLI and GUI gateway.
 
-Shared skill composition preserves existing availability; relocating guidance does not change its instructions. Runtime Golden examples remain in `knowledge/golden/`; independent evaluation datasets remain in `evaluation/` and outside agent images.
+Shared skill composition preserves existing availability; relocating guidance does not change its instructions. Independent evaluation datasets remain in `evaluation/` and outside agent images.
 
 ## Validation scope
 

@@ -34,6 +34,5 @@ def test_legacy_brand_context_cannot_reinstate_restrictions_or_change_report_own
         assert app.identity.user_id == "archive-owner"
         assert app.identity.brands is None
         assert app.gateway.brands is None
-        assert app.knowledge._brands is None
     finally:
         app.reports.close()

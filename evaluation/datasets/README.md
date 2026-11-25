@@ -2,7 +2,7 @@
 
 **Status:** 43 synthetic pilot cases and 40 paired judge controls are implemented and independently checked in code. Human reference review, human judge calibration, and a sealed holdout remain pending. These assets support diagnostics; they do not establish production accuracy.
 
-`golden/` contains evaluation tasks and trusted references. It is separate from runtime `knowledge/golden/`, which provides reusable methods to the analyst. Only the fixed workspace identity and user steps enter the task adapter. Every agent has all-brand access. A case's `reference_scope` describes an explicit analytical filter in its question, not an authorization boundary; it remains grader-only. The harness configures frozen SQL fixtures, the clock, report seeds, faults, and Golden Knowledge availability; reference answers, facts, and criteria remain grader-only.
+`golden/` contains evaluation tasks and trusted references. These references are available only to the evaluation harness. Only the fixed workspace identity and user steps enter the task adapter. Every agent has all-brand access. A case's `reference_scope` describes an explicit analytical filter in its question, not an authorization boundary; it remains grader-only. The harness configures frozen SQL fixtures, the clock, report seeds and faults; reference answers, facts, and criteria remain grader-only.
 
 - `golden/dev/`: 36 development cases, including three focused challenges.
 - `golden/regression/`: 7 synthetic reproductions of reported failure families.

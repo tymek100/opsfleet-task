@@ -30,7 +30,7 @@ def case_named(name: str) -> Case:
     return load_cases(name)[0]
 
 
-def test_pilot_admission_is_honest_and_runtime_knowledge_remains_separate():
+def test_pilot_admission_is_honest_and_evaluation_fixtures_are_separate():
     report = validate_dataset()
     assert report["valid"], report["errors"]
     assert report["cases"] == 43
@@ -41,7 +41,7 @@ def test_pilot_admission_is_honest_and_runtime_knowledge_remains_separate():
     assert len(load_cases("challenge")) == 3
     assert all(not case.provenance.human_reviewed for case in load_cases())
     assert all(case.provenance.oracle_verified for case in load_cases())
-    assert "knowledge/golden" not in str(fixture_path(case_named("totals-q1")))
+    assert fixture_path(case_named("totals-q1")).parent == data.DATASETS.parent / "fixtures"
     with pytest.raises(ValueError, match="Unknown suite"):
         load_cases("not-a-suite")
 
@@ -56,6 +56,14 @@ def test_oracle_cannot_reuse_application_sql_or_gateway():
         for alias in node.names
     ]
     assert not any(name.startswith(("retail_insight", "duckdb", "sqlglot")) for name in imports)
+
+
+def test_archived_retrieval_setting_is_ignored_and_never_written_to_new_cases():
+    case = case_named("totals-q1")
+    archived = {**case.model_dump(), "golden_enabled": True}
+    loaded = Case.model_validate(archived)
+    assert loaded.references == case.references
+    assert "golden_enabled" not in loaded.model_dump()
 
 
 def test_reference_admission_rejects_mutated_fact_instead_of_relaxing_tolerance():

@@ -2,7 +2,7 @@
 
 Three independent development suites contain **20 conversations each**, with an initial question and one follow-up: inventory, distribution, and coordinator. The existing retail dataset is preserved. These are authored scenarios, not production traffic or a sealed holdout.
 
-`scenarios.py` defines requests and acceptance criteria. `fixture.json` and `retail_fixture.sql` contain the same frozen source rows in the two runtime formats. Agent containers receive only these raw sources, never this package's references or judges. Runtime Golden Knowledge uses separate fixtures and examples.
+`scenarios.py` defines requests and acceptance criteria. `fixture.json` and `retail_fixture.sql` contain the same frozen source rows in the two runtime formats. Agent containers receive only these raw sources, never this package's references or judges. Local demo fixtures are separate from these evaluation sources.
 
 `oracle.py` derives expected facts directly from raw rows using Decimal arithmetic and sets. It does not call the runtime query compiler or copy agent outputs. References include numeric bindings, criteria and illustrative prose for both turns; exact wording is not graded. The cutoff is `2026-04-01T00:00:00Z`. A table snapshot version, when used, is recorded separately.
 

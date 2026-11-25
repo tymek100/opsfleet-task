@@ -5,7 +5,7 @@
 These are the exact 20 initial prompts and 20 follow-ups frozen for the live review.
 They are authored scenarios against the public TheLook sample, not production transcripts.
 Use a fresh conversation and isolated report store for each numbered case. Send its follow-up
-in the same conversation after the initial response. Runtime golden examples are disabled.
+in the same conversation after the initial response.
 
 The [scenario JSON](../../evaluation/scenarios/manual_20.json) contains acceptance checks and
 the isolated report seeds required for case 18. Results and methodology are in the

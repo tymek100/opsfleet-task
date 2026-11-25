@@ -82,7 +82,6 @@ class CompletionTools:
             "candidate": {"markdown": markdown, "outcome": outcome},
             "evidence": evidence,
             "other_results_manifest": self.turn.app.result_manifest(),
-            "retrieved_methods": self.turn.retrieved,
             "loaded_skills": list(self.turn.loaded_skills.values()),
             "pending_save": self.turn.pending_save,
             "save_target": {"id": target.id, "markdown": target.markdown} if target else None,

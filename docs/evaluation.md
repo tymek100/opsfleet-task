@@ -73,7 +73,7 @@ uses metadata-only tracing. Warehouse and Maps credentials never enter the trace
 The runner calls actual A2A endpoints in the four agent containers. Each scenario gets a new
 conversation; its follow-up reuses only that scenario's context. Independent raw fixture rows
 are mounted into warehouse adapters, while expected values and grading criteria stay on the
-host. Runtime Golden examples use separate fixture values and remain optional methods.
+host. Local demo data is separate from evaluation fixtures.
 
 Expected facts are calculated with independent Decimal arithmetic and sets. A separate LLM
 extracts answer claims and assesses grounding against observed tool results; code compares
@@ -229,7 +229,7 @@ The command executes and grades conversations until the run limit is reached:
    grounding/completeness and tool use, and check persisted report state.
 6. Save local artifacts and publish answers and scores after each conversation, then write a summary.
 
-Runtime Golden retrieval is disabled. Expected reference values never reach the analyst.
+Expected reference values never reach the analyst.
 Completed spans appear during execution; enable trace streaming in Phoenix. Refresh the
 experiment view for newly uploaded results. Neither view streams individual tokens.
 
@@ -334,7 +334,6 @@ plugin is disabled so tests cannot automatically create `tests/integration/...` 
 
 | Collection | Purpose | Analyst access |
 |---|---|---|
-| [knowledge/golden/](../knowledge/golden/README.md) | Optional analytical examples | Eligible examples when enabled |
 | [evaluation/scenarios/](../evaluation/scenarios/README.md) | 20 authored conversations and behavioral criteria | Questions only; criteria remain hidden |
 | [evaluation/datasets/golden/](../evaluation/datasets/README.md) | 43 controlled cases across nine fixtures | User steps and scoped tools; references remain hidden |
 

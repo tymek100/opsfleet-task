@@ -47,9 +47,6 @@ class Analyst:
     def build_skills(self):
         raise NotImplementedError("Each agent supplies its guidance catalog")
 
-    def build_knowledge(self):
-        raise NotImplementedError("Each agent supplies its method examples")
-
     def build_gateway(self, clock):
         raise ValueError("This agent requires an explicitly configured data gateway")
 
@@ -92,7 +89,6 @@ class Analyst:
         self.reviewer_model = reviewer_model
         self.skills = self.build_skills()
         self.gateway = gateway if gateway is not None else self.build_gateway(clock)
-        self.knowledge = self.build_knowledge()
         self.reports = reports or ReportStore(
             settings.data_dir / "reports-v2.sqlite3", clock=lambda: self.now().timestamp()
         )

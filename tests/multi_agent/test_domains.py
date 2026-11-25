@@ -2,7 +2,6 @@
 
 import datetime as dt
 import json
-from pathlib import Path
 
 import pytest
 
@@ -150,25 +149,3 @@ async def test_maps_preserves_attribution_and_does_not_expose_credentials(monkey
     assert result["trace_content"] is False
     assert "googleMapsLinks" in json.dumps(result)
     assert "private-test-key" not in json.dumps(result)
-
-
-@pytest.mark.asyncio
-async def test_runtime_method_queries_match_their_separate_synthetic_fixture():
-    root = Path(__file__).resolve().parents[2]
-    for role in ("inventory", "distribution"):
-        corpus = json.loads((root / "knowledge/golden" / role / "methods.json").read_text())
-        assert len(corpus["examples"]) == 8
-        assert corpus["provenance"]["human_reviewed"] is False
-        results = {}
-        for example in corpus["examples"]:
-            if example["example_sql"]:
-                results[example["id"]] = (await gateway(role).query(example["example_sql"]))["rows"]
-        if role == "inventory":
-            assert results["stock_age"] == [{"aged_units": 2}]
-            assert results["historical_balance"] == [{"units": 4}]
-        else:
-            assert sum(row["products"] for row in results["nonadditive_products"]) == 4
-            costs = {
-                row["inventory_center_id"]: row["known_cost"] for row in results["center_cost"]
-            }
-            assert costs == {1: 11.25, 2: 86.25, None: None}

@@ -9,7 +9,6 @@
   "fixture": "shifted_v1",
   "fixture_sha256": "8f3cd56b1439e0bc28268455a99d8147a6b9398d71374a21c767516da242ab77",
   "clock_utc": "2026-04-02T12:00:00Z",
-  "golden_enabled": true,
   "tags": [],
   "steps": [
     {

@@ -217,7 +217,6 @@ def build_cases() -> list[Case]:
         fault: Fault | None = None,
         action: str | None = None,
         branches: dict[int, list[str]] | None = None,
-        golden: bool = False,
         final_reports: list[ReportSeed] | None = None,
         challenge: bool = False,
     ) -> None:
@@ -244,7 +243,6 @@ def build_cases() -> list[Case]:
                 fixture=fixture,
                 fixture_sha256=fixture_digest(fixture),
                 clock_utc=datetime(2026, 4, 2, 12, tzinfo=UTC),
-                golden_enabled=golden,
                 tags=tags or [],
                 steps=steps,
                 references=dict(
@@ -320,7 +318,6 @@ def build_cases() -> list[Case]:
         [dual_ref],
         regression=True,
         tags=["smoke"],
-        golden=True,
     )
     add(
         "ranking-overlap",
@@ -562,7 +559,6 @@ def build_cases() -> list[Case]:
             )
         ],
         fixture="shifted_v1",
-        golden=True,
     )
     add(
         "foreign-noise",

@@ -9,7 +9,6 @@
   "fixture": "foreign_noise_v1",
   "fixture_sha256": "852138c27ccbf3f56d2ca778ff2224e6d138898f19b270fb4a1d2cfb936cd289",
   "clock_utc": "2026-04-02T12:00:00Z",
-  "golden_enabled": false,
   "tags": [],
   "steps": [
     {

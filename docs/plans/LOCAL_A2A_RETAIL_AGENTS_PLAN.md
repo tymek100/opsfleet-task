@@ -6,7 +6,7 @@ Date: 2026-11-24. Status: implementation proposal; the services, images, command
 
 ## 1. Objective and decisions
 
-Extend the existing retail analyst into a local system with four independently deployed agents: sales analysis, inventory analysis, distribution-center analysis, and a coordinator. Each agent has its own Docker image, A2A endpoint, Agent Card, prompts, skills, and runtime Golden Knowledge. A ready-made browser UI exposes the cards and conversations; Phoenix retains traces and independent evaluations.
+Extend the existing retail analyst into a local system with four independently deployed agents: sales analysis, inventory analysis, distribution-center analysis, and a coordinator. Each agent has its own Docker image, A2A endpoint, Agent Card, prompts, skills. A ready-made browser UI exposes the cards and conversations; Phoenix retains traces and independent evaluations.
 
 | Decision | Initial implementation |
 |---|---|
@@ -26,7 +26,6 @@ Local hosting does not make Gemini or BigQuery local. A fixture backend supports
 
 - [Analyst.ask](../../src/retail_insight/runtime/analyst.py) owns conversation context, the ADK tool loop, per-prompt budgets and reviewed publication.
 - [QueryGateway](../../src/retail_insight/integrations/bigquery/retail.py) exposes scoped `sales`, `transactions` and `products`. Geography is available only through the restricted state-summary tool.
-- [GoldenStore](../../src/retail_insight/integrations/knowledge.py) applies scope, version, provenance and integrity checks. Its 11 bootstrap examples are synthetic methods, not current facts or human-approved company knowledge.
 - [Runtime skills](../../src/retail_insight/runtime/skills/README.md) provide optional analytical procedures and mandatory review guidance.
 - [Evaluation](../evaluation.md) already separates runtime knowledge from grader-only references, captures follow-ups, and publishes to local Phoenix.
 
@@ -115,9 +114,9 @@ Later, add a separate, explicitly synthetic dataset with `supplier_terms`, `purc
 | Agent | Proposed capabilities | Initial runtime skills |
 |---|---|---|
 | Retail | Preserve existing discovery, SQL, result calculation, knowledge and report tools | Existing analytical skills |
-| Inventory | `describe_inventory`, scoped `query_inventory`, result inspection/calculation, read supplied evidence, Golden retrieval | Stock grain and as-of analysis; stock aging; demand coverage; replenishment assumptions |
-| Distribution | `describe_distribution`, scoped `query_distribution`, `calculate_center_distances`, result inspection/calculation, Golden retrieval | Center reconciliation; attribution quality; stock concentration; geographic limitations |
-| Coordinator | `list_agents`, `delegate`, `get_task`, `cancel_task`, `read_artifact`, bounded `analyze_results`, Golden retrieval and report tools | Task decomposition; evidence reconciliation; uncertainty; multi-agent report writing |
+| Inventory | `describe_inventory`, scoped `query_inventory`, result inspection/calculation, read supplied evidence | Stock grain and as-of analysis; stock aging; demand coverage; replenishment assumptions |
+| Distribution | `describe_distribution`, scoped `query_distribution`, `calculate_center_distances`, result inspection/calculation | Center reconciliation; attribution quality; stock concentration; geographic limitations |
+| Coordinator | `list_agents`, `delegate`, `get_task`, `cancel_task`, `read_artifact`, bounded `analyze_results` and report tools | Task decomposition; evidence reconciliation; uncertainty; multi-agent report writing |
 
 Use composable read-only SQL over allowlisted logical relations; do not add a separate tool or route for every business question. Query schemas and calculation definitions belong to application contracts. Models choose the analysis and presentation.
 
@@ -189,7 +188,7 @@ Mount credentials read-only and provide them only to services that require them.
 
 Maintain a reviewed descriptor for each agent, used to generate its card for the pinned A2A version. Include its name, version, domain description, advertised interfaces, supported input/output modes, authentication requirements and actual skills. Advertise streaming/cancellation only when implemented and tested.
 
-Publish each card at `/.well-known/agent-card.json`. Cards describe how to call an agent; they do not contain system prompts, API keys, Golden answers or evaluation references. The protocol permits direct configuration and curated discovery; it does not require a particular registry product. [A2A discovery](https://a2a-protocol.org/latest/topics/agent-discovery/)
+Publish each card at `/.well-known/agent-card.json`. Cards describe how to call an agent; they do not contain system prompts, API keys, evaluation references. The protocol permits direct configuration and curated discovery; it does not require a particular registry product. [A2A discovery](https://a2a-protocol.org/latest/topics/agent-discovery/)
 
 ### Local catalog
 
@@ -220,37 +219,13 @@ Cards advertise client-reachable internal endpoints such as `http://inventory:80
 
 Use one multi-stage Dockerfile with four explicit final targets and four separately tagged images. Share only common runtime layers. Package each agent's tools, prompts, skills and eligible knowledge; exclude evaluation references, development captures, `.env`, credentials and the repository `.git` directory using explicit build inputs and `.dockerignore`.
 
-Update package manifests explicitly: the current wheel includes both `retail_insight` and `evaluation`. Agent image builds must install a runtime-only distribution/target, while the evaluation runner keeps its own package and dependencies. An image-content check verifies that grader references and unrelated agents' knowledge are absent; `.dockerignore` alone cannot remove files already included in a wheel.
+Update package manifests explicitly: the current wheel includes both `retail_insight` and `evaluation`. Agent image builds must install a runtime-only distribution/target, while the evaluation runner keeps its own package and dependencies. An image-content check verifies that grader references are absent; `.dockerignore` alone cannot remove files already included in a wheel.
 
 Add per-service readiness/liveness checks, non-root users, bounded resources, graceful shutdown and independent task/report volumes. Use locked dependencies and image digests. Fixture and BigQuery modes use separate configuration profiles; the default Compose network still needs outbound provider access for live runs.
 
 Reuse the existing Phoenix volume and process when already running. A developer-stack launcher should attach agents to an accessible Docker network or start the existing Phoenix definition, then print Inspector and Phoenix URLs. It must not create a second conflicting port-6006 stack or remove data volumes on shutdown.
 
-## 10. Golden Knowledge and independent golden evaluation
-
-These are two different assets for every agent:
-
-| Asset | Visible to the agent? | Purpose |
-|---|---|---|
-| Runtime Golden Knowledge | Yes, through scoped retrieval tools | Examples of methods, valid reasoning boundaries and presentation |
-| Golden evaluation dataset | Only task input and permitted environment | Independent facts, expected behavior and reference answers for graders |
-
-### Runtime collections
-
-| Collection | Initial target | Example families |
-|---|---|---|
-| Retail | Preserve existing 11 examples | Rankings, cohorts, status analysis, comparisons and reporting |
-| Inventory | 8 new examples | As-of stock, aging, cost coverage, unsold products, demand coverage, zero demand, missing data and unsupported replenishment claims |
-| Distribution | 8 new examples | Center totals, zero-stock centers, unknown attribution, concentration, product spread, age by center, straight-line distance and missing capacity data |
-| Coordinator | 8 new examples | Single-specialist delegation, combined analysis, optional concurrency, conflicting evidence, clarification, partial failure, follow-up reuse and report synthesis |
-
-Each example records a question, method notes, input assumptions, source fixture/snapshot, observed tool results, calculation or query provenance, an **LLM-authored illustrative answer**, scope, versions and review status. Coordinator examples contain delegation/evidence methods instead of fabricated SQL. Store observed task summaries, not hidden model reasoning or a mandatory tool sequence.
-
-Extend the Golden schema with typed query and delegation examples while accepting the existing retail schema. Make corpus roots explicit: the current loader assumes `knowledge/golden` when resolving fixture paths, so simply moving files into nested role directories would break validation. Preserve path containment and whole-corpus integrity checks.
-
-Each agent receives only its own eligible collection and approved shared metric guidance. Use `list_golden` and `read_golden`; retain LLM selection with no keyword filter or fixed intent router. Examples may be ignored. Current claims require fresh authorized evidence, regardless of example quality.
-
-Generate drafts against frozen knowledge fixtures, verify numbers independently, inspect every answer, and record author/model/prompt provenance. Keep generated collections labeled synthetic and not human-approved until actual human review occurs. Bootstrap access remains an explicit opt-in. Never publish runtime examples automatically from passing evaluation outputs.
+## 10. Independent evaluation
 
 ### Evaluation datasets
 
@@ -338,13 +313,6 @@ src/
     integrations/               # BigQuery, Maps MCP, Phoenix and storage
     a2a/                        # Transport, authentication and task storage
     interfaces/                 # CLI and GUI gateway
-knowledge/
-  golden/
-    bootstrap.json              # Existing retail collection remains compatible
-    inventory/
-    distribution/
-    coordinator/
-  fixtures/                     # Runtime-example fixtures only
 evaluation/
   scenarios/
     manual_20.json              # Existing scenario-01 … scenario-20
@@ -391,7 +359,7 @@ These commands are an interface proposal, **not commands that work in the curren
 uv run retail-stack up --backend bigquery
 
 # Use the coordinator through A2A from a client inside the Compose network.
-uv run retail-stack chat --user alice --golden-bootstrap
+uv run agent-chat coordinator
 
 # Run a bounded multi-agent smoke suite and publish live progress/results to Phoenix.
 uv run --group evaluation retail-eval run-multi-agent \

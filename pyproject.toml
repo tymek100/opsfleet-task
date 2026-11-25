@@ -1,7 +1,7 @@
 [project]
 name = "retail-insight-agent"
 version = "0.2.0"
-description = "Autonomous retail analyst with Golden retrieval and evaluated completion"
+description = "Multi-agent retail analytics with reviewed answers and independent evaluation"
 requires-python = ">=3.12"
 dependencies = [
   "google-adk==2.12.0",
@@ -14,7 +14,6 @@ dependencies = [
   "rich>=15,<16",
   "python-dotenv>=1.2,<2",
   "duckdb>=2.0.0",
-  "jsonschema>=4.0",
   "prompt-toolkit>=3.0.52,<4",
   "pytz>=2025.2",
   "a2a-sdk[http-server]>=0.3.24,<0.4",

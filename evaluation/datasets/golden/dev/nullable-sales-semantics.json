@@ -9,7 +9,6 @@
   "fixture": "nullable_v1",
   "fixture_sha256": "4b388739c087d31e503e3739d6c9fdf12b4242333e58a97020170ba7dae3e616",
   "clock_utc": "2026-04-02T12:00:00Z",
-  "golden_enabled": false,
   "tags": [
     "challenge"
   ],

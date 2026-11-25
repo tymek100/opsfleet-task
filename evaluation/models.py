@@ -121,7 +121,6 @@ class Case(Record):
     fixture: str
     fixture_sha256: str
     clock_utc: datetime
-    golden_enabled: bool = False
     tags: list[str] = Field(default_factory=list)
     steps: list[Step]
     references: dict[str, TurnReference]
@@ -130,6 +129,14 @@ class Case(Record):
     expected_final_reports: list[ReportSeed] | None = None
     faults: list[Fault] = Field(default_factory=list)
     provenance: Provenance = Field(default_factory=Provenance)
+
+    @model_validator(mode="before")
+    @classmethod
+    def read_historical_case(cls, value):
+        """Keep frozen runs readable after retiring runtime example retrieval."""
+        if isinstance(value, dict) and "golden_enabled" in value:
+            return {key: item for key, item in value.items() if key != "golden_enabled"}
+        return value
 
     @model_validator(mode="after")
     def validate_structure(self) -> Case:

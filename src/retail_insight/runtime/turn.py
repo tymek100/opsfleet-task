@@ -26,7 +26,6 @@ class Turn:
         self.trace: list[dict] = []
         self.answer: Answer | None = None
         self.new_results: list[str] = []
-        self.retrieved: list[dict] = []
         self.loaded_skills: dict[str, dict] = {}
         self.pending_save: dict | None = None
         self.deletion_preview: dict | None = None

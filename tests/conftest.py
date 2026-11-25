@@ -1,7 +1,6 @@
 """Isolated settings and real local services; no environment or credentials lookup."""
 
 import os
-from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
@@ -79,15 +78,12 @@ def warehouse_fixture(tmp_path):
 
 @pytest.fixture
 def settings(tmp_path, warehouse_fixture):
-    root = Path(__file__).resolve().parents[1]
     return Settings.model_construct(
         gemini_api_key=SecretStr("offline-placeholder"),
         google_cloud_project="offline-project",
         data_dir=tmp_path / "app",
         backend="fixture",
         fixture_path=warehouse_fixture,
-        golden_path=root / "knowledge/golden/bootstrap.json",
-        golden_bootstrap=False,
         turn_timeout_seconds=60,
         review_reserve_seconds=1,
         question_budget_usd=10,

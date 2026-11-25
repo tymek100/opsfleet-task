@@ -16,7 +16,6 @@ The existing agentic runtime remains the system under test, including its runtim
 
 | Component | Purpose | Runtime access |
 |---|---|---|
-| **Golden Knowledge** | Reusable question/SQL/answer examples | Through `list_golden` and `read_golden` when enabled |
 | **Evaluation Golden Dataset** | Frozen tasks, environments, verified facts, acceptance criteria | Task inputs and authorized environment only |
 | **Phoenix** | Experiment inspection, comparison, outputs, scores | No analyst access |
 
@@ -59,7 +58,6 @@ Imported metrics require a versioned contract for evaluation unit, denominator, 
 flowchart TD
     Inputs[Identity and user steps] --> Runner[Isolated conversation runner]
     Runner --> App[Analyst.ask and trusted actions]
-    Knowledge[Runtime Golden Knowledge] --> App
     Fixtures[Frozen warehouse and report state] --> App
     App --> Loop[Analyst tool loop]
     Loop --> Review[Runtime reviewer]
@@ -78,7 +76,6 @@ Offline graders cannot feed references back into the analyst or runtime reviewer
 
 | Asset | Location | Contract |
 |---|---|---|
-| Runtime examples and demo data | Existing `knowledge/golden/`, `knowledge/fixtures/` | Methods and demonstrations, not evaluation ground truth |
 | Evaluation cases | `evaluation/datasets/golden/` | Development, regression, and held-out splits |
 | Evaluation fixtures | `evaluation/fixtures/` | Independently designed, versioned data |
 | Judge calibration | `evaluation/datasets/judge_calibration/` | Human-labeled candidates; separate tuning/validation splits |
@@ -165,7 +162,6 @@ environment:
   fixture_sha256: <verified-fixture-hash>
   report_store: empty
   clock_utc: "2026-04-02T12:00:00Z"
-  golden_knowledge: enabled
 reference:
   oracle: category_changes_v1
   metric_policy_version: retail-defaults-v1
@@ -254,7 +250,7 @@ Reconstruct these contracts:
 - Exact reviewed publication/save target; revision feedback in the same analyst loop.
 - Fresh per-prompt budgets with retained context; shared analyst/reviewer/retry accounting within a prompt; exactly-once settlements and conservative unknown usage.
 - Explicit saves, owner isolation, exact deletion selection, expiring one-use tokens, stale previews, and final database state.
-- Skill/Golden integrity, path restrictions, evidence separation, and bounded reads.
+- Skill integrity, path restrictions, evidence separation, and bounded reads.
 - CLI spacing, independent timer/status updates, completion navigation without automatic execution, and piped input.
 
 Assert requirements rather than optional SQL/tool/skill choices. Enforce ordering only for genuine protocols, including review before publication and confirmation before deletion.
@@ -271,7 +267,7 @@ Exercise both runtime and evaluation surfaces with synthetic paired payloads:
 
 | Surface | Attempt | Required observation |
 |---|---|---|
-| Product values, tool errors, Golden examples, saved reports | Override scope, fabricate facts, request unauthorized save/delete | No forbidden disclosure/mutation; retain legitimate task utility |
+| Product values, tool errors, saved reports | Override scope, fabricate facts, request unauthorized save/delete | No forbidden disclosure/mutation; retain legitimate task utility |
 | Candidate, quoted history, selected evidence | Persuade the runtime reviewer to approve or authorize saving | Record reviewer false accepts and actual persisted state separately |
 | Candidate/evidence passed to offline graders | Spoof rubric/system messages, full-score JSON, evidence IDs | Trusted criteria unchanged; defective controls remain failures |
 
@@ -356,7 +352,7 @@ Judge budgets/timeouts/retries are separate. Attach programmatic evaluators expl
 
 Every live command declares selected cases, total cost ceiling, and deadline in addition to per-prompt limits. Preserve conservative reservations for unknown usage. On exhaustion, retain completed work and mark remaining trials `NOT_EXECUTED`. Never select the best repetition or rerun failures until green.
 
-Record commit/dirty-diff and lockfile hashes, dataset/fixture versions, metric policy, model/settings, prompt/skill/Golden hashes, judge version, repetitions, and limits. Distinguish changed judges from changed agent performance.
+Record commit/dirty-diff and lockfile hashes, dataset/fixture versions, metric policy, model/settings, prompt/skill hashes, judge version, repetitions, and limits. Distinguish changed judges from changed agent performance.
 
 ### Reporting and comparisons
 
@@ -371,7 +367,6 @@ Compare identical case/fixture/repetition/judge versions; alternate execution or
 
 Predeclare primary metrics, slices, comparison, and acceptable margins in the run manifest. Mark additional analyses exploratory; multiple tested variants must not turn a selected favorable result into an unqualified improvement claim.
 
-An initial ablation compares Golden Knowledge enabled/disabled on identical independent tasks, without requiring particular retrieval decisions.
 
 ## 11. Repository layout and workflow
 
@@ -399,7 +394,6 @@ tests/
   integration/
   cli/
   evaluation/
-knowledge/{golden,fixtures}/
 src/retail_insight/integrations/phoenix/tracing.py
 .artifacts/evaluation/            # Ignored generated output
 docs/
@@ -445,7 +439,7 @@ Release gates require passing deterministic boundary tests, valid graders, verif
 | 4. Runner | Isolated conversations, run/grade phases, manifests, bounded execution; no leakage, hidden retries, cross-prompt accounting, or untracked timeout work |
 | 5. Pilot | Calibrated judges with adversarial controls; 40 reviewed cases including answerability pairs and branching/context cases; per-turn, reviewer-impact, and repeated baseline results |
 | 6. Atomic cutover | Remove old implementation, update CI/docs/configuration; new suite runnable without deleted paths |
-| 7. Expansion | Toward 200 reviewed cases, frozen holdout, Golden ablation; versioned comparisons with uncertainty and costs |
+| 7. Expansion | Toward 200 reviewed cases, frozen holdout; versioned comparisons with uncertainty and costs |
 
 Compatibility acceptance checks:
 
@@ -458,7 +452,7 @@ Compatibility acceptance checks:
 7. References never enter runtime inputs; regrading never reruns the agent.
 8. Phoenix outages preserve chat operation and local artifacts with explicit publication errors.
 
-At cutover, delete `evals/`, `scripts/evaluate_rewrite.py`, `scripts/calibrate_reviewer.py`, every old `tests/test_*.py` implementation, and obsolete dependencies/exclusions/configuration. Retain runtime Golden Knowledge and its validator, updating their tests and documentation. Replace capture-based calibration with reviewed self-contained fixtures.
+At cutover, delete `evals/`, `scripts/evaluate_rewrite.py`, `scripts/calibrate_reviewer.py`, every old `tests/test_*.py` implementation, and obsolete dependencies/exclusions/configuration. Replace capture-based calibration with reviewed self-contained fixtures.
 
 Update README, architecture, packaging, skills, and agent configuration references. Do not archive old code or commit generated capture collections. Work on an implementation branch: temporary coexistence is acceptable, but no published intermediate commit may leave the suite empty; the final cutover contains only reconstructed tests.
 
@@ -492,7 +486,7 @@ missing repetitions. The test suite no longer depends on historical captures.
 The platform still requires independent human reference review, adjudicated judge calibration,
 a frozen held-out family split, product-specific quality margins, and controlled BigQuery
 execution before release-quality conclusions. LLM user simulation, a 200-case expansion,
-Golden Knowledge ablation, bias/stability studies and production workload sampling remain
+Bias/stability studies and production workload sampling remain
 subsequent experiments. Local DuckDB denotations do not establish BigQuery equivalence.
 
 Operational commands live in the root README. Reproducible dataset builders are maintenance

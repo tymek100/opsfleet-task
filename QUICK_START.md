@@ -39,12 +39,11 @@ Use the coordinator for tasks combining sales, inventory and distribution. These
 ## Standalone retail conversation
 
 ```bash
-uv run retail-agent chat --golden-bootstrap
+uv run retail-agent chat
 ```
 
 The CLI has no user selection. Every new question can analyze all brands; request a brand explicitly when needed, for example, "Show Calvin Klein revenue in Q1 2026." Follow-ups preserve that requested filter. Read-only SQL and privacy checks still apply.
 
-`--golden-bootstrap` explicitly enables the synthetic, unapproved reference methods. The analyst selects examples from eligible summaries and may use none. Current numerical answers require fresh authorized queries. Without the flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
 
 Example conversations:
 
@@ -57,7 +56,7 @@ What was our average order value in Q1 2026? Answer in one short paragraph witho
 
 Which category earned the most revenue per active selling day in Q1 2026?
 
-Consult a relevant Golden example, then calculate our Q1 2026 repeat-customer share from current authorized data.
+Calculate our Q1 2026 repeat-customer share from current data.
 
 Write a short Q1 2026 report and suggest two measurable actions for Q2. Do not save it yet.
 Save that exact report as Q1 2026 Review.
@@ -70,7 +69,7 @@ The model generates the complete answer, including optional tables, and the eval
 This mode uses the real Gemini model with analytical queries against a frozen local fixture:
 
 ```bash
-uv run retail-agent chat --backend fixture --golden-bootstrap
+uv run retail-agent chat --backend fixture
 ```
 
 The fixture has three products sold in Q1 across Calvin Klein and Levi's, one unsold product and invented transactions. A request for five products should explain that fewer qualify. All-brand qualifying Q1 revenue is 1,275, across six orders and five customers; an explicit Calvin Klein filter gives 375. It contains no geography. These are demonstration figures, not live company results.
@@ -80,7 +79,7 @@ One-shot example:
 ```bash
 uv run retail-agent ask \
   "What was our average order value in Q1 2026? No table." \
-  --backend fixture --golden-bootstrap
+  --backend fixture
 ```
 
 ## Reports and evidence
@@ -121,7 +120,6 @@ Offline checks use isolated settings, temporary stores and scripted providers:
 uv sync --group evaluation
 uv run --group evaluation pytest
 uv run --group evaluation retail-eval validate
-uv run python scripts/validate_golden_bootstrap.py
 uv run ruff check .
 uv run ruff format --check .
 uv run --group evaluation pyright
@@ -142,8 +140,7 @@ to a $2 cap; `--max-cost-usd` can lower it, but higher values are rejected. One 
 deadline cover the agent and judges; the suite may stop before completing all cases. No separate grading or publishing command is needed.
 
 For metrics, saved answers, advanced regrading, and comparisons, follow
-[the testing and evaluation guide](docs/evaluation.md). Runtime Golden Knowledge and evaluation
-references are separate. Regrading a saved run never executes the agent again.
+[the testing and evaluation guide](docs/evaluation.md). Evaluation references remain outside agent context. Regrading a saved run never executes the agent again.
 
 ## Configuration
 

@@ -18,7 +18,6 @@ RUN groupadd --gid 10001 agent && useradd --uid 10001 --gid agent --no-create-ho
     && mkdir /data && chown agent:agent /data
 COPY --from=dependencies /app/.venv /app/.venv
 COPY src /app/src
-COPY knowledge /app/knowledge
 COPY infra/agents/entrypoint.py /app/entrypoint.py
 USER agent
 EXPOSE 8000

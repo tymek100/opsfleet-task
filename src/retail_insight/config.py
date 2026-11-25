@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 def repository_root() -> Path:
     for parent in Path(__file__).resolve().parents:
-        if (parent / "knowledge/golden/bootstrap.json").exists():
+        if (parent / "pyproject.toml").is_file():
             return parent
     return Path.cwd()
 
@@ -25,12 +25,8 @@ class Settings(BaseSettings):
     review_thinking_level: Literal["low", "medium", "high"] = "medium"
     data_dir: Path = Path(".retail-agent")
     backend: Literal["bigquery", "fixture"] = "bigquery"
-    golden_bootstrap: bool = False
-    golden_path: Path = Field(
-        default_factory=lambda: repository_root() / "knowledge/golden/bootstrap.json"
-    )
     fixture_path: Path = Field(
-        default_factory=lambda: repository_root() / "knowledge/fixtures/retail_seed_v1.sql"
+        default_factory=lambda: Path(__file__).parent / "integrations/bigquery/retail_demo.sql"
     )
     turn_timeout_seconds: float = Field(default=120, ge=1, le=600)
     question_budget_usd: float = Field(default=1, gt=0, le=10)

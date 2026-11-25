@@ -123,7 +123,7 @@ def prepare(backend: str, evaluation_fixtures: bool = False) -> None:
             if evaluation_fixtures
             else (
                 ROOT / "src/retail_insight/integrations/bigquery/fixtures.json",
-                ROOT / "knowledge/fixtures/retail_seed_v1.sql",
+                ROOT / "src/retail_insight/integrations/bigquery/retail_demo.sql",
             )
         )
         source_profile["fixture_hashes"] = [

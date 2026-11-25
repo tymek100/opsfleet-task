@@ -19,7 +19,7 @@ from types import SimpleNamespace
 from typing import Any
 from urllib.parse import quote
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
@@ -48,8 +48,15 @@ class Scenario(BaseModel):
     intent: str
     checks: list[str]
     oracle_topics: list[str] = Field(default_factory=list)
-    golden_enabled: bool = False
     initial_reports: list[InitialReport] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def read_historical_scenario(cls, value):
+        """Ignore the retired retrieval flag in archived scenario manifests."""
+        if isinstance(value, dict) and "golden_enabled" in value:
+            return {key: item for key, item in value.items() if key != "golden_enabled"}
+        return value
 
 
 def load_scenarios(path: Path, only: str | None = None) -> list[Scenario]:
@@ -74,7 +81,6 @@ def _source_paths() -> list[Path]:
         [
             *root.glob("src/retail_insight/**/*.py"),
             *root.glob("src/retail_insight/**/*.md"),
-            *root.glob("knowledge/golden/*.json"),
             *root.glob("evaluation/**/*.py"),
             root / "uv.lock",
         ]
@@ -187,7 +193,6 @@ async def run_manual(
                 "gemini_api_key",
                 "google_cloud_project",
                 "data_dir",
-                "golden_path",
                 "fixture_path",
             },
         ),
@@ -262,7 +267,6 @@ async def run_manual(
                 isolated = config.model_copy(
                     update={
                         "data_dir": Path(temporary),
-                        "golden_bootstrap": scenario.golden_enabled,
                     }
                 )
                 app = None

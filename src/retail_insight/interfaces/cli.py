@@ -58,14 +58,12 @@ def _close_tracing(session: TracingSession | None) -> None:
         console.print("Phoenix tracing could not finish; the answer is unaffected.")
 
 
-def build(backend: str | None, bootstrap: bool) -> Analyst:
+def build(backend: str | None) -> Analyst:
     settings = Settings.load()
     if backend:
         if backend not in ("bigquery", "fixture"):
             raise typer.BadParameter("Backend must be bigquery or fixture.")
         settings.backend = backend
-    if bootstrap:
-        settings.golden_bootstrap = True
     # SDK logs can contain arbitrary generated arguments; the app records metadata itself.
     for name in ("google.adk", "google_genai", "httpx", "httpcore"):
         logging.getLogger(name).setLevel(logging.CRITICAL)
@@ -119,12 +117,11 @@ async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
 def ask(
     prompt: Annotated[str, typer.Argument(help="Question in English.")],
     backend: str | None = None,
-    golden_bootstrap: bool = False,
     output_json: Path | None = None,
     phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
 ) -> None:
     """Answer one question; optionally capture its answer, evidence and metadata."""
-    analyst = build(backend, golden_bootstrap)
+    analyst = build(backend)
     tracing = _start_tracing(phoenix, analyst.settings)
     try:
         result = asyncio.run(run_question(analyst, prompt))
@@ -149,10 +146,6 @@ async def conversation(analyst: Analyst) -> None:
     )
     if analyst.settings.backend == "fixture":
         console.print("Data: frozen synthetic fixture (not live company results).")
-    if analyst.settings.golden_bootstrap:
-        console.print(
-            "Golden retrieval: synthetic example methods enabled; current facts still require queries."
-        )
     session = (
         create_prompt_session()
         if sys.stdin.isatty() and console.is_terminal and not console.is_dumb_terminal
@@ -227,11 +220,10 @@ async def conversation(analyst: Analyst) -> None:
 @app.command()
 def chat(
     backend: str | None = None,
-    golden_bootstrap: bool = False,
     phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
 ) -> None:
     """Start an interactive conversation with ephemeral history and persistent reports."""
-    analyst = build(backend, golden_bootstrap)
+    analyst = build(backend)
     tracing = _start_tracing(phoenix, analyst.settings)
     try:
         asyncio.run(conversation(analyst))
@@ -243,7 +235,7 @@ def chat(
 @app.command()
 def import_legacy(path: Path) -> None:
     """Copy your legacy reports into the new library; the source remains unchanged."""
-    analyst = build("fixture", False)
+    analyst = build("fixture")
     try:
         console.print_json(data=analyst.reports.import_legacy(path, analyst.identity.user_id))
         console.print(

@@ -20,12 +20,12 @@ def values(snapshot, topic, identity="workspace"):
     return {f.metric: f.value for f in snapshot.calculate(topic, identity)}
 
 
-def test_fixture_is_frozen_and_runtime_knowledge_is_independent():
+def test_fixture_is_frozen_and_runtime_demo_data_is_independent():
     snapshot = Snapshot.load(Path("evaluation/multi_agent/fixture.json"))
     assert snapshot.raw == build()
     assert Path("evaluation/multi_agent/retail_fixture.sql").read_text() == retail_sql(build())
-    knowledge = Path("knowledge/golden/bootstrap.json").read_text()
-    assert "Evaluation linen shirt" not in knowledge
+    demo = Path("src/retail_insight/integrations/bigquery/retail_demo.sql").read_text()
+    assert "Evaluation linen shirt" not in demo
 
 
 def test_stock_boundary_and_null_cost_truth():

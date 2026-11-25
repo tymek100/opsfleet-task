@@ -114,7 +114,6 @@ async def run_trial(
                 "backend": "fixture",
                 "fixture_path": fixture,
                 "data_dir": directory,
-                "golden_bootstrap": case.golden_enabled,
             }
         )
         schedule = Schedule(case.faults)

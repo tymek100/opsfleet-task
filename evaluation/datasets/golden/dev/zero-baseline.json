@@ -9,7 +9,6 @@
   "fixture": "zero_baseline_v1",
   "fixture_sha256": "420ed6c69ca5633bdcf65d62ef8f3057c852ca3c2ae98255b0c344ff9c0bbe03",
   "clock_utc": "2026-04-02T12:00:00Z",
-  "golden_enabled": false,
   "tags": [],
   "steps": [
     {

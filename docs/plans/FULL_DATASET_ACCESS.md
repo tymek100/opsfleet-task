@@ -11,7 +11,7 @@ Service authentication, tool boundaries, privacy controls, execution budgets and
 ## Checklist
 
 - [x] Remove the demo-user catalog and CLI user options.
-- [x] Use all-brand runtime warehouses and Golden retrieval.
+- [x] Use all-brand runtime warehouses.
 - [x] Update prompts to distinguish requested brand filters from access permissions.
 - [x] Configure the GUI and A2A client for the local workspace access token.
 - [x] Preserve report ownership isolation and historical data.
@@ -31,7 +31,7 @@ The older controlled pilot can use explicit reference filters while agents retai
 Runtime coverage includes all four agent types, cross-brand visibility, explicit SQL brand filters, and preservation of report ownership when legacy internal context is supplied. Verification completed:
 
 - Full offline suite: 527 passed, 5 live/Phoenix cases deselected; two dependency warnings.
-- Ruff lint/format and Pyright pass. All 11 runtime Golden examples validate (14 SQL queries and 23 evidence facts).
+- Ruff lint/format and Pyright pass.
 - Rebuilt all four agents and the GUI on BigQuery. All health endpoints and Agent Cards respond; workspace Bearer authentication is advertised.
 - The GUI establishes a fresh workspace session and automatically connects to the coordinator.
 - One live coordinator request compared Calvin Klein and Levi's qualifying revenue in Q1 2026. Delegation completed with an approved answer and `scope: all brands`, using the workspace Bearer credential. Recorded accounted usage was $0.114148 against a $1.50 ceiling; this is application accounting, not a provider invoice.

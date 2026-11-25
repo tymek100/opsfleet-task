@@ -4,7 +4,6 @@ x-common-environment: &common-environment
   BACKEND: ${RETAIL_STACK_BACKEND:-fixture}
   DATA_DIR: /data
   RETAIL_DATA_PROFILE: ${RETAIL_STACK_DATA_PROFILE:-default}
-  GOLDEN_BOOTSTRAP: ${RETAIL_STACK_GOLDEN_BOOTSTRAP:-true}
   A2A_SIGNING_KEY_FILE: /run/secrets/a2a_signing_key
   A2A_ACCESS_TOKEN_FILE: /run/secrets/a2a_access_token
   A2A_CATALOG_PATH: /app/catalog.json

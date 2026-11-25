@@ -76,7 +76,6 @@ def prepare_run(
     paths = [
         *repo.glob("src/retail_insight/**/*.py"),
         *repo.glob("src/retail_insight/**/*.md"),
-        *repo.glob("knowledge/golden/*.json"),
     ]
     safe_settings = settings.model_dump(
         mode="json",
@@ -84,7 +83,6 @@ def prepare_run(
             "gemini_api_key",
             "google_cloud_project",
             "data_dir",
-            "golden_path",
             "fixture_path",
         },
     )

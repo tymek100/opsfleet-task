@@ -53,30 +53,28 @@ See [evaluation instructions](docs/evaluation.md) and the [validation report](ev
 
 ```bash
 uv sync --python 3.12
-uv run retail-agent chat --golden-bootstrap
+uv run retail-agent chat
 ```
 
-New questions cover all brands unless you request a brand filter, for example, "Show Calvin Klein revenue in Q1 2026." Configure your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). `--golden-bootstrap` enables the repository's 11 synthetic reference methods. Current answers require fresh evidence. Without this flag, only eligible approved examples from the configured corpus are available.
+New questions cover all brands unless you request a brand filter, for example, "Show Calvin Klein revenue in Q1 2026." Configure your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). Current answers require fresh query evidence.
 
 For real Gemini calls against a frozen synthetic dataset, without BigQuery credentials:
 
 ```bash
-uv run retail-agent chat --backend fixture --golden-bootstrap
+uv run retail-agent chat --backend fixture
 ```
 
-The application provides schema discovery, a Golden example catalog, warehouse queries, local result analysis, prior-answer access and private report management. The analyst selects examples from eligible summaries. Application services enforce permissions, privacy, budgets and deletion confirmation. Answers contain the model's reviewed Markdown; `/details` displays supporting SQL and evidence.
+The application provides schema discovery, warehouse queries, local result analysis, prior-answer access and private report management. Application services enforce permissions, privacy, budgets and deletion confirmation. Answers contain the model's reviewed Markdown; `/details` displays supporting SQL and evidence.
 
-Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Each agent owns its definition, tool registration, prompt and skills under `src/retail_insight/agents/<role>/`. Shared tools live in `tools/`, execution and accounting in `runtime/`, completion review in `review/`, and external adapters in `integrations/`. See [how skills and Golden examples work](docs/architecture.md#knowledge-and-evaluation-assets) and [skill authoring](src/retail_insight/runtime/skills/README.md).
+Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Each agent owns its definition, tool registration, prompt and skills under `src/retail_insight/agents/<role>/`. Shared tools live in `tools/`, execution and accounting in `runtime/`, completion review in `review/`, and external adapters in `integrations/`. See [how skills work](docs/architecture.md#skills-and-evaluation-assets) and [skill authoring](src/retail_insight/runtime/skills/README.md).
 
 - [Architecture](docs/architecture.md): the agent loop, tools, data access and implementation limits.
 - [Testing and evaluation](docs/evaluation.md): how tests, datasets, grading, and Phoenix work, with runnable commands.
 - [Evaluation design](docs/plans/EVALUATION_REBUILD_PLAN.md): independent references, grading contracts, and remaining validation work.
 - [Implementation results](docs/plans/EVALUATION_IMPLEMENTATION_RESULTS.md): verified checks, live trials, grader repairs and limitations.
-- [Golden examples](knowledge/golden/README.md): provenance, offline validation and publication rules.
 
 ```bash
 uv run --group evaluation pytest
-uv run python scripts/validate_golden_bootstrap.py
 uv run ruff check .
 uv run --group evaluation pyright
 ```
@@ -125,9 +123,8 @@ through `retail-eval run`, using a separate Phoenix endpoint such as port 6007. 
 and collector integration tests cannot use the main port 6006 workspace. The Phoenix pytest auto-publication
 plugin is disabled. See [Phoenix setup](infra/phoenix/README.md#disposable-test-instance).
 
-`knowledge/golden/` contains optional runtime methods; evaluation references never enter analyst
-context. Human reference review, judge calibration, and a sealed holdout remain pending.
+Evaluation references never enter analyst context. Human reference review, judge calibration, and a sealed holdout remain pending.
 
-The CLI workflow expects a source checkout: knowledge assets, Git metadata, and `uv.lock` are
+The CLI workflow expects a source checkout: runtime skills, Git metadata, and `uv.lock` are
 resolved from the repository. The wheel supports reference validation but is not a standalone
 distribution of the complete application.

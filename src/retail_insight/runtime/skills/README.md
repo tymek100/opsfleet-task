@@ -30,7 +30,7 @@ metadata:
 ---
 ```
 
-The name must match the directory. Describe the skill's scope and analytical pitfalls without prescribing a fixed investigation. Reference supporting files explicitly. Essential grounding requirements belong in core instructions; authorization remains application-controlled. Golden examples and evaluation fixtures belong outside this library.
+The name must match the directory. Describe the skill's scope and analytical pitfalls without prescribing a fixed investigation. Reference supporting files explicitly. Essential grounding requirements belong in core instructions; authorization remains application-controlled. Evaluation fixtures belong outside this library.
 
 Supported resources are flat `references/*.md` files. Skills contain instructions only: scripts, tool grants, arbitrary file access and dynamic tool registration are unsupported. `../tools/registry.py` defines the model-facing tool surface; services implement the operations.
 
@@ -38,7 +38,7 @@ The catalog uses ADK's native `load_skill_from_dir` parser after validating the 
 
 An `Analyst` instance loads an immutable snapshot of skill text and references. Restart the CLI after edits. Increment the version when changing a method; hashes identify exact content independently of version labels. The Python wheel includes all skill files, so discovery is independent of the working directory.
 
-See the [runtime architecture](../../../docs/architecture.md#knowledge-and-evaluation-assets) for how skills fit into the agent loop and the [testing overview](../../../docs/architecture.md#verification-and-planned-work) for validation. ADK documents the underlying [skills format and progressive disclosure](https://adk.dev/skills/).
+See the [runtime architecture](../../../../docs/architecture.md#skills-and-evaluation-assets) for how skills fit into the agent loop and the [testing overview](../../../../docs/architecture.md#independent-evaluation) for validation. ADK documents the underlying [skills format and progressive disclosure](https://adk.dev/skills/).
 
 
 ## Ownership

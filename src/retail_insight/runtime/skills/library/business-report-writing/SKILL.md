@@ -16,7 +16,7 @@ Unknown currency requires bare amounts; an "unspecified" caveat cannot justify d
 
 Separate measured findings from unverified hypotheses and proposed actions. An action can propose a measurable success criterion, owner or target, but label those as proposals; do not present invented operational facts, campaigns or decisions as observed. Revenue losses or category changes do not by themselves establish fulfillment, fit or marketing causes.
 
-Match every percentage to its actual denominator and scope. Avoid extrapolating a subset or a top-products list into a claim about the entire brand. Previous approved prose and Golden example figures are not current evidence; refresh measurements when the question calls for current facts.
+Match every percentage to its actual denominator and scope. Avoid extrapolating a subset or a top-products list into a claim about the entire brand. Previous approved prose is not current evidence; refresh measurements when the question calls for current facts.
 
 Honor explicit constraints such as one paragraph, no table or a short report. A brief answer does not need an audit trail, raw SQL, repeated caveats or orchestration details. Evidence IDs may support claims without becoming a policy appendix.
 

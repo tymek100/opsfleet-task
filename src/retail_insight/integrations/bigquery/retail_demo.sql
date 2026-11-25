@@ -1,4 +1,4 @@
--- Synthetic retail fixture for Golden Knowledge authoring only.
+-- Synthetic retail data for the local demo backend; never current BigQuery facts.
 -- Adapted from the repository's small synthetic fixture, then frozen here.
 -- Adds an unsold catalog product and a second eligible item in an existing order.
 -- No live TheLook data or customer contact/geographic fields are present.
