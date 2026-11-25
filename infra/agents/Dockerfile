@@ -41,3 +41,9 @@ CMD ["--role", "distribution", "--port", "8000"]
 FROM runtime AS coordinator
 ENV RETAIL_AGENT_ROLE=coordinator
 CMD ["--role", "coordinator", "--port", "8000"]
+
+FROM runtime AS gui
+ENTRYPOINT ["python", "-m", "retail_insight.interfaces.gui"]
+CMD []
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=6 \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"]

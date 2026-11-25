@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from typer.testing import CliRunner
 
 from evaluation.cli import app as cli
-from retail_agent.config import Settings
+from retail_insight.config import Settings
 
 
 def test_cli_uses_default_grading_and_immediate_progress(settings, monkeypatch):

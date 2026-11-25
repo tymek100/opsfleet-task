@@ -14,7 +14,7 @@ from evaluation.results import Claim, CriterionFinding, ExtractedFact, Judgment,
 from evaluation.runners.artifacts import digest, read_json, write_json
 from evaluation.runners.authored import final_summary
 from evaluation.runners.manual import load_scenarios
-from retail_agent.services.warehouse import QueryGateway, compile_query
+from retail_insight.integrations.bigquery.retail import QueryGateway, compile_query
 from tests.evaluation.test_manual_reference import item
 
 

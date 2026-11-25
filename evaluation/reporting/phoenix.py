@@ -15,7 +15,7 @@ from evaluation.reporting.phoenix_service import PhoenixUnavailable
 from evaluation.results import Trial, TrialGrade
 from evaluation.runners.artifacts import digest, frozen_cases, read_json, write_json
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import sanitize_capture
+from retail_insight.integrations.phoenix.tracing import sanitize_capture
 
 
 def client_for(settings: EvaluationSettings, *, deadline: float | None = None):

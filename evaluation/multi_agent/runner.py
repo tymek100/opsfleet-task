@@ -21,8 +21,8 @@ from evaluation.graders.judge import GeminiJudge
 from evaluation.reporting.phoenix import client_for
 from evaluation.reporting.phoenix_service import ensure_phoenix
 from evaluation.settings import EvaluationSettings
-from retail_agent.config import Settings
-from retail_agent.observability import configure_tracing
+from retail_insight.config import Settings
+from retail_insight.integrations.phoenix.tracing import configure_tracing
 
 from .grading import grade
 from .oracle import AS_OF, Snapshot, checksum, reference
@@ -36,8 +36,7 @@ def provenance():
     paths = [
         p
         for folder in (
-            Path("src/retail_agent"),
-            Path("src/retail_agents"),
+            Path("src/retail_insight"),
             Path("knowledge/golden"),
             HERE,
         )
@@ -264,7 +263,7 @@ async def run(
         save(directory / "manifest.json", manifest)
         tracing.close()
         return directory, 0
-    from retail_agents.client import AgentClient
+    from retail_insight.a2a.client import AgentClient
 
     urls = urls or {
         "retail": "http://127.0.0.1:8001",

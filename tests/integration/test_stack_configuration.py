@@ -37,7 +37,7 @@ def launcher(tmp_path, monkeypatch):
         )
     )
     for relative in (
-        "src/retail_agents/domains/fixtures.json",
+        "src/retail_insight/integrations/bigquery/fixtures.json",
         "knowledge/fixtures/retail_seed_v1.sql",
     ):
         path = tmp_path / relative
@@ -95,7 +95,7 @@ def test_inspector_catalog_contains_no_credentials(launcher):
 def test_changed_source_rows_get_an_isolated_persistent_profile(launcher):
     launcher.prepare("fixture")
     first = dotenv_values(launcher.STATE / "compose.env")["RETAIL_STACK_DATA_PROFILE"]
-    (launcher.ROOT / "src/retail_agents/domains/fixtures.json").write_text(
+    (launcher.ROOT / "src/retail_insight/integrations/bigquery/fixtures.json").write_text(
         "different warehouse rows"
     )
     launcher.prepare("fixture")

@@ -32,14 +32,11 @@ uv run --locked python infra/agents/start.py --backend fixture
 
 ## Inspector
 
-The startup output includes Inspector's authenticated URL. To display it again:
+Open [localhost:8080](http://localhost:8080). The coordinator opens automatically; select any specialist in the shared catalog to inspect its Agent Card or chat directly. Authentication is configured automatically as **Alice / Calvin Klein**, including after a page reload. No login link, token copying or Bearer configuration is required.
 
-```bash
-docker compose -f infra/agents/compose.yaml logs --tail 12 inspector
-uv run --locked retail-stack token
-```
+The `gui` service fronts the pinned Inspector in hosted mode on a loopback-only port. It selects the coordinator at startup and supplies the Alice demo credential server-side when connecting to an approved catalog endpoint. Submitted cards and credential overrides are discarded; the real card is fetched from its configured service. Host and origin checks restrict browser access to the local GUI. Inspector is internal to Compose and returns only masked credential references. Browser sessions stay separate. The gateway adapts session cookies for local HTTP while retaining `HttpOnly` and `SameSite=Strict`; this configuration is a local demo, not a public deployment.
 
-Open the printed Inspector URL, select the coordinator in the shared catalog, and configure **Bearer** authentication with the local demo token. This token represents Alice's Calvin Klein scope; text in a message cannot change that identity. The three specialist cards are available for direct testing. Inspector receives no Gemini key, so its optional host agent is disabled; conversations use this application's coordinator.
+Inspector receives no Gemini key, so its optional host agent is disabled; conversations use this application's coordinator. `retail-stack token` remains available for manual API clients but is unnecessary for the GUI.
 
 `catalog.json` is the approved endpoint source. Startup generates an AI Catalog at `.artifacts/agents/inspector-catalog.json`; Inspector loads it with `--catalog`. Cards advertise Docker service addresses, which Inspector resolves from its backend. Host callers use the loopback ports below and must explicitly select the external transport URL rather than following an internal card URL.
 
@@ -49,15 +46,16 @@ Open the printed Inspector URL, select the coordinator in the shared catalog, an
 | Inventory | `http://127.0.0.1:8002` | `http://inventory:8000` |
 | Distribution | `http://127.0.0.1:8003` | `http://distribution:8000` |
 | Coordinator | `http://127.0.0.1:8004` | `http://coordinator:8000` |
-| Inspector | `http://127.0.0.1:8080` | `http://inspector:8080` |
+| Agent GUI | `http://localhost:8080` | `http://gui:8080` |
+| Inspector backend | Internal only | `http://inspector:8080` |
 
 All published ports bind to loopback. Override the corresponding `RETAIL_PORT`, `INVENTORY_PORT`, `DISTRIBUTION_PORT`, `COORDINATOR_PORT` or `INSPECTOR_PORT` environment variable if necessary.
 
 ## Images, credentials and persistence
 
-The Dockerfile has four explicit final targets and distinct image tags. Only runtime source and `knowledge/` enter the build context. Evaluation datasets, grader references, `.env`, credentials, artifacts and Git history are excluded. Python dependencies are installed from `uv.lock` without installing the repository evaluation package.
+The Dockerfile has four agent targets and a separate GUI gateway target, with distinct image tags. All use the `retail_insight` package: agents start through `retail_insight.a2a.server`, which selects the role from `agents/registry.py`; the GUI starts through `retail_insight.interfaces.gui`. Each role owns a directory under `agents/` and shares the ADK runtime and review implementation. Only runtime source and `knowledge/` enter the build context. Evaluation datasets, grader references, `.env`, credentials, artifacts and Git history are excluded. Python dependencies are installed from `uv.lock` without installing the repository evaluation package.
 
-Startup creates `.artifacts/agents/secrets/` with owner-only directory permissions. Individual bind-mounted files are readable by the non-root container user; keep the enclosing directory private. The model profile reaches all four agents, warehouse credentials reach only specialists, and Maps credentials reach only distribution. The coordinator and Inspector have no warehouse credentials. Secrets are loaded from read-only files, never baked into images. Re-running `up` refreshes provider profiles without rotating existing local identity keys.
+Startup creates `.artifacts/agents/secrets/` with owner-only directory permissions. Individual bind-mounted files are readable by the non-root container user; keep the enclosing directory private. The model profile reaches all four agents, warehouse credentials reach only specialists, and Maps credentials reach only distribution. The GUI mounts only the Alice demo credential; it has no signing key, model key or warehouse credentials. The coordinator and Inspector have no warehouse credentials. Secrets are loaded from read-only files, never baked into images. Re-running `up` refreshes provider profiles without rotating existing local identity keys.
 
 Each agent owns its own `/data` named volume. Within it, persistent state lives under `/data/<backend>/<source-profile>/`: A2A tasks and conversation context in `a2a.sqlite3`, saved reports in `reports-v2.sqlite3`, and diagnostic events in `events-v2.jsonl`. The startup helper fingerprints the backend and source dataset; fixture profiles also include hashes of both the domain JSON and retail SQL. Normal fixtures, evaluation fixtures and BigQuery therefore do not reuse each other's answers, task cache or reports. Changing fixture contents or the warehouse source dataset selects another directory; returning to the same profile restores its history.
 

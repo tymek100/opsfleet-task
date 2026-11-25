@@ -16,5 +16,5 @@ jobs:
       - run: uv run --locked --group evaluation ruff check .
       - run: uv run --locked --group evaluation ruff format --check .
       - run: uv run --locked --group evaluation pyright
-      - run: uv run --locked --group evaluation pytest --cov=retail_agent --cov-report=term-missing
+      - run: uv run --locked --group evaluation pytest --cov=retail_insight --cov-report=term-missing
       - run: uv run --locked --group evaluation retail-eval validate

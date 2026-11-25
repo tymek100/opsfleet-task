@@ -12,9 +12,14 @@ from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import Status, StatusCode
 
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.observability import configure_tracing, record_observation, span, trace_context
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.contracts import DEMO_USERS
+from retail_insight.integrations.phoenix.tracing import (
+    configure_tracing,
+    record_observation,
+    span,
+    trace_context,
+)
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 
@@ -300,7 +305,7 @@ async def test_preview_export_failure_does_not_abort_answer(settings, monkeypatc
     def broken(*args, **kwargs):
         raise RuntimeError("Collector preview unavailable")
 
-    monkeypatch.setattr("retail_agent.runtime.record_observation", broken)
+    monkeypatch.setattr("retail_insight.runtime.analyst.record_observation", broken)
     app = Analyst(
         settings,
         DEMO_USERS["alice"],
@@ -395,7 +400,7 @@ def test_remote_or_credential_bearing_collector_is_rejected(endpoint):
 def test_cli_phoenix_initialization_failure_keeps_answer_available(make_agent, monkeypatch):
     from typer.testing import CliRunner
 
-    from retail_agent import cli
+    from retail_insight.interfaces import cli
 
     app = make_agent([finish("Which quarter?", outcome="clarification")], [verdict()])
     monkeypatch.setattr(cli, "build", lambda *_args: app)

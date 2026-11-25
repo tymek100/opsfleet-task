@@ -8,8 +8,8 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
-from retail_agent.budget import Budget
-from retail_agent.provider import AccountedModel, ProviderUnavailable
+from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable
 from tests.support.models import ScriptedModel, text, usage
 
 
@@ -104,7 +104,7 @@ async def test_retry_retains_unknown_first_attempt_and_settles_success(settings,
     async def immediate(_delay):
         return None
 
-    monkeypatch.setattr("retail_agent.provider.asyncio.sleep", immediate)
+    monkeypatch.setattr("retail_insight.runtime.provider.asyncio.sleep", immediate)
     budget, events = Budget(settings), []
     model = ScriptedModel(script=[httpx.ConnectError("synthetic outage"), text("Recovered")])
     assert len(await collect(metered(model, budget, events))) == 1

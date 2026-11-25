@@ -398,7 +398,7 @@ tests/
   cli/
   evaluation/
 knowledge/{golden,fixtures}/
-src/retail_agent/observability.py
+src/retail_insight/integrations/phoenix/tracing.py
 .artifacts/evaluation/            # Ignored generated output
 docs/
   architecture.md

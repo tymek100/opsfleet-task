@@ -10,7 +10,7 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output import DummyOutput
 
-from retail_agent.terminal import SlashCommandCompleter, create_prompt_session
+from retail_insight.interfaces.terminal import SlashCommandCompleter, create_prompt_session
 
 
 @asynccontextmanager

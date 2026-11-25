@@ -7,8 +7,8 @@ from decimal import Decimal
 import pytest
 from google.adk.models.llm_response import LlmResponse
 
-from retail_agent.services.warehouse import QueryGateway
-from retail_agent.turn import Turn
+from retail_insight.integrations.bigquery.retail import QueryGateway
+from retail_insight.runtime.turn import Turn
 from tests.support.models import calls, finish, text, verdict
 from tests.support.warehouse import Q1
 

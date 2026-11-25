@@ -3,7 +3,7 @@
 import pytest
 from google import auth
 
-from retail_agent.config import Settings
+from retail_insight.config import Settings
 
 
 @pytest.mark.parametrize("lookup", ["settings", "adc", "credentials_file"])

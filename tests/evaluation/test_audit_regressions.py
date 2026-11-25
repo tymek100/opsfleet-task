@@ -20,9 +20,9 @@ from evaluation.runners.artifacts import digest, prepare_run, read_json, write_j
 from evaluation.runners.conversation import run_trial
 from evaluation.runners.faults import FaultModel, Schedule
 from evaluation.settings import EvaluationSettings
-from retail_agent.budget import Budget
-from retail_agent.contracts import Answer, TurnResult
-from retail_agent.provider import AccountedModel
+from retail_insight.contracts import Answer, TurnResult
+from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.provider import AccountedModel
 from tests.support.models import ScriptedModel, text, usage
 
 
@@ -420,7 +420,7 @@ async def test_injected_provider_timeout_exercises_real_retry_and_keeps_unknown_
     async def immediate(_seconds):
         return None
 
-    monkeypatch.setattr("retail_agent.provider.asyncio.sleep", immediate)
+    monkeypatch.setattr("retail_insight.runtime.provider.asyncio.sleep", immediate)
     delegate = ScriptedModel(script=[text("Recovered.")])
     boundary = FaultModel(model=delegate.model, delegate=delegate).bind(
         Schedule([Fault(boundary="provider", occurrence=1)])

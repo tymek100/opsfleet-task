@@ -14,8 +14,8 @@ from evaluation.results import Claim, CriterionFinding, Judgment
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.pipeline import outcome_code, run_pipeline
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import configure_tracing
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.integrations.phoenix.tracing import configure_tracing
 from tests.support.models import ScriptedModel, finish, verdict
 
 

@@ -18,7 +18,7 @@ def main() -> None:
         for key, value in dotenv_values(path).items():
             if value is not None:
                 os.environ.setdefault(key, value)
-    os.execv(sys.executable, [sys.executable, "-m", "retail_agents.server", *sys.argv[1:]])
+    os.execv(sys.executable, [sys.executable, "-m", "retail_insight.a2a.server", *sys.argv[1:]])
 
 
 if __name__ == "__main__":

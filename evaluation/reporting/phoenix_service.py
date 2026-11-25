@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import httpx
 
 from evaluation.settings import EvaluationSettings
-from retail_agent.config import repository_root
+from retail_insight.config import repository_root
 
 
 class PhoenixUnavailable(RuntimeError):

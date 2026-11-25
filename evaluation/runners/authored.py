@@ -22,12 +22,12 @@ from evaluation.reporting.phoenix_service import ensure_phoenix
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.manual import load_scenarios, run_manual
-from retail_agent.config import repository_root
-from retail_agent.observability import configure_tracing, trace_context
-from retail_agent.phoenix_prompts import sync_prompts
-from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
-from retail_agent.runtime import Analyst
-from retail_agent.services.warehouse import QueryGateway
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.config import repository_root
+from retail_insight.integrations.bigquery.retail import QueryGateway
+from retail_insight.integrations.phoenix.prompts import sync_prompts
+from retail_insight.integrations.phoenix.tracing import configure_tracing, trace_context
+from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
 
 def final_summary(grades, planned):

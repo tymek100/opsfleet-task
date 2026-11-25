@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.privacy import screen
-from retail_agents.domains.warehouse import DEFAULT_FIXTURE, DomainGateway
-from retail_agents.privacy import facility_coordinates, screen_role_text
-from retail_agents.runtime import RoleAnalyst
+from retail_insight.agents.registry import create_agent
+from retail_insight.contracts import DEMO_USERS
+from retail_insight.integrations.bigquery.domains import DEFAULT_FIXTURE, DomainGateway
+from retail_insight.runtime.domain_privacy import facility_coordinates, screen_role_text
+from retail_insight.runtime.privacy import screen
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 AS_OF = dt.datetime(2026, 4, 1, tzinfo=dt.UTC)
@@ -158,7 +158,7 @@ async def test_facility_query_survives_analyst_history_reviewer_revision_and_fol
         ]
     )
     reviewer = ScriptedModel(script=[verdict("revise"), verdict(), verdict()])
-    app = RoleAnalyst(
+    app = create_agent(
         "distribution",
         settings,
         DEMO_USERS["alice"],
@@ -221,7 +221,7 @@ async def test_coordinator_imported_facility_evidence_allows_reviewed_prose(
         ]
     )
     reviewer = ScriptedModel(script=[verdict()])
-    app = RoleAnalyst(
+    app = create_agent(
         "coordinator",
         settings,
         DEMO_USERS["alice"],

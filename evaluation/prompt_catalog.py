@@ -7,7 +7,7 @@ from google.genai import types
 
 from evaluation.results import Judgment
 from evaluation.settings import EvaluationSettings
-from retail_agent.prompt_catalog import PromptSpec
+from retail_insight.runtime.prompts import PromptSpec
 
 
 def judge_prompt(

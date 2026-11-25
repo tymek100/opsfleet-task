@@ -22,10 +22,10 @@ Local hosting does not make Gemini or BigQuery local. A fixture backend supports
 
 ## 2. Current implementation to preserve
 
-- [Analyst.ask](../../src/retail_agent/runtime.py) owns conversation context, the ADK tool loop, per-prompt budgets and reviewed publication.
-- [QueryGateway](../../src/retail_agent/services/warehouse.py) exposes scoped `sales`, `transactions` and `products`. Geography is available only through the restricted state-summary tool.
-- [GoldenStore](../../src/retail_agent/services/golden.py) applies scope, version, provenance and integrity checks. Its 11 bootstrap examples are synthetic methods, not current facts or human-approved company knowledge.
-- [Runtime skills](../../src/retail_agent/skills/README.md) provide optional analytical procedures and mandatory review guidance.
+- [Analyst.ask](../../src/retail_insight/runtime/analyst.py) owns conversation context, the ADK tool loop, per-prompt budgets and reviewed publication.
+- [QueryGateway](../../src/retail_insight/integrations/bigquery/retail.py) exposes scoped `sales`, `transactions` and `products`. Geography is available only through the restricted state-summary tool.
+- [GoldenStore](../../src/retail_insight/integrations/knowledge.py) applies scope, version, provenance and integrity checks. Its 11 bootstrap examples are synthetic methods, not current facts or human-approved company knowledge.
+- [Runtime skills](../../src/retail_insight/runtime/skills/README.md) provide optional analytical procedures and mandatory review guidance.
 - [Evaluation](../evaluation.md) already separates runtime knowledge from grader-only references, captures follow-ups, and publishes to local Phoenix.
 
 Wrap the application runtime, not just the inner `LlmAgent`. Exposing the inner agent directly could bypass `finish_answer`, publication review, budgets and report authorization.
@@ -199,7 +199,7 @@ The coordinator sees capability summaries and decides which approved agent to ca
 
 Use the official A2A Inspector. Its current repository documents card validation, chat, protocol traffic, saved agents, and shared catalogs through `--catalog`. Pin a tested release or commit-backed image digest that actually includes these capabilities; do not assume every released image matches `main`. If the shared-catalog feature is unavailable in that build, use documented catalog import/manual card registration and keep runtime discovery independent. [A2A Inspector](https://github.com/a2aproject/a2a-inspector)
 
-Configure the four cards so the coordinator is the normal conversation entry point and specialists remain directly testable. Open the authenticated local URL printed by Inspector. Browser-saved cards are developer convenience; the versioned application catalog controls runtime discovery. Use our coordinator, not Inspector's optional host agent, for product behavior and evaluations.
+Configure the four cards so the coordinator is the normal conversation entry point and specialists remain directly testable. The implemented local gateway opens the coordinator at `http://localhost:8080` and configures Alice's credentials automatically; no token copying is required. Browser-saved cards are developer convenience; the versioned application catalog controls runtime discovery. Use our coordinator, not Inspector's optional host agent, for product behavior and evaluations.
 
 Keep Phoenix for trace inspection and evaluation. No custom frontend or registry database is needed initially. A central multi-user registry can be added later without changing the agent contracts.
 
@@ -218,7 +218,7 @@ Cards advertise client-reachable internal endpoints such as `http://inventory:80
 
 Use one multi-stage Dockerfile with four explicit final targets and four separately tagged images. Share only common runtime layers. Package each agent's tools, prompts, skills and eligible knowledge; exclude evaluation references, development captures, `.env`, credentials and the repository `.git` directory using explicit build inputs and `.dockerignore`.
 
-Update package manifests explicitly: the current wheel includes both `retail_agent` and `evaluation`. Agent image builds must install a runtime-only distribution/target, while the evaluation runner keeps its own package and dependencies. An image-content check verifies that grader references and unrelated agents' knowledge are absent; `.dockerignore` alone cannot remove files already included in a wheel.
+Update package manifests explicitly: the current wheel includes both `retail_insight` and `evaluation`. Agent image builds must install a runtime-only distribution/target, while the evaluation runner keeps its own package and dependencies. An image-content check verifies that grader references and unrelated agents' knowledge are absent; `.dockerignore` alone cannot remove files already included in a wheel.
 
 Add per-service readiness/liveness checks, non-root users, bounded resources, graceful shutdown and independent task/report volumes. Use locked dependencies and image digests. Fixture and BigQuery modes use separate configuration profiles; the default Compose network still needs outbound provider access for live runs.
 
@@ -319,16 +319,23 @@ These English prompts illustrate intended behavior; they are not hardcoded route
 
 For live demos, choose periods based on observed source coverage and explicitly set `as_of`. For reproducible evaluation, use fixed timestamps and independently verified references. A source that contains no positive examples should produce an honest empty result, not a fabricated shortage.
 
-## 13. Proposed repository structure
+## 13. Repository structure
 
 ```text
 src/
-  retail_agent/                 # Preserve the existing analyst and CLI
-  retail_agents/
-    shared/                     # A2A adapter, artifacts, auth, catalogs, child budgets
-    coordinator/                # Agent, prompts, skills, tools, report integration
-    inventory/                  # Agent, prompts, skills, tools, inventory service
-    distribution/               # Agent, prompts, skills, tools, center service
+  retail_insight/
+    agents/
+      retail/                   # Agent, tools, prompt and skills
+      inventory/
+      distribution/
+      coordinator/
+      registry.py               # Explicit role-to-agent construction
+    runtime/                    # Shared ADK loop, turn state, budgets, provider
+    review/                     # Completion tool, reviewer and rubric
+    tools/                      # Shared model-facing capabilities
+    integrations/               # BigQuery, Maps MCP, Phoenix and storage
+    a2a/                        # Transport, authentication and task storage
+    interfaces/                 # CLI and GUI gateway
 knowledge/
   golden/
     bootstrap.json              # Existing retail collection remains compatible
@@ -356,7 +363,7 @@ tests/
   integration/                 # Containerized A2A, Inspector and Phoenix
 ```
 
-Keep model-facing adapters in each agent's `tools/`, domain calculations/query compilation in its service modules, and transport/auth/accounting in `shared/`. Reuse existing generic helpers through explicit APIs before considering larger moves. Do not reorganize unrelated retail modules as a prerequisite.
+The package layout above supersedes the original two-package implementation. Each role owns its definition, prompt, skills and tool registration. Shared execution, transport, review and integrations have explicit packages; see the [package refactor checklist](AGENT_PACKAGE_REFACTOR.md).
 
 ## 14. Implementation sequence
 

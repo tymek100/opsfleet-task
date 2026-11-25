@@ -8,9 +8,9 @@ from google.genai import errors, types
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import StatusCode
 
-from retail_agent.budget import Budget
-from retail_agent.observability import configure_tracing
-from retail_agent.provider import ProviderUnavailable
+from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.provider import ProviderUnavailable
 from tests.integration.test_provider import collect, metered, request
 from tests.support.models import ScriptedModel, text, usage
 

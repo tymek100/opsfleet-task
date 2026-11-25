@@ -7,7 +7,7 @@ import pytest
 
 from evaluation.runners.artifacts import digest, read_json
 from evaluation.runners.manual import InitialReport, Scenario, run_manual
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from tests.support.models import ScriptedModel, finish, verdict
 
 

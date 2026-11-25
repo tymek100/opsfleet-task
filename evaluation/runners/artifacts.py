@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from evaluation.models import Case
 from evaluation.results import RunManifest
-from retail_agent.config import Settings, repository_root
+from retail_insight.config import Settings, repository_root
 
 
 def digest(path: Path) -> str:
@@ -74,8 +74,8 @@ def prepare_run(
             fixtures[source.name] = digest(source)
     repo = repository_root()
     paths = [
-        *repo.glob("src/retail_agent/**/*.py"),
-        *repo.glob("src/retail_agent/**/*.md"),
+        *repo.glob("src/retail_insight/**/*.py"),
+        *repo.glob("src/retail_insight/**/*.md"),
         *repo.glob("knowledge/golden/*.json"),
     ]
     safe_settings = settings.model_dump(

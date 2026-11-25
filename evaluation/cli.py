@@ -72,9 +72,9 @@ def sync_prompts(
     """Publish four repository prompt definitions to Phoenix without model calls."""
     from evaluation.prompt_catalog import judge_prompt
     from evaluation.reporting.phoenix_service import ensure_phoenix
-    from retail_agent.config import Settings
-    from retail_agent.phoenix_prompts import sync_prompts as publish_prompts
-    from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
+    from retail_insight.config import Settings
+    from retail_insight.integrations.phoenix.prompts import sync_prompts as publish_prompts
+    from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
     settings = Settings.load()
     if model:
@@ -123,7 +123,7 @@ def run(
     from evaluation.graders.judge import GeminiJudge
     from evaluation.reporting.phoenix_service import PhoenixUnavailable
     from evaluation.runners.pipeline import run_pipeline
-    from retail_agent.config import Settings
+    from retail_insight.config import Settings
 
     if not phoenix:
         raise typer.BadParameter(
@@ -184,7 +184,7 @@ def run(
 
 def _judge(model: str | None, max_cost_usd: float, deadline_seconds: float):
     from evaluation.graders.judge import GeminiJudge
-    from retail_agent.config import Settings
+    from retail_insight.config import Settings
 
     settings = Settings.load()
     if not settings.gemini_api_key.get_secret_value():
@@ -289,7 +289,7 @@ def run_conversations(
     """Run and independently grade the 20 conversations against the same warehouse snapshot."""
     from evaluation.runners.authored import run_authored
     from evaluation.runners.manual import load_scenarios
-    from retail_agent.config import Settings, repository_root
+    from retail_insight.config import Settings, repository_root
 
     settings = Settings.load()
     scenarios = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json", only)
@@ -325,7 +325,7 @@ def sync_conversations(
     from evaluation.reporting.phoenix import client_for
     from evaluation.reporting.phoenix_service import ensure_phoenix
     from evaluation.runners.manual import load_scenarios
-    from retail_agent.config import repository_root
+    from retail_insight.config import repository_root
 
     snapshot = Snapshot.load(reference)
     scenarios = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json")

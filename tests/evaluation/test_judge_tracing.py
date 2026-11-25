@@ -9,7 +9,7 @@ from opentelemetry.trace import StatusCode
 
 from evaluation.graders.judge import PROMPT_PATH, GeminiJudge, JudgeUnavailable
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import configure_tracing
+from retail_insight.integrations.phoenix.tracing import configure_tracing
 from tests.evaluation.test_judge_budget import Client, records
 from tests.evaluation.test_trajectory import assessment, captured_trial
 from tests.evaluation.test_trajectory import response as trajectory_response

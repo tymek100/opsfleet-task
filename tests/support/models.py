@@ -14,7 +14,7 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from pydantic import Field, PrivateAttr
 
-from retail_agent.contracts import REVIEW_CATEGORIES
+from retail_insight.contracts import REVIEW_CATEGORIES
 
 
 def text(value: str) -> types.Content:

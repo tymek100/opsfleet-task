@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from retail_agent.services.golden import GoldenStore, content_hash
-from retail_agent.skills.catalog import SkillCatalog, SkillError
+from retail_insight.integrations.knowledge import GoldenStore, content_hash
+from retail_insight.runtime.skills.catalog import SkillCatalog, SkillError
 
 
 def published_record(name, brands, *, all_brands=False):

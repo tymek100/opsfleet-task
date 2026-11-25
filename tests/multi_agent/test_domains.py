@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from retail_agent.services.warehouse import DataError
-from retail_agents.domains.maps import MapsClient, validate_maps_arguments
-from retail_agents.domains.warehouse import DomainGateway, compile_domain_query
+from retail_insight.integrations.bigquery.domains import DomainGateway, compile_domain_query
+from retail_insight.integrations.bigquery.retail import DataError
+from retail_insight.integrations.maps.client import MapsClient, validate_maps_arguments
 
 AS_OF = dt.datetime(2026, 4, 1, tzinfo=dt.UTC)
 

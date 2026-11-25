@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from retail_agent.services.reports import ReportError, ReportStore
+from retail_insight.integrations.reports import ReportError, ReportStore
 
 
 def save(store, owner="alice", answer="A1", title="Quarterly report"):

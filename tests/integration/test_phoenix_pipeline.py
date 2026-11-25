@@ -9,7 +9,7 @@ from evaluation.results import Claim, CriterionFinding, ExtractedFact, Judgment
 from evaluation.runners.artifacts import read_json
 from evaluation.runners.pipeline import run_pipeline
 from evaluation.settings import EvaluationSettings
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 pytestmark = [pytest.mark.phoenix, pytest.mark.enable_socket]

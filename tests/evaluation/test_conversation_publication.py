@@ -18,7 +18,7 @@ from evaluation.reporting.conversations import (
 from evaluation.runners.artifacts import digest, write_json
 from evaluation.runners.manual import Scenario
 from evaluation.settings import EvaluationSettings
-from retail_agent.config import Settings
+from retail_insight.config import Settings
 
 
 @pytest.fixture

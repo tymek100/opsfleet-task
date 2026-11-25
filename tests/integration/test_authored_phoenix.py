@@ -19,7 +19,7 @@ from evaluation.results import Claim, CriterionFinding, ExtractedFact, Judgment
 from evaluation.runners.artifacts import read_json
 from evaluation.runners.authored import run_authored
 from evaluation.settings import EvaluationSettings
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from tests.evaluation.test_authored_grading import scenarios, snapshot  # noqa: F401
 from tests.support.models import ScriptedModel, finish, verdict
 

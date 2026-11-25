@@ -3,8 +3,8 @@
 import json
 from datetime import UTC, datetime, timedelta, timezone
 
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.contracts import DEMO_USERS
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 

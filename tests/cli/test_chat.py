@@ -6,8 +6,8 @@ import pytest
 from rich.console import Console
 from typer.testing import CliRunner
 
-from retail_agent import cli
-from retail_agent.contracts import Answer, TurnResult
+from retail_insight.contracts import Answer, TurnResult
+from retail_insight.interfaces import cli
 from tests.support.models import finish, verdict
 
 

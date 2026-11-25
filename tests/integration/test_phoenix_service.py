@@ -11,8 +11,8 @@ from evaluation.reporting.phoenix import client_for, publish
 from evaluation.runners.artifacts import read_json
 from evaluation.runners.conversation import run_cases
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import configure_tracing
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.integrations.phoenix.tracing import configure_tracing
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 pytestmark = [pytest.mark.phoenix, pytest.mark.enable_socket]

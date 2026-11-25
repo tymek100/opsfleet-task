@@ -16,7 +16,7 @@ from pathlib import Path
 from evaluation.graders.judge import PROMPT_PATH, GeminiJudge
 from evaluation.models import TurnReference
 from evaluation.settings import EvaluationSettings
-from retail_agent.config import Settings
+from retail_insight.config import Settings
 
 from .grading import grade
 from .semantic_contracts import independent_totals, semantic_criteria

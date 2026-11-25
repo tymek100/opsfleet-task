@@ -18,10 +18,10 @@ from evaluation.reporting.summary import write_summary
 from evaluation.results import RunManifest, Trial
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.conversation import run_cases
-from retail_agent.observability import configure_tracing
-from retail_agent.phoenix_prompts import sync_prompts
-from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.integrations.phoenix.prompts import sync_prompts
+from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
 
 @dataclass(frozen=True)

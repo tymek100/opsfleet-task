@@ -16,7 +16,7 @@ from evaluation.reporting.phoenix import client_for
 from evaluation.runners.artifacts import digest, read_json, write_json
 from evaluation.runners.manual import load_scenarios
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import sanitize_capture
+from retail_insight.integrations.phoenix.tracing import sanitize_capture
 
 DATASET_NAME = "Retail agent — 20 conversations"
 PROJECT_NAME = "retail-conversations-20"

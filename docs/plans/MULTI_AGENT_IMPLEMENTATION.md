@@ -55,6 +55,7 @@ Status: implemented and running on BigQuery. The full fixture baseline, targeted
 
 - [x] Build four runtime images without evaluation references or secrets.
 - [x] Start services, Inspector and the existing Phoenix through Compose; bind public ports to loopback.
+- [x] Open the GUI at a fixed localhost URL with automatic Alice authentication for all four agents, including browser refresh and renewed sessions.
 - [x] Verify cards, GUI catalog, authenticated chat, follow-up context and trace visibility.
 - [x] Run focused boundary tests and existing retail regression checks: 486 passed, five external-service pytest checks deselected. Actual Docker/A2A/BigQuery/Phoenix validation is recorded separately.
 - [x] Document startup, chat, evaluation, credentials, shutdown and actual validation results.

@@ -5,8 +5,8 @@ from phoenix.client import Client
 
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.settings import EvaluationSettings
-from retail_agent.phoenix_prompts import phoenix_version, sync_prompts
-from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
+from retail_insight.integrations.phoenix.prompts import phoenix_version, sync_prompts
+from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
 pytestmark = [pytest.mark.phoenix, pytest.mark.enable_socket]
 

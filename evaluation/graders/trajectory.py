@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import Field
 
 from evaluation.results import Record, Score, Trial
-from retail_agent.observability import sanitize_capture
+from retail_insight.integrations.phoenix.tracing import sanitize_capture
 
 PROMPT_PATH = Path(__file__).parents[1] / "prompts/trajectory.md"
 CRITERIA = (

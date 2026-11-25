@@ -100,8 +100,7 @@ services:
   inspector:
     image: ghcr.io/a2aproject/a2a-inspector:v1.0.0-alpha.2@sha256:699e8eab72b5f46f9ce95d10acc7be51a99c3d9f3649da009e534889871083e2
     platform: linux/amd64
-    command: ["--catalog", "/config/inspector-catalog.json", "--agent-card", "http://coordinator:8000/.well-known/agent-card.json"]
-    ports: ["127.0.0.1:${INSPECTOR_PORT:-8080}:8080"]
+    command: ["--hosted", "--catalog", "/config/inspector-catalog.json", "--egress-allow", "coordinator", "--egress-allow", "retail", "--egress-allow", "inventory", "--egress-allow", "distribution"]
     restart: unless-stopped
     read_only: true
     cap_drop: [ALL]
@@ -112,6 +111,29 @@ services:
       coordinator: {condition: service_healthy}
     volumes:
       - ../../.artifacts/agents/inspector-catalog.json:/config/inspector-catalog.json:ro
+
+  gui:
+    image: retail-gui:${RETAIL_STACK_REVISION:-local}
+    build:
+      <<: *build
+      target: gui
+    environment:
+      A2A_CATALOG_PATH: /app/catalog.json
+      A2A_DEMO_TOKEN_FILE: /run/secrets/a2a_demo_token
+      GUI_PUBLIC_PORT: ${INSPECTOR_PORT:-8080}
+    ports: ["127.0.0.1:${INSPECTOR_PORT:-8080}:8080"]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    networks: [agents]
+    secrets: [a2a_demo_token]
+    depends_on:
+      inspector: {condition: service_started}
+    volumes:
+      - ./catalog.json:/app/catalog.json:ro
 
 networks:
   agents:

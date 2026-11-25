@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from retail_agents.server import profile_directory
+from retail_insight.a2a.server import profile_directory
 
 
 def test_source_profiles_separate_all_persistent_state():

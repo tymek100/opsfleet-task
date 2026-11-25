@@ -1,6 +1,6 @@
 # Retail agent architecture
 
-Updated: 2026-11-24.
+Updated: 2026-11-25.
 
 ## Scope
 
@@ -26,7 +26,7 @@ flowchart TD
     D -.-> P
 ```
 
-[`src/retail_agents/server.py`](../src/retail_agents/server.py) exposes the complete reviewed runtime through A2A 0.3 JSON-RPC, with Agent Cards at `/.well-known/agent-card.json`. The four Docker targets produce separate service images. The coordinator chooses approved specialists through `list_agents` and `delegate`; it can revisit a specialist and combine observations. Specialists do not delegate recursively. Each agent retains the analyst/reviewer completion protocol below.
+[`src/retail_insight/a2a/server.py`](../src/retail_insight/a2a/server.py) exposes the complete reviewed runtime through A2A 0.3 JSON-RPC, with Agent Cards at `/.well-known/agent-card.json`. The four Docker targets produce separate service images. The coordinator chooses approved specialists through `list_agents` and `delegate`; it can revisit a specialist and combine observations. Specialists do not delegate recursively. Each agent retains the analyst/reviewer completion protocol below.
 
 | Role | Data and capabilities |
 |---|---|
@@ -35,19 +35,19 @@ flowchart TD
 | Distribution | Scoped center attribution, facility metadata, stock reconciliation and optional Maps observations |
 | Coordinator | Specialist delegation, evidence reconciliation, result calculations and combined reports; no direct warehouse queries |
 
-Role prompts, skills and tool registration live under [`src/retail_agents/`](../src/retail_agents/). Inventory and distribution use read-only logical relations over `inventory_items`, `products` and `distribution_centers`. Modeled unsold stock at T requires `created_at <= T` and an absent or later `sold_at`; it does not prove physical availability or reservations. Cost is not revenue or profit. Unknown centers remain explicit, and customer geography is not exposed. Warehouse snapshots and business cutoffs are distinct values.
+Each role has its own `agent.py`, `tools.py`, `prompt.md` and `skills/` under [`src/retail_insight/agents/`](../src/retail_insight/agents/). The [agent registry](../src/retail_insight/agents/registry.py) selects an explicit agent implementation; the shared runtime contains the ADK execution loop. Inventory and distribution use read-only logical relations over `inventory_items`, `products` and `distribution_centers`. Modeled unsold stock at T requires `created_at <= T` and an absent or later `sold_at`; it does not prove physical availability or reservations. Cost is not revenue or profit. Unknown centers remain explicit, and customer geography is not exposed. Warehouse snapshots and business cutoffs are distinct values.
 
 Distribution and the coordinator may reproduce public facility coordinate pairs supported by direct `centers` column observations. The exception follows matching scope, cutoff and specialist provenance through tool results, model requests and completion review. Invented coordinates, customer contact information and unrelated result fields retain the default privacy checks.
 
 Google Maps is the only external MCP integration. Distribution discovers allowlisted route/weather tools from the managed endpoint through the MCP client. Credentials stay outside prompts. Missing credentials or failed lookups return explicit unavailable observations; coordinates alone do not establish road travel time, truck feasibility or delivery commitments. Maps content and derived answers are ephemeral: persisted records retain provenance, and later requests must fetch fresh observations. Live Maps access has not been verified without a configured key.
 
-A shared approved [catalog](../infra/agents/catalog.json) supplies endpoints to the coordinator and Inspector. Short-lived HMAC-signed transport requests bind demo identity and audience; the GUI Bearer token permits Alice only. User text cannot grant another brand's access. Each service persists owned tasks and conversation context in its own SQLite volume. This extends persistence beyond the legacy CLI's in-memory conversation; interrupted work is not automatically resumed after a process restart.
+A shared approved [catalog](../infra/agents/catalog.json) supplies endpoints to the coordinator and Inspector. Short-lived HMAC-signed transport requests bind demo identity and audience. The local GUI automatically authenticates as Alice through a loopback gateway; its Bearer credential is supplied server-side only to approved agents. User text cannot grant another brand's access. Each service persists owned tasks and conversation context in its own SQLite volume. This extends persistence beyond the legacy CLI's in-memory conversation; interrupted work is not automatically resumed after a process restart.
 
 Persistent tasks, cached requests, conversation context, reports and diagnostic events share a source-specific directory, `/data/<backend>/<source-profile>/`. `retail-stack up` derives the profile from the backend, warehouse source dataset and, for fixtures, both source-file hashes. Normal fixtures, evaluation fixtures and BigQuery retain separate histories; returning to an identical profile restores its state. Existing images require rebuilding to adopt this layout, and legacy top-level data is not migrated automatically. Direct server/Compose launches must configure the profile explicitly to isolate same-backend source changes. This storage boundary does not freeze live data: each conversation separately fixes its business cutoff and optional warehouse snapshot.
 
 Every user prompt has a fresh budget shared with its reviews and delegated work. Child grants are reserved before dispatch, reported usage settles them once, and unknown usage retains its reservation. Delegations are bounded to two concurrent children. Transport propagates OpenTelemetry context to the `retail-multi-agent` Phoenix project. A2A streaming reports task events; it does not promise token-by-token answer streaming.
 
-The [Compose stack](../infra/agents/README.md) provides Inspector on port 8080 and reuses existing Phoenix on port 6006. It preserves historical experiments and agent volumes. Runtime images exclude evaluation references and credentials. The [implementation checklist](plans/MULTI_AGENT_IMPLEMENTATION.md) records validation and remaining limitations; the [original design](plans/LOCAL_A2A_RETAIL_AGENTS_PLAN.md) includes proposed extensions beyond the current release.
+The [Compose stack](../infra/agents/README.md) provides the agent GUI at `http://localhost:8080` and reuses existing Phoenix on port 6006. Opening the GUI selects the coordinator without manual authentication; the pinned Inspector backend runs internally in hosted mode. It preserves historical experiments and agent volumes. Runtime images exclude evaluation references and credentials. The [implementation checklist](plans/MULTI_AGENT_IMPLEMENTATION.md) records validation and remaining limitations; the [original design](plans/LOCAL_A2A_RETAIL_AGENTS_PLAN.md) includes proposed extensions beyond the current release.
 
 ## Runtime and completion protocol
 
@@ -63,11 +63,11 @@ flowchart TD
     A -->|Limit reached| X
 ```
 
-[`Analyst.ask`](../src/retail_agent/runtime.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context contains trusted brand scope, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
+[`Analyst.ask`](../src/retail_insight/runtime/analyst.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context contains trusted brand scope, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
 
 The analyst executes an iterative tool loop and submits Markdown through `finish_answer`, referencing supporting evidence. It selects prose, lists, or tables according to the request.
 
-[`reviewer.evaluate`](../src/retail_agent/reviewer.py) invokes a separate, tool-free `LlmAgent` with the candidate and evidence. Its structured decision covers task coverage, grounding, metrics, presentation, and operations:
+[`reviewer.evaluate`](../src/retail_insight/review/reviewer.py) invokes a separate, tool-free `LlmAgent` with the candidate and evidence. Its structured decision covers task coverage, grounding, metrics, presentation, and operations:
 
 - **Approve:** publish the exact candidate.
 - **Revise:** return findings to the existing analyst loop for further queries or edits.
@@ -77,7 +77,7 @@ All published analytical answers require approval. Input rejection, provider fai
 
 ## Tool interface
 
-The [registry](../src/retail_agent/tools/registry.py) exposes composable capabilities:
+The retail [tool registration](../src/retail_insight/agents/retail/tools.py) exposes composable capabilities:
 
 | Capability | Tools |
 |---|---|
@@ -89,7 +89,7 @@ The [registry](../src/retail_agent/tools/registry.py) exposes composable capabil
 | Report operations | `stage_report_save`, `preview_report_deletion`, `cancel_report_deletion` |
 | Reviewed completion | `finish_answer` |
 
-Adapters in `tools/` expose model-facing schemas and delegate to `services/`. New analytical questions can compose existing tools; additional capabilities require implementation changes.
+Each agent registers its capabilities in `agents/<role>/tools.py`. Shared adapters in `tools/` expose model-facing schemas; `integrations/` implements warehouse, storage, Maps MCP and Phoenix access. The coordinator owns its delegation tools, and distribution owns its Maps tools. New analytical questions can compose existing tools; additional capabilities require implementation changes.
 
 Report retrieval, deletion previews and cancellations register their actual observations as
 typed evidence. The analyst can submit those evidence handles to the reviewer without a
@@ -100,7 +100,7 @@ deletion confirmation tokens are excluded from model-visible observations.
 
 | Resource | Role | Location |
 |---|---|---|
-| Skills | Analytical and writing procedures, loaded on demand | [`src/retail_agent/skills/`](../src/retail_agent/skills/README.md) |
+| Skills | Analytical and writing procedures, loaded on demand | Agent `skills/` directories, shared `runtime/skills/library/`, and `review/skills/`; [authoring guide](../src/retail_insight/runtime/skills/README.md) |
 | Golden Knowledge | Reusable question/SQL/answer examples | [`knowledge/golden/`](../knowledge/golden/README.md) |
 | Evaluation references | Frozen cases, criteria, numeric facts, and fixtures; never supplied to the analyst | [`evaluation/datasets/`](../evaluation/datasets/README.md) |
 | Authored conversations | 20 fixed questions and follow-ups, with acceptance criteria kept outside agent context | [`evaluation/scenarios/`](../evaluation/scenarios/README.md) |
@@ -144,7 +144,7 @@ Deletion requires an exact preview and the user's `/confirm TOKEN`, handled outs
 
 Each prompt receives an independent budget. Analyst calls, runtime review, retries, and repairs share that prompt's allowance.
 
-Defaults in [`config.py`](../src/retail_agent/config.py): $1, 120 seconds, 12 model calls, 8 queries, and 24 tool calls, with 30 seconds and execution capacity reserved for review.
+Defaults in [`config.py`](../src/retail_insight/config.py): $1, 120 seconds, 12 model calls, 8 queries, and 24 tool calls, with 30 seconds and execution capacity reserved for review.
 
 Model calls reserve estimated input and maximum output cost. Complete usage settles input, output, and thinking tokens at configured rates, releasing unused reservations. Unknown usage retains its reservation; query reservations remain conservative at the maximum-byte allowance. These values are estimates, not provider invoices.
 
@@ -168,7 +168,7 @@ Phoenix's native cost display uses its own registered pricing and span filters; 
 not duplicate child model costs. Metadata-only tracing continues to omit business content.
 
 Prompt definitions are shared between inference and Phoenix publication through
-`src/retail_agent/prompt_catalog.py` and `evaluation/prompt_catalog.py`. Git remains the source
+`src/retail_insight/runtime/prompts.py` and `evaluation/prompt_catalog.py`. Git remains the source
 of instructions. Evaluation startup publishes the analyst, reviewer (including its mandatory
 review skill), answer judge and trajectory judge to Phoenix Prompts. Normal CLI and manual
 tracing publish the two runtime definitions. Content hashes prevent duplicate versions and
@@ -179,20 +179,44 @@ Playground tests prompt variants but does not run the application's ADK tools or
 
 ## Modules
 
-Python paths below are relative to `src/retail_agent/`.
+All application code lives in `src/retail_insight/`:
 
-| Module | Responsibility |
+```text
+retail_insight/
+├── agents/
+│   ├── retail/
+│   ├── inventory/
+│   ├── distribution/
+│   ├── coordinator/
+│   └── registry.py
+├── runtime/
+├── review/
+├── tools/
+├── integrations/
+├── a2a/
+├── interfaces/
+├── config.py
+└── contracts.py
+```
+
+| Location | Responsibility |
 |---|---|
-| `cli.py`, `terminal.py` | CLI commands, completion menu, progress, Markdown rendering |
-| `runtime.py`, `turn.py` | Analyst orchestration, conversation context, per-prompt state |
-| `reviewer.py`, `prompts/` | Completion review and model instructions |
-| `tools/`, `services/` | Tool contracts and domain implementations |
-| `skills/` | Runtime skill catalog and loader |
-| `budget.py`, `provider.py` | Limits, provider retries, usage settlement |
-| `observability.py` | Optional tracing, export redaction, synthetic capture |
-| `config.py`, `contracts.py`, `privacy.py` | Configuration, shared types, privacy controls |
+| `agents/<role>/agent.py` | Agent-specific composition and runtime configuration |
+| `agents/<role>/tools.py`, `prompt.md`, `skills/` | Capabilities, instructions and analytical methods owned by that agent |
+| `agents/registry.py` | Construct the requested agent for the A2A service |
+| `runtime/analyst.py`, `service.py`, `turn.py` | Shared ADK loop, persistent-service support and per-question state |
+| `runtime/budget.py`, `provider.py` | Execution limits, provider retries and usage settlement |
+| `runtime/skills/` | Shared skill loader and reusable guidance |
+| `review/` | Completion tool, reviewer, review prompt and mandatory rubric |
+| `tools/` | Reusable analytics, knowledge, skill and report tools |
+| `integrations/` | Scoped BigQuery, local storage, Maps MCP and Phoenix adapters |
+| `a2a/` | Server, client, authentication and persistent task storage |
+| `interfaces/` | Standalone CLI, stack commands, terminal rendering and GUI gateway |
+| `config.py`, `contracts.py` | Configuration and shared data contracts |
 
-Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests.
+Each agent owns its definition while reusing the same reviewed execution loop. The four Docker services select their agent through the registry; separate deployments do not require duplicated runtimes. `retail-agent`, `retail-stack` and `retail-eval` keep their existing command names.
+
+Repository-level `knowledge/` contains runtime examples and fixtures. `evaluation/` contains the independent evaluation system; `tests/` contains deterministic contracts and integration tests. Evaluation references remain outside the application package and agent images.
 
 ## Independent evaluation
 

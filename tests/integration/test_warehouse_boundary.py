@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from google.api_core.exceptions import Conflict
 
-from retail_agent.services.warehouse import DataError, QueryGateway
+from retail_insight.integrations.bigquery.retail import DataError, QueryGateway
 
 
 def client_with_rows():

@@ -9,8 +9,8 @@ from google.adk.models.llm_response import LlmResponse
 from pydantic import PrivateAttr
 
 from evaluation.models import Fault
-from retail_agent.services.reports import ReportError, ReportStore
-from retail_agent.services.warehouse import DataError, QueryGateway, compile_query
+from retail_insight.integrations.bigquery.retail import DataError, QueryGateway, compile_query
+from retail_insight.integrations.reports import ReportError, ReportStore
 
 
 class Schedule:

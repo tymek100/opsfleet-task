@@ -230,7 +230,7 @@ def judge_source(row: dict, roots: list[dict], captures: dict, source_hashes: di
 
 
 def build_plan(database: Path, artifacts: Path, canonical: Path) -> dict:
-    from retail_agent import observability
+    from retail_insight.integrations.phoenix import tracing as observability
 
     sources = {
         str(path.resolve()): digest(path) for path in (Path(__file__), Path(observability.__file__))

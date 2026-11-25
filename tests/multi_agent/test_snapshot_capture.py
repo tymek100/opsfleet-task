@@ -8,9 +8,9 @@ from evaluation.multi_agent.oracle import AS_OF
 from evaluation.multi_agent.snapshot import capture
 
 
-def fake_client(monkeypatch, *, total_rows=0, billed=None):
+def fake_client(monkeypatch, *, total_rows: int | None = 0, billed=None):
     class Rows(list):
-        pass
+        total_rows: int | None
 
     rows = Rows()
     rows.total_rows = total_rows

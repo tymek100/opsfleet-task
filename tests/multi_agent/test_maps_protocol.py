@@ -8,8 +8,8 @@ import pytest
 import uvicorn
 from mcp.server.fastmcp import FastMCP
 
-from retail_agents.domains.maps import MapsClient
-from retail_agents.ephemeral import contains_maps, scrub_maps
+from retail_insight.integrations.maps.client import MapsClient
+from retail_insight.integrations.maps.privacy import contains_maps, scrub_maps
 
 
 def test_ephemeral_redaction_preserves_correlation_without_provider_content():
@@ -65,7 +65,7 @@ async def test_maps_client_uses_native_mcp_and_filters_discovered_capabilities(m
             while not application.started:
                 await asyncio.sleep(0.01)
         monkeypatch.setattr(
-            "retail_agents.domains.maps.MAPS_ENDPOINT", f"http://127.0.0.1:{port}/mcp"
+            "retail_insight.integrations.maps.client.MAPS_ENDPOINT", f"http://127.0.0.1:{port}/mcp"
         )
         client = MapsClient(api_key="local-contract-only")
         description = await client.describe(timeout=5)

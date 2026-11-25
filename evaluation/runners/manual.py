@@ -24,10 +24,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.conversation import _capture_turn, report_state
-from retail_agent.config import Settings, repository_root
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.observability import sanitize_capture, trace_context
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.config import Settings, repository_root
+from retail_insight.contracts import DEMO_USERS
+from retail_insight.integrations.phoenix.tracing import sanitize_capture, trace_context
 
 
 class InitialReport(BaseModel):
@@ -72,8 +72,8 @@ def _source_paths() -> list[Path]:
     root = repository_root()
     return sorted(
         [
-            *root.glob("src/retail_agent/**/*.py"),
-            *root.glob("src/retail_agent/**/*.md"),
+            *root.glob("src/retail_insight/**/*.py"),
+            *root.glob("src/retail_insight/**/*.md"),
             *root.glob("knowledge/golden/*.json"),
             *root.glob("evaluation/**/*.py"),
             root / "uv.lock",
@@ -221,9 +221,9 @@ async def run_manual(
             from evaluation.reporting.phoenix import client_for
             from evaluation.reporting.phoenix_service import ensure_phoenix
             from evaluation.settings import EvaluationSettings
-            from retail_agent.observability import configure_tracing
-            from retail_agent.phoenix_prompts import sync_prompts
-            from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
+            from retail_insight.integrations.phoenix.prompts import sync_prompts
+            from retail_insight.integrations.phoenix.tracing import configure_tracing
+            from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
             phoenix_settings = EvaluationSettings(phoenix_url=phoenix_url)
             await asyncio.to_thread(

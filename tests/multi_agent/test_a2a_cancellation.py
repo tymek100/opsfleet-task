@@ -6,8 +6,8 @@ import socket
 import pytest
 import uvicorn
 
-from retail_agents.client import AgentClient
-from retail_agents.server import create_app
+from retail_insight.a2a.client import AgentClient
+from retail_insight.a2a.server import create_app
 from tests.multi_agent.test_transport import AS_OF, SECRET, ReviewedRuntime
 
 
@@ -24,12 +24,18 @@ async def test_cancel_streaming_client_stops_remote_execution(settings, monkeypa
                 cancelled.set()
                 raise
 
-    monkeypatch.setattr("retail_agents.server.RoleAnalyst", WaitingRuntime)
+    monkeypatch.setattr("retail_insight.a2a.server.create_agent", WaitingRuntime)
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))
     listener.listen()
     port = listener.getsockname()[1]
-    app = create_app("inventory", settings, secret=SECRET, demo_token="local-only", public_url=f"http://127.0.0.1:{port}")
+    app = create_app(
+        "inventory",
+        settings,
+        secret=SECRET,
+        demo_token="local-only",
+        public_url=f"http://127.0.0.1:{port}",
+    )
     server = uvicorn.Server(uvicorn.Config(app, log_level="error"))
     serving = asyncio.create_task(server.serve(sockets=[listener]))
     request = None

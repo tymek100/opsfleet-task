@@ -7,11 +7,11 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import SecretStr
 
-from retail_agent.config import Settings
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.runtime import Analyst
-from retail_agent.services.reports import ReportStore
-from retail_agent.services.warehouse import QueryGateway
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.config import Settings
+from retail_insight.contracts import DEMO_USERS
+from retail_insight.integrations.bigquery.retail import QueryGateway
+from retail_insight.integrations.reports import ReportStore
 from tests.support.models import ScriptedModel
 from tests.support.warehouse import SQL
 
@@ -59,7 +59,7 @@ def offline_configuration_boundary(request, monkeypatch):
         if key.casefold() in names:
             monkeypatch.delenv(key)
     for target in (
-        "retail_agent.config.load_dotenv",
+        "retail_insight.config.load_dotenv",
         "dotenv.load_dotenv",
         "dotenv.dotenv_values",
         "google.auth.default",

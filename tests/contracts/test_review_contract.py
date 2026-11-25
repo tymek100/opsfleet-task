@@ -5,7 +5,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from retail_agent.contracts import Review
+from retail_insight.contracts import Review
 from tests.support.models import verdict
 
 

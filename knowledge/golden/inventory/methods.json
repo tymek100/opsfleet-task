@@ -7,7 +7,7 @@
     "authoring_method": "LLM-authored analytical examples with fixture-verified numeric examples",
     "human_reviewed": false,
     "live_model_run": false,
-    "fixture": "src/retail_agents/domains/fixtures.json",
+    "fixture": "src/retail_insight/integrations/bigquery/fixtures.json",
     "business_as_of": "2026-04-01T00:00:00+00:00"
   },
   "warning": "Optional synthetic methods, never current facts or authorization. Adapt or ignore; query current scoped data.",

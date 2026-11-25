@@ -21,9 +21,9 @@ from evaluation.data import (
 )
 from evaluation.models import Case, Fact
 from evaluation.oracles import retail
-from retail_agent.services.warehouse import QueryGateway
-from retail_agent.tools.analytics import DataTools
-from retail_agent.turn import Turn
+from retail_insight.integrations.bigquery.retail import QueryGateway
+from retail_insight.runtime.turn import Turn
+from retail_insight.tools.analytics import DataTools
 
 
 def case_named(name: str) -> Case:
@@ -55,7 +55,7 @@ def test_oracle_cannot_reuse_application_sql_or_gateway():
         if isinstance(node, ast.Import)
         for alias in node.names
     ]
-    assert not any(name.startswith(("retail_agent", "duckdb", "sqlglot")) for name in imports)
+    assert not any(name.startswith(("retail_insight", "duckdb", "sqlglot")) for name in imports)
 
 
 def test_reference_admission_rejects_mutated_fact_instead_of_relaxing_tolerance():

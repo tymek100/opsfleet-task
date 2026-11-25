@@ -4,7 +4,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from retail_agent.services.warehouse import DataError, QueryGateway, analyze_results, compile_query
+from retail_insight.integrations.bigquery.retail import (
+    DataError,
+    QueryGateway,
+    analyze_results,
+    compile_query,
+)
 
 AS_OF = datetime(2026, 4, 1, 0, 30, 45, tzinfo=UTC)
 SQL_CLOCK = "SELECT CURRENT_DATE() AS today, CURRENT_TIMESTAMP() AS now, CURRENT_DATE('America/Los_Angeles') AS local_date, CURRENT_DATETIME() AS local_datetime, CURRENT_TIME() AS local_time"

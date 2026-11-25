@@ -460,7 +460,7 @@ def capture(
 
 
 def main() -> None:
-    from retail_agent.config import Settings
+    from retail_insight.config import Settings
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, default=Path(".artifacts/manual-reference"))

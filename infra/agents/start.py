@@ -117,7 +117,7 @@ def prepare(backend: str, evaluation_fixtures: bool = False) -> None:
             )
             if evaluation_fixtures
             else (
-                ROOT / "src/retail_agents/domains/fixtures.json",
+                ROOT / "src/retail_insight/integrations/bigquery/fixtures.json",
                 ROOT / "knowledge/fixtures/retail_seed_v1.sql",
             )
         )
@@ -184,11 +184,9 @@ def up(backend: str = "fixture", build: bool = True, evaluation_fixtures: bool =
     }
     (STATE / "images.json").write_text(json.dumps(image_manifest, indent=2) + "\n")
     print("Agent stack ready. Phoenix: http://127.0.0.1:6006")
-    print("Inspector: http://127.0.0.1:8080 (open its tokenized URL from the logs below).")
-    print(
-        "For agent authentication, use Bearer plus the local token printed by retail-stack token."
-    )
-    subprocess.run(compose_args("logs", "--tail", "12", "inspector"), cwd=ROOT, check=True)
+    port = os.environ.get("INSPECTOR_PORT", "8080")
+    print(f"Agent GUI: http://localhost:{port} — ready as Alice (Calvin Klein).")
+    print("Open the link to chat with the coordinator or select a specialist. No tokens required.")
 
 
 def main() -> None:

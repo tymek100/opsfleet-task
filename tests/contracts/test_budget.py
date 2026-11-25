@@ -2,7 +2,7 @@
 
 import pytest
 
-from retail_agent.budget import Budget, LimitReached
+from retail_insight.runtime.budget import Budget, LimitReached
 
 
 def test_settlement_releases_only_its_hold_and_is_idempotent(settings):

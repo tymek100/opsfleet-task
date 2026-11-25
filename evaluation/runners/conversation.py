@@ -12,11 +12,11 @@ from evaluation.models import Case
 from evaluation.results import RunManifest, Trial, TurnRecord
 from evaluation.runners.artifacts import digest, prepare_run, write_json
 from evaluation.runners.faults import FaultGateway, FaultModel, FaultReports, Schedule
-from retail_agent.config import Settings
-from retail_agent.contracts import DEMO_USERS
-from retail_agent.observability import span
-from retail_agent.provider import make_gemini
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
+from retail_insight.config import Settings
+from retail_insight.contracts import DEMO_USERS
+from retail_insight.integrations.phoenix.tracing import span
+from retail_insight.runtime.provider import make_gemini
 
 
 def report_state(store) -> list[dict]:

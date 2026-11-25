@@ -8,11 +8,11 @@ from typing import ClassVar
 import httpx
 import pytest
 
-from retail_agent.contracts import Answer, TurnResult
-from retail_agents.auth import authenticate, canonical_json, signed_headers
-from retail_agents.client import AgentClient
-from retail_agents.runtime import PersistentBudget
-from retail_agents.server import create_app
+from retail_insight.a2a.auth import authenticate, canonical_json, signed_headers
+from retail_insight.a2a.client import AgentClient
+from retail_insight.a2a.server import create_app
+from retail_insight.contracts import Answer, TurnResult
+from retail_insight.runtime.service import PersistentBudget
 
 SECRET = "a-local-contract-signing-key-with-48-characters-minimum"
 DEMO_TOKEN = "local-alice-demo-token"
@@ -24,7 +24,7 @@ class ReviewedRuntime:
 
     instances: ClassVar[list] = []
     calls: ClassVar[list] = []
-    entered = None
+    entered: ClassVar[asyncio.Event]
 
     def __init__(self, role, settings, identity, **kwargs):
         self.role, self.settings, self.identity = role, settings, identity
@@ -72,7 +72,7 @@ class ReviewedRuntime:
 def app(settings, monkeypatch):
     ReviewedRuntime.instances, ReviewedRuntime.calls = [], []
     ReviewedRuntime.entered = asyncio.Event()
-    monkeypatch.setattr("retail_agents.server.RoleAnalyst", ReviewedRuntime)
+    monkeypatch.setattr("retail_insight.a2a.server.create_agent", ReviewedRuntime)
     return create_app(
         "inventory",
         settings,
@@ -135,7 +135,7 @@ def test_transport_signature_covers_identity_body_audience_and_expiry(monkeypatc
         with pytest.raises(ValueError):
             authenticate(bad_headers, bad_body, SECRET, DEMO_TOKEN, audience)
     now = time.time()
-    monkeypatch.setattr("retail_agents.auth.time.time", lambda: now + 301)
+    monkeypatch.setattr("retail_insight.a2a.auth.time.time", lambda: now + 301)
     with pytest.raises(ValueError):
         authenticate(headers, body, SECRET, DEMO_TOKEN, "inventory")
 
@@ -346,7 +346,7 @@ async def test_native_agent_client_decodes_scoped_artifact(app, monkeypatch, str
     def local_client(**kwargs):
         return original(transport=httpx.ASGITransport(app=app), **kwargs)
 
-    monkeypatch.setattr("retail_agents.client.httpx.AsyncClient", local_client)
+    monkeypatch.setattr("retail_insight.a2a.client.httpx.AsyncClient", local_client)
     client = AgentClient({"inventory": "http://inventory:8000"}, SECRET)
     result = await client.ask(
         "inventory", "Count our stock", identity="bob", as_of=AS_OF, stream=stream

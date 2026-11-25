@@ -13,8 +13,9 @@ uv run --locked retail-stack chat --user alice
 
 This builds four separate agent images, starts the official A2A Inspector GUI and reuses local
 Phoenix. Inspector exposes all four Agent Cards; the coordinator delegates to specialists through
-A2A. Open the Inspector URL printed during startup and use `retail-stack token` for its Alice-only
-Bearer credential. Phoenix is at [localhost:6006](http://127.0.0.1:6006).
+A2A. Open [localhost:8080](http://localhost:8080): the coordinator opens automatically and all
+four agents are ready to chat as Alice (Calvin Klein), without copying tokens or configuring
+authentication. Phoenix is at [localhost:6006](http://127.0.0.1:6006).
 
 Fixture mode still calls Gemini. Use `--backend bigquery` with Google Cloud application credentials
 for TheLook. Only distribution connects to Google Maps MCP; it needs `GOOGLE_MAPS_API_KEY` and
@@ -53,7 +54,7 @@ uv run --locked retail-agent chat --user alice --backend fixture --golden-bootst
 
 The application provides schema discovery, a Golden example catalog, warehouse queries, local result analysis, prior-answer access and private report management. The analyst selects examples from eligible summaries. Application services enforce permissions, privacy, budgets and deletion confirmation. Answers contain the model's reviewed Markdown; `/details` displays supporting SQL and evidence.
 
-Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Model-facing functions live in `src/retail_agent/tools/`, their database/storage implementations in `services/`, and skill Markdown in `skills/library/`. See [how skills and Golden examples work](docs/architecture.md#knowledge-and-evaluation-assets) and [skill authoring](src/retail_agent/skills/README.md).
+Runtime analytical skills are enabled by default. The analyst reads relevant methods on demand, and every evaluator call receives the review rubric. Each agent owns its definition, tool registration, prompt and skills under `src/retail_insight/agents/<role>/`. Shared tools live in `tools/`, execution and accounting in `runtime/`, completion review in `review/`, and external adapters in `integrations/`. See [how skills and Golden examples work](docs/architecture.md#knowledge-and-evaluation-assets) and [skill authoring](src/retail_insight/runtime/skills/README.md).
 
 - [Architecture](docs/architecture.md): the agent loop, tools, data access and implementation limits.
 - [Testing and evaluation](docs/evaluation.md): how tests, datasets, grading, and Phoenix work, with runnable commands.

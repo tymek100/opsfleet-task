@@ -4,7 +4,12 @@ from decimal import Decimal
 
 import pytest
 
-from retail_agent.services.warehouse import DataError, QueryGateway, analyze_results, compile_query
+from retail_insight.integrations.bigquery.retail import (
+    DataError,
+    QueryGateway,
+    analyze_results,
+    compile_query,
+)
 from tests.support.warehouse import Q1
 
 

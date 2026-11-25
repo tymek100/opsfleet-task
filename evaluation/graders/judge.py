@@ -19,8 +19,13 @@ from evaluation.models import TurnReference
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.results import Judgment, Trial, TurnRecord
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import prompt_attributes, record_observation, sanitize_capture, span
-from retail_agent.provider import _usage_counts
+from retail_insight.integrations.phoenix.tracing import (
+    prompt_attributes,
+    record_observation,
+    sanitize_capture,
+    span,
+)
+from retail_insight.runtime.provider import _usage_counts
 
 PROMPT_PATH = Path(__file__).parents[1] / "prompts/judge.md"
 MAX_VISIBLE_RESPONSE_BYTES = 64_000

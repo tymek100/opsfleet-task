@@ -9,9 +9,9 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.settings import EvaluationSettings
-from retail_agent.observability import configure_tracing, prompt_attributes
-from retail_agent.phoenix_prompts import _sync, phoenix_version, sync_prompts
-from retail_agent.prompt_catalog import analyst_prompt, reviewer_prompt
+from retail_insight.integrations.phoenix.prompts import _sync, phoenix_version, sync_prompts
+from retail_insight.integrations.phoenix.tracing import configure_tracing, prompt_attributes
+from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 from tests.support.models import finish, verdict
 
 
@@ -144,7 +144,7 @@ async def test_trace_versions_match_actual_role_and_do_not_leak_after_close(make
 
 
 def test_cli_registry_outage_keeps_tracing_and_repository_instructions(settings, monkeypatch):
-    from retail_agent import cli
+    from retail_insight.interfaces import cli
 
     exporter = InMemorySpanExporter()
     monkeypatch.setattr(
@@ -154,7 +154,7 @@ def test_cli_registry_outage_keeps_tracing_and_repository_instructions(settings,
     def unavailable(*args, **kwargs):
         raise ConnectionError("Controlled registry outage")
 
-    monkeypatch.setattr("retail_agent.phoenix_prompts.sync_prompts", unavailable)
+    monkeypatch.setattr("retail_insight.integrations.phoenix.prompts.sync_prompts", unavailable)
     session = cli._start_tracing(True, settings)
     assert session is not None
     try:

@@ -11,7 +11,7 @@ from evaluation.data import load_cases
 from evaluation.graders.runner import grade_run
 from evaluation.runners.artifacts import frozen_cases, read_json
 from evaluation.runners.conversation import run_cases
-from retail_agent.runtime import Analyst
+from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 
