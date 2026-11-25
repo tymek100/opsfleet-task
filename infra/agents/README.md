@@ -39,6 +39,8 @@ uv run agent-chat inventory
 uv run agent-chat distribution
 ```
 
+In an interactive terminal, type `/` to show `/help`, `/new`, `/exit` and `/quit`. Keep typing to filter with matching characters highlighted, then use arrows and Enter or Tab to select. Selection fills the input; press Enter again to run the command. Piped input supports the same commands without the dropdown.
+
 Each command connects to the named A2A service and retains conversation context for follow-ups. `/new` starts a new conversation; `/exit` ends the chat. Use `--context-id ID` to resume a conversation with the same agent. `--max-cost-usd` and `--deadline-seconds` bound each request.
 
 The running services already send traces to Phoenix under `retail-multi-agent`; the chat client needs no tracing flag. `retail-agent chat` remains the standalone retail CLI, where tracing is enabled with `--phoenix`. The older `retail-stack chat --agent ROLE` command remains compatible, defaulting to coordinator.

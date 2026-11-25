@@ -30,6 +30,8 @@ uv run agent-chat inventory
 uv run agent-chat distribution
 ```
 
+In an interactive terminal, type `/` to show `/help`, `/new`, `/exit` and `/quit`. Keep typing to filter with matching characters highlighted, then use arrows and Enter or Tab to select. Selection fills the input; press Enter again to run the command. Piped input supports the same commands without the dropdown.
+
 Use the coordinator for tasks combining sales, inventory and distribution. These commands connect to the Docker services, which send traces to Phoenix. See the [stack guide](infra/agents/README.md) for fixture mode and service setup.
 
 ## Standalone retail conversation

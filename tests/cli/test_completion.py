@@ -10,13 +10,18 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output import DummyOutput
 
-from retail_insight.interfaces.terminal import SlashCommandCompleter, create_prompt_session
+from retail_insight.interfaces.agent_cli import CHAT_COMMANDS
+from retail_insight.interfaces.terminal import (
+    COMMANDS,
+    SlashCommandCompleter,
+    create_prompt_session,
+)
 
 
 @asynccontextmanager
-async def prompt():
+async def prompt(commands=COMMANDS):
     with create_pipe_input() as pipe:
-        session = create_prompt_session(input=pipe, output=DummyOutput())
+        session = create_prompt_session(commands=commands, input=pipe, output=DummyOutput())
         task = asyncio.create_task(session.prompt_async())
         try:
             yield session, pipe, task
@@ -101,3 +106,26 @@ async def test_escape_restores_typed_filter_after_arrow_selection():
         pipe.send_text("\x1b")
         await observed(session, lambda: buffer.text == "/de" and buffer.complete_state is None)
         assert not task.done()
+
+
+@pytest.mark.parametrize(
+    "prefix,key,expected",
+    [("/", "\x1b[B\x1b[B\r", "/new"), ("/ex", "\t", "/exit")],
+)
+async def test_remote_chat_menu_supports_filtering_and_selection_without_submission(
+    prefix, key, expected
+):
+    async with prompt(CHAT_COMMANDS) as (session, pipe, task):
+        buffer = session.default_buffer
+        pipe.send_text(prefix)
+        await observed(session, lambda: buffer.complete_state is not None)
+        state = buffer.complete_state
+        assert state is not None
+        assert {c.text for c in state.completions} == (
+            {"/help", "/new", "/exit", "/quit"} if prefix == "/" else {"/exit"}
+        )
+        pipe.send_text(key)
+        await observed(session, lambda: buffer.text == expected and buffer.complete_state is None)
+        assert not task.done()
+        pipe.send_text("\r")
+        assert await asyncio.wait_for(task, 2) == expected

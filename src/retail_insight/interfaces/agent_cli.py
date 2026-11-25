@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from enum import StrEnum
 from typing import Annotated
 
@@ -12,9 +13,11 @@ from rich.markdown import Markdown
 
 from retail_insight.a2a.client import AgentClient
 from retail_insight.config import repository_root
+from retail_insight.interfaces.terminal import COMMANDS, command_help, create_prompt_session
 
 app = typer.Typer(help="Chat with a running coordinator or specialist agent.", no_args_is_help=True)
 console = Console()
+CHAT_COMMANDS = tuple(c for c in COMMANDS if c.name in {"/help", "/new", "/exit", "/quit"})
 HOST_PORTS = {"retail": 8001, "inventory": 8002, "distribution": 8003, "coordinator": 8004}
 AGENT_LABELS = {
     "coordinator": "Coordinator",
@@ -46,11 +49,18 @@ def run_chat(
     urls = {role: f"http://127.0.0.1:{port}" for role, port in HOST_PORTS.items()}
     client = AgentClient(urls, key_path.read_text().strip(), signed=True)
     label = AGENT_LABELS[agent]
-    console.print(f"{label} — full dataset access. /exit to leave.")
+    console.print(f"{label} — full dataset access. Type / for commands.")
+    session = (
+        create_prompt_session(commands=CHAT_COMMANDS)
+        if sys.stdin.isatty() and console.is_terminal and not console.is_dumb_terminal
+        else None
+    )
     conversation = context_id
     while True:
         try:
-            question = console.input("[bold]You> [/bold]").strip()
+            question = (
+                session.prompt() if session is not None else console.input("[bold]You> [/bold]")
+            ).strip()
         except (EOFError, KeyboardInterrupt):
             console.print()
             break
@@ -58,9 +68,15 @@ def run_chat(
             break
         if not question:
             continue
-        if question == "/new":
+        if question.lower() in {"/", "/help"}:
+            console.print(command_help(CHAT_COMMANDS), markup=False)
+            continue
+        if question.lower() == "/new":
             conversation = None
             console.print("Started a new conversation.")
+            continue
+        if question.startswith("/"):
+            console.print("Unknown command. Use /help.")
             continue
         console.print()
         try:

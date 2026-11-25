@@ -1,6 +1,6 @@
 """Interactive command discovery without submitting or authorizing operations."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from prompt_toolkit import PromptSession
@@ -41,8 +41,8 @@ COMMANDS = (
 )
 
 
-def command_help() -> str:
-    lines = ["Commands:", *(f"{c.usage:<18}{c.description}" for c in COMMANDS)]
+def command_help(commands: Sequence[Command] = COMMANDS) -> str:
+    lines = ["Commands:", *(f"{c.usage:<18}{c.description}" for c in commands)]
     lines.extend(
         [
             "Type / to browse commands; keep typing to filter, then use arrows and Enter or Tab.",
@@ -64,16 +64,16 @@ def _command_token(document: Document) -> bool:
 class SlashCommandCompleter(Completer):
     """Offer command names only; arguments and natural-language questions stay untouched."""
 
-    def __init__(self) -> None:
+    def __init__(self, commands: Sequence[Command] = COMMANDS) -> None:
         self._completer = FuzzyWordCompleter(
-            [command.name for command in COMMANDS],
+            [command.name for command in commands],
             meta_dict={
                 command.name: (
                     f"{command.argument} — {command.description}"
                     if command.argument
                     else command.description
                 )
-                for command in COMMANDS
+                for command in commands
             },
             WORD=True,
         )
@@ -86,7 +86,10 @@ class SlashCommandCompleter(Completer):
 
 
 def create_prompt_session(
-    *, input: Input | None = None, output: Output | None = None
+    *,
+    commands: Sequence[Command] = COMMANDS,
+    input: Input | None = None,
+    output: Output | None = None,
 ) -> PromptSession[str]:
     bindings = KeyBindings()
     command_token = Condition(lambda: _command_token(get_app().current_buffer.document))
@@ -103,7 +106,7 @@ def create_prompt_session(
             # Arrow navigation already inserts the selected completion. Commit it
             # without triggering a new completion task or submitting the input.
             buffer.complete_state = None
-            if any(command.name == completion.text and command.argument for command in COMMANDS):
+            if any(command.name == completion.text and command.argument for command in commands):
                 buffer.insert_text(" ", fire_event=False)
 
     @bindings.add("down", filter=command_token)
@@ -141,7 +144,7 @@ def create_prompt_session(
 
     session = PromptSession[str](
         [("class:prompt", "You> ")],
-        completer=SlashCommandCompleter(),
+        completer=SlashCommandCompleter(commands),
         complete_while_typing=command_token,
         enable_history_search=False,
         history=InMemoryHistory(),
