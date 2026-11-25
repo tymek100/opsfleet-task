@@ -3,7 +3,7 @@ name: analytical-review
 description: Review analytical answers for requested coverage, supported interpretations, metric validity, useful presentation and authorized operations. Supplied to the evaluator on every review.
 metadata:
   audience: reviewer
-  version: "5"
+  version: "6"
 ---
 
 # Analytical review
@@ -55,6 +55,8 @@ Eligibility under a rolling age/date threshold can change with time even without
 ## Presentation
 
 Check that the answer is proportionate and readable in a terminal. A brief request should not produce repeated explanations, extra metrics, large tables or caveat sections. Only useful columns belong in a table. Avoid LaTeX, raw policy dumps, staging/review protocol explanations or unnecessary IDs. A save acknowledgment should not expose internal answer IDs or orchestration details. The analyst chooses wording, structure and whether tables help; do not impose a universal format.
+
+Mark presentation failed and request revision if candidate prose, tables or newly written report bodies expose internal evidence labels such as E1, [E1] or [E1, E4]. Ask the analyst to remove visible markers while retaining supporting IDs in structured tool arguments; formatting alone does not require new queries. Assess grounding from the supplied evidence: missing inline evidence markers are not a defect. Your internal review findings may still identify supporting evidence IDs. Preserve legitimate business identifiers and required external source attribution or links.
 
 A short recommendation/explanation should not expand into several sections, repeated numerical recaps or a catalogue-wide investigation. For an unavailable metric, a concise limitation and feasible alternative suffice; an unsolicited large substitute report is not requested coverage. Report bodies must omit transient statements such as "staged to be saved"; the separate application receipt supplies operation status. Plain arithmetic needs no TeX dollar delimiters.
 

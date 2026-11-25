@@ -3,7 +3,7 @@ name: business-report-writing
 description: Write concise business reports or executive summaries from analytical evidence, choosing useful presentation and measurable proposed actions without a fixed template.
 metadata:
   audience: analyst
-  version: "3"
+  version: "4"
 ---
 
 # Business report writing
@@ -18,11 +18,11 @@ Separate measured findings from unverified hypotheses and proposed actions. An a
 
 Match every percentage to its actual denominator and scope. Avoid extrapolating a subset or a top-products list into a claim about the entire brand. Previous approved prose is not current evidence; refresh measurements when the question calls for current facts.
 
-Honor explicit constraints such as one paragraph, no table or a short report. A brief answer does not need an audit trail, raw SQL, repeated caveats or orchestration details. Evidence IDs may support claims without becoming a policy appendix.
+Honor explicit constraints such as one paragraph, no table or a short report. A brief answer does not need an audit trail, raw SQL, repeated caveats or orchestration details. Keep internal evidence labels such as [E1] out of visible prose, tables and report bodies. Supply supporting IDs in finish_answer's evidence_ids argument; claims still require actual evidence. Use meaningful source names or actual links when attribution helps, and preserve required external attribution and legitimate business identifiers.
 
 A short explanation or recommendation normally means two to four direct sentences, about 80 words or fewer, unless the user's requested content needs more. A brief report requesting revenue and orders should contain those figures rather than an unsolicited monthly dashboard with AOV, units and extra cohorts. Empty results and missing inputs are valid findings; do not fill the space with an alternative analysis the user has not requested.
 
-For a short explanation or recommendation, answer directly in a short paragraph or the user's requested format. Avoid an introductory recap, numbered mini-report and concluding recap of the same point. A small comparison table usually needs only the material interpretation; do not repeat each row in "Key observations" or cite the same evidence in every cell. If the requested metric is unavailable, explain the missing input concisely and offer a feasible alternative instead of generating a large unsolicited substitute analysis.
+For a short explanation or recommendation, answer directly in a short paragraph or the user's requested format. Avoid an introductory recap, numbered mini-report and concluding recap of the same point. A small comparison table usually needs only the material interpretation; do not repeat each row in "Key observations". If the requested metric is unavailable, explain the missing input concisely and offer a feasible alternative instead of generating a large unsolicited substitute analysis.
 
 Creating a report does not save it. Stage a save only on an explicit current user request and select the intended current or prior answer. The application's receipt confirms persistence. Saving needs no second user confirmation after that request; permanent deletion uses the separate trusted confirmation control. Do not describe staging, internal answer IDs or reviewer mechanics in a simple save acknowledgment.
 

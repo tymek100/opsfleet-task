@@ -25,7 +25,10 @@ class CompletionTools:
     async def finish_answer(
         self, markdown: str, evidence_ids: list[str], outcome: str, tool_context: ToolContext
     ) -> dict:
-        """Submit your complete Markdown for review. Outcome: answer, clarification, refusal, partial."""
+        """Submit complete Markdown for review; keep internal evidence IDs only in evidence_ids.
+
+        Outcome: answer, clarification, refusal, partial.
+        """
         self.turn.budget.tool(completion=True)
         if self.turn.finish_conflict or self.turn.active:
             return {
