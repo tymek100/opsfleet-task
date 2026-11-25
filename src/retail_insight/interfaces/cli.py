@@ -6,21 +6,20 @@ import logging
 import signal
 import sys
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from pathlib import Path
-from time import monotonic
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
-from rich.text import Text
 
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY, TurnResult
 from retail_insight.integrations.phoenix.tracing import TracingSession, configure_tracing
+from retail_insight.interfaces.progress import ThinkingStatus
 from retail_insight.interfaces.terminal import command_help, create_prompt_session
 from retail_insight.runtime.privacy import screen
 
@@ -102,59 +101,8 @@ def display(result: TurnResult) -> None:
         show_preview(result.deletion_preview)
 
 
-_TOOL_STATUS_MESSAGES = {
-    "describe_data": "Checking available data...",
-    "load_skill": "Reading analysis guidance...",
-    "load_skill_resource": "Reading supporting guidance...",
-    "list_golden": "Browsing analysis examples...",
-    "read_golden": "Reading an analysis example...",
-    "query_data": "Looking up retail data...",
-    "read_result": "Reading query results...",
-    "analyze_results": "Analyzing the results...",
-    "query_state_summary": "Summarizing sales by state...",
-    "search_reports": "Searching your saved reports...",
-    "read_report": "Reading a saved report...",
-    "read_answer": "Reading an earlier answer...",
-    "stage_report_save": "Preparing to save your report...",
-    "preview_report_deletion": "Preparing a report deletion preview...",
-    "cancel_report_deletion": "Cancelling the pending deletion...",
-    "finish_answer": "Submitting the answer for review...",
-}
-
-
-@dataclass
-class _QuestionStatus:
-    started: float
-    detail: str = "Considering your question..."
-
-    def __rich__(self) -> Text:
-        # Rich refreshes this even while the agent is waiting without emitting events.
-        elapsed = int(monotonic() - self.started)
-        return Text(f"Elapsed: {elapsed}s | Status: {self.detail}")
-
-
 async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
-    indicator = _QuestionStatus(started=monotonic())
-    with console.status(indicator, spinner="dots"):
-
-        def progress(event: dict) -> None:
-            name = event["event"]
-            if name == "tool_start":
-                detail = _TOOL_STATUS_MESSAGES.get(event["tool"], "Working on your request...")
-            elif name == "review_start":
-                detail = "Reviewing the answer..."
-            elif name == "model_call":
-                detail = (
-                    "Checking the answer against the evidence..."
-                    if event.get("role") == "reviewer"
-                    else "Considering the next step..."
-                )
-            else:
-                return
-            indicator.detail = detail
-
-        previous_progress = getattr(analyst, "progress", None)
-        analyst.progress = progress
+    with console.status(ThinkingStatus(), spinner="dots"):
         task = asyncio.create_task(analyst.ask(prompt))
         loop = asyncio.get_running_loop()
         previous_handler = signal.getsignal(signal.SIGINT)
@@ -162,7 +110,6 @@ async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
         try:
             result = await task
         finally:
-            analyst.progress = previous_progress
             loop.remove_signal_handler(signal.SIGINT)
             signal.signal(signal.SIGINT, previous_handler)
     return result

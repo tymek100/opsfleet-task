@@ -7,7 +7,7 @@ from rich.console import Console
 from typer.testing import CliRunner
 
 from retail_insight.contracts import Answer, TurnResult
-from retail_insight.interfaces import cli
+from retail_insight.interfaces import cli, progress
 from tests.support.models import finish, verdict
 
 
@@ -57,20 +57,25 @@ async def test_piped_conversation_has_one_blank_line_after_question_and_before_n
     assert "Which quarter?" in rendered and len(app.model.requests) == 1
 
 
-def test_status_timer_advances_without_events_and_detail_changes_independently(monkeypatch):
+def test_thinking_timer_and_dots_advance_without_agent_events_and_reset_each_question(monkeypatch):
     now = [100.0]
-    monkeypatch.setattr(cli, "monotonic", lambda: now[0])
-    status = cli._QuestionStatus(started=100)
-    assert status.__rich__().plain == "Elapsed: 0s | Status: Considering your question..."
-    now[0] += 7
-    assert "Elapsed: 7s" in status.__rich__().plain
-    status.detail = "Reviewing the answer..."
-    assert status.__rich__().plain == "Elapsed: 7s | Status: Reviewing the answer..."
-    next_question = cli._QuestionStatus(started=now[0])
-    assert "Elapsed: 0s" in next_question.__rich__().plain
+    monkeypatch.setattr(progress, "monotonic", lambda: now[0])
+    status = progress.ThinkingStatus()
+    assert status.__rich__().plain.rstrip() == "0s Thinking."
+    now[0] += 0.5
+    assert status.__rich__().plain.rstrip() == "0s Thinking.."
+    now[0] += 0.5
+    assert status.__rich__().plain.rstrip() == "1s Thinking..."
+    now[0] += 0.5
+    assert status.__rich__().plain.rstrip() == "1s Thinking."
+    now[0] = 107.0
+    assert status.__rich__().plain.rstrip() == "7s Thinking..."
+    assert progress.ThinkingStatus().__rich__().plain.rstrip() == "0s Thinking."
 
 
-async def test_run_question_restores_original_callback_after_completion(make_agent, output):
+async def test_run_question_preserves_progress_callback_while_displaying_thinking(
+    make_agent, output
+):
     app = make_agent([finish("Which year?", outcome="clarification")], [verdict()])
     events = []
     callback = events.append
@@ -78,7 +83,7 @@ async def test_run_question_restores_original_callback_after_completion(make_age
     result = await cli.run_question(app, "Compare Q1.")
     assert result.status == "approved"
     assert app.progress is callback
-    assert events == []
+    assert events
 
 
 def test_ask_failure_returns_nonzero_and_closes_storage(make_agent, monkeypatch):

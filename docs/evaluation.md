@@ -328,8 +328,8 @@ uv run --group evaluation ruff format --check .
 uv run --group evaluation pyright
 ```
 
-Offline tests block external sockets and credential discovery. CI runs these checks with
-coverage. Tests marked `live` or `phoenix` are excluded by default. The Phoenix SDK pytest
+Run these checks locally; the repository has no GitHub Actions CI workflow. Offline tests
+block external sockets and credential discovery. Tests marked `live` or `phoenix` are excluded by default. The Phoenix SDK pytest
 plugin is disabled so tests cannot automatically create `tests/integration/...` datasets.
 
 | Collection | Purpose | Analyst access |

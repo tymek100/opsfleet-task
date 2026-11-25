@@ -32,6 +32,8 @@ uv run agent-chat distribution
 
 In an interactive terminal, type `/` to show `/help`, `/new`, `/exit` and `/quit`. Keep typing to filter with matching characters highlighted, then use arrows and Enter or Tab to select. Selection fills the input; press Enter again to run the command. Piped input supports the same commands without the dropdown.
 
+While a request is running, the CLI displays a spinner and `0s Thinking.`; seconds advance and the dots cycle automatically.
+
 Use the coordinator for tasks combining sales, inventory and distribution. These commands connect to the Docker services, which send traces to Phoenix. See the [stack guide](infra/agents/README.md) for fixture mode and service setup.
 
 ## Standalone retail conversation
@@ -61,7 +63,7 @@ Write a short Q1 2026 report and suggest two measurable actions for Q2. Do not s
 Save that exact report as Q1 2026 Review.
 ```
 
-The model generates the complete answer, including optional tables, and the evaluator can request revisions. The progress indicator reports model, tool and review activity. Deadline exhaustion or reviewer unavailability returns an incomplete status; unreviewed answers are not published.
+The model generates the complete answer, including optional tables, and the evaluator can request revisions. While waiting, the CLI shows a spinner, elapsed seconds and `Thinking` with cycling dots (`.`, `..`, `...`). The timer resets for each question and advances independently of agent events. Deadline exhaustion or reviewer unavailability returns an incomplete status; unreviewed answers are not published.
 
 ## Use synthetic data
 

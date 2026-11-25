@@ -13,6 +13,7 @@ from rich.markdown import Markdown
 
 from retail_insight.a2a.client import AgentClient
 from retail_insight.config import repository_root
+from retail_insight.interfaces.progress import ThinkingStatus
 from retail_insight.interfaces.terminal import COMMANDS, command_help, create_prompt_session
 
 app = typer.Typer(help="Chat with a running coordinator or specialist agent.", no_args_is_help=True)
@@ -80,7 +81,7 @@ def run_chat(
             continue
         console.print()
         try:
-            with console.status(f"Waiting for {label.lower()}…"):
+            with console.status(ThinkingStatus(), spinner="dots"):
                 result = asyncio.run(
                     client.ask(
                         agent,
