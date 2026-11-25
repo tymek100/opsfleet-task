@@ -450,7 +450,12 @@ def capture(
                 "rows": len(rows),
                 "estimated_bytes": estimated,
                 "processed_bytes": int(job.total_bytes_processed or 0),
-                "billed_bytes": int(job.total_bytes_billed or 0),
+                "billed_bytes": int(job.total_bytes_billed)
+                if job.total_bytes_billed is not None
+                else max_query_bytes,
+                "billing_basis": "reported billed bytes"
+                if job.total_bytes_billed is not None
+                else "configured cap; billed usage unavailable",
                 "sql": sql,
             }
             save(directory / "manifest.json", manifest)

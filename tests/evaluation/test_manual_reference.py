@@ -112,7 +112,8 @@ def test_reference_queries_never_select_raw_customer_geography():
         queries("untrusted` UNION ALL SELECT 1")
 
 
-def test_successful_capture_is_complete_and_never_silently_truncated(tmp_path):
+@pytest.mark.parametrize("billed", [20, 0, None])
+def test_successful_capture_is_complete_and_never_silently_truncated(tmp_path, billed):
     raw_item = item(1, 1, 1, 10.1, datetime(2026, 1, 2, tzinfo=UTC))
     product = {key: raw_item[key] for key in ("product_id", "product_name", "brand", "category")}
 
@@ -124,7 +125,7 @@ def test_successful_capture_is_complete_and_never_silently_truncated(tmp_path):
     client = Mock()
     jobs = []
     for records in ([raw_item], [product], []):
-        job = Mock(job_id=f"job-{len(jobs)}", total_bytes_processed=20, total_bytes_billed=20)
+        job = Mock(job_id=f"job-{len(jobs)}", total_bytes_processed=20, total_bytes_billed=billed)
         job.result.return_value = Rows(records)
         jobs.extend([SimpleNamespace(total_bytes_processed=20), job])
     client.query.side_effect = jobs
@@ -133,6 +134,9 @@ def test_successful_capture_is_complete_and_never_silently_truncated(tmp_path):
     )
     result = capture(config, tmp_path / "reference", brands=("Calvin Klein",), client=client)
     assert result["status"] == "completed"
+    for job in result["jobs"].values():
+        assert job["billed_bytes"] == (100_000_000 if billed is None else billed)
+        assert ("unavailable" in job["billing_basis"]) == (billed is None)
     assert len(result["reference_implementation_sha256"]) == 64
     assert set(result["files_sha256"]) == {
         "transactions.json",

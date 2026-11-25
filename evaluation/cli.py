@@ -9,13 +9,20 @@ from urllib.parse import urlparse
 
 import typer
 
-from evaluation.settings import EvaluationSettings
+from evaluation.settings import MAX_EVALUATION_COST_USD, EvaluationSettings, validate_run_budget
 
 app = typer.Typer(
     pretty_exceptions_show_locals=False,
     no_args_is_help=True,
     help="Independent retail-agent evaluation with local Phoenix.",
 )
+
+
+def cost_limit(value: float) -> float:
+    try:
+        return validate_run_budget(value)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from None
 
 
 def echo(value) -> None:
@@ -106,7 +113,13 @@ def sync_prompts(
 def run(
     suite: str = "smoke",
     repetitions: int = typer.Option(1, min=1, max=20),
-    max_cost_usd: float = typer.Option(..., min=0.01),
+    max_cost_usd: float = typer.Option(
+        MAX_EVALUATION_COST_USD,
+        min=0.01,
+        max=MAX_EVALUATION_COST_USD,
+        callback=cost_limit,
+        help="Shared run budget in USD, including agent work, references and judges.",
+    ),
     deadline_seconds: float = typer.Option(..., min=1),
     allow_unreviewed: bool = False,
     phoenix: bool = typer.Option(True, hidden=True),
@@ -201,7 +214,13 @@ def _judge(model: str | None, max_cost_usd: float, deadline_seconds: float):
 @app.command()
 def grade(
     run_directory: Annotated[Path, typer.Option("--run", exists=True, file_okay=False)],
-    max_cost_usd: float = typer.Option(..., min=0.01),
+    max_cost_usd: float = typer.Option(
+        MAX_EVALUATION_COST_USD,
+        min=0.01,
+        max=MAX_EVALUATION_COST_USD,
+        callback=cost_limit,
+        help="Shared run budget in USD, including agent work, references and judges.",
+    ),
     deadline_seconds: float = typer.Option(..., min=1),
     code_only: bool = False,
     candidates: bool = True,
@@ -278,7 +297,13 @@ def publish_conversations(
 
 @app.command()
 def run_conversations(
-    max_cost_usd: float = typer.Option(..., min=0.01),
+    max_cost_usd: float = typer.Option(
+        MAX_EVALUATION_COST_USD,
+        min=0.01,
+        max=MAX_EVALUATION_COST_USD,
+        callback=cost_limit,
+        help="Shared run budget in USD, including agent work, references and judges.",
+    ),
     deadline_seconds: float = typer.Option(..., min=1),
     phase: str = "recheck",
     only: str | None = None,
@@ -345,7 +370,13 @@ def sync_conversations(
 
 @app.command()
 def calibrate(
-    max_cost_usd: float = typer.Option(..., min=0.01),
+    max_cost_usd: float = typer.Option(
+        MAX_EVALUATION_COST_USD,
+        min=0.01,
+        max=MAX_EVALUATION_COST_USD,
+        callback=cost_limit,
+        help="Shared run budget in USD, including agent work, references and judges.",
+    ),
     deadline_seconds: float = typer.Option(..., min=1),
     split: str = "validation",
     judge_model: str | None = None,
@@ -385,13 +416,19 @@ def compare(
 def run_multi_agent(
     suite: str = "all",
     only: str | None = None,
-    max_cost_usd: float = typer.Option(20, min=0.01),
+    max_cost_usd: float = typer.Option(
+        MAX_EVALUATION_COST_USD,
+        min=0.01,
+        max=MAX_EVALUATION_COST_USD,
+        callback=cost_limit,
+        help="Shared run budget in USD, including agent work, references and judges.",
+    ),
     deadline_seconds: int = typer.Option(7200, min=1),
     backend: str = "fixture",
-    concurrency: int = typer.Option(3, min=1, max=3),
+    concurrency: int = typer.Option(1, min=1, max=3),
     phoenix_url: str = "http://127.0.0.1:6006",
     publish_only: bool = False,
-    agent_budget_usd: float = typer.Option(2, min=0.01, max=10),
+    agent_budget_usd: float = typer.Option(2, min=0.01, max=MAX_EVALUATION_COST_USD),
 ) -> None:
     """Run the inventory, distribution and coordinator conversations through A2A."""
     from evaluation.multi_agent.runner import run

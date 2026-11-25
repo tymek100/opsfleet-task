@@ -15,7 +15,12 @@ from pathlib import Path
 
 from evaluation.graders.judge import PROMPT_PATH, GeminiJudge
 from evaluation.models import TurnReference
-from evaluation.settings import EvaluationSettings
+from evaluation.settings import (
+    MAX_EVALUATION_COST_USD,
+    EvaluationSettings,
+    parse_run_budget,
+    validate_run_budget,
+)
 from retail_insight.config import Settings
 
 from .grading import grade
@@ -197,9 +202,17 @@ def build_controls(baseline):
     return result
 
 
-async def run(baseline, *, max_cost_usd=2.0, deadline_seconds=600, prepare_only=False, only=None):
+async def run(
+    baseline,
+    *,
+    max_cost_usd=MAX_EVALUATION_COST_USD,
+    deadline_seconds=600,
+    prepare_only=False,
+    only=None,
+):
     if not all(math.isfinite(v) and v > 0 for v in (max_cost_usd, deadline_seconds)):
         raise ValueError("Positive finite cost and deadline limits are required")
+    validate_run_budget(max_cost_usd)
     controls = build_controls(baseline)
     if only:
         selected = set(only.split(","))
@@ -331,7 +344,7 @@ async def run(baseline, *, max_cost_usd=2.0, deadline_seconds=600, prepare_only=
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
-    parser.add_argument("--max-cost-usd", type=float, default=2)
+    parser.add_argument("--max-cost-usd", type=parse_run_budget, default=MAX_EVALUATION_COST_USD)
     parser.add_argument("--deadline-seconds", type=float, default=600)
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--only", help="Comma-separated control IDs for an explicit focused rerun")

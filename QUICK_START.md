@@ -127,14 +127,15 @@ For a real-model evaluation, set `GEMINI_API_KEY`, start Docker, and run:
 
 ```bash
 uv run --group evaluation retail-eval run \
-  --suite smoke --repetitions 1 \
-  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
+  --suite smoke --repetitions 1 --phoenix-url http://127.0.0.1:6007 \
+  --max-cost-usd 2 --deadline-seconds 900 --allow-unreviewed
 ```
 
 This connects to or starts local Phoenix, prints experiment and trace links, executes the cases,
 and publishes answer and trajectory evaluations as trials finish. Enable trace streaming for
-completed spans; refresh the experiment view for new outputs and scores. One cost ceiling and deadline
-cover the agent and judges. No separate grading or publishing command is needed.
+completed spans; refresh the experiment view for new outputs and scores. Evaluation runs default
+to a $2 cap; `--max-cost-usd` can lower it, but higher values are rejected. One cost ceiling and
+deadline cover the agent and judges; the suite may stop before completing all cases. No separate grading or publishing command is needed.
 
 For metrics, saved answers, advanced regrading, and comparisons, follow
 [the testing and evaluation guide](docs/evaluation.md). Runtime Golden Knowledge and evaluation

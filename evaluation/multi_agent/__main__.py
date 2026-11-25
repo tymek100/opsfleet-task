@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 
+from evaluation.settings import MAX_EVALUATION_COST_USD, parse_run_budget
+
 from .runner import run
 
 
@@ -14,10 +16,10 @@ def main():
         default="all",
     )
     parser.add_argument("--only", help="Comma-separated scenario IDs or role/scenario-ID selectors")
-    parser.add_argument("--max-cost-usd", type=float, default=15)
+    parser.add_argument("--max-cost-usd", type=parse_run_budget, default=MAX_EVALUATION_COST_USD)
     parser.add_argument("--deadline-seconds", type=float, default=7200)
     parser.add_argument("--backend", choices=["fixture", "bigquery"], default="fixture")
-    parser.add_argument("--concurrency", type=int, default=3)
+    parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--phoenix-url", default="http://127.0.0.1:6006")
     parser.add_argument("--publish-only", action="store_true")
     parser.add_argument("--agent-budget-usd", type=float, default=2.0)

@@ -395,11 +395,11 @@ uv run retail-stack chat --user alice --golden-bootstrap
 
 # Run a bounded multi-agent smoke suite and publish live progress/results to Phoenix.
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite smoke --max-cost-usd 3 --deadline-seconds 600
+  --suite smoke --max-cost-usd 2 --deadline-seconds 600
 
 # Run all 60 new conversations; limits are caps, not completion guarantees.
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite all --max-cost-usd 30 --deadline-seconds 7200
+  --suite all --max-cost-usd 2 --deadline-seconds 7200
 
 # Stop agent/Inspector services while preserving Phoenix and data volumes.
 uv run retail-stack down

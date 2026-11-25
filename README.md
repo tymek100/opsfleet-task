@@ -38,8 +38,10 @@ To run the independent 20-question-plus-follow-up suites for each new agent:
 ```bash
 uv run retail-stack up --backend fixture --evaluation-fixtures
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite all --max-cost-usd 40 --deadline-seconds 7200
+  --suite all --max-cost-usd 2 --deadline-seconds 7200
 ```
+
+Evaluation runs default to a shared **$2 cap** and reject higher limits. Use `--only scenario-01` for a focused run; a full suite may stop early. See [evaluation spending limits](docs/evaluation.md#spending-limit).
 
 The three suites contain 60 conversations and 120 answers. Phoenix receives separate inventory,
 distribution and coordinator datasets and a shared `retail-multi-agent` trace project. References
@@ -95,7 +97,7 @@ Run new conversations with Gemini and BigQuery credentials configured and Docker
 
 ```bash
 uv run --group evaluation retail-eval run-conversations \
-  --max-cost-usd 10 --deadline-seconds 3600
+  --max-cost-usd 2 --deadline-seconds 3600
 ```
 
 The command starts or connects to local Phoenix, captures independent references, and runs the

@@ -167,7 +167,7 @@ uv run --group evaluation python -m evaluation.runners.manual \
   --backend bigquery \
   --phase recheck \
   --clock-utc 2026-11-22T18:56:20+00:00 \
-  --max-cost-usd 12 \
+  --max-cost-usd 2 \
   --deadline-seconds 3600 \
   --data-note "Public TheLook sample data; authored scenarios, not production conversations"
 ```

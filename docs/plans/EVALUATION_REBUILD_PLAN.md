@@ -417,9 +417,9 @@ uv run retail-eval validate
 docker compose -f infra/phoenix/compose.yaml up -d
 uv run retail-eval sync --suite regression
 uv run --group evaluation retail-eval run --suite smoke --repetitions 3 \
-  --max-cost-usd 10 --deadline-seconds 2400 --allow-unreviewed
+  --max-cost-usd 2 --deadline-seconds 2400 --allow-unreviewed
 uv run --group evaluation retail-eval grade --run <run-directory> \
-  --max-cost-usd 5 --deadline-seconds 1200
+  --max-cost-usd 2 --deadline-seconds 1200
 uv run --group evaluation retail-eval compare --baseline <baseline-grade-directory> --candidate <candidate-grade-directory>
 ~~~
 

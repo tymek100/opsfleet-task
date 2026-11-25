@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.conversation import _capture_turn, report_state
+from evaluation.settings import MAX_EVALUATION_COST_USD, parse_run_budget, validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings, repository_root
 from retail_insight.contracts import WORKSPACE_IDENTITY
@@ -128,6 +129,7 @@ async def run_manual(
     external_cost: Callable[[], float] = lambda: 0.0,
     absolute_deadline: float | None = None,
 ) -> Path:
+    validate_run_budget(max_cost_usd)
     if (
         not scenarios
         or backend not in {"bigquery", "fixture"}
@@ -411,7 +413,7 @@ def main() -> None:
     parser.add_argument("--data-note", default="")
     parser.add_argument("--phoenix", action="store_true")
     parser.add_argument("--phoenix-url", default="http://127.0.0.1:6006")
-    parser.add_argument("--max-cost-usd", type=float, required=True)
+    parser.add_argument("--max-cost-usd", type=parse_run_budget, default=MAX_EVALUATION_COST_USD)
     parser.add_argument("--deadline-seconds", type=float, required=True)
     args = parser.parse_args()
     scenarios = load_scenarios(args.scenarios, args.only)

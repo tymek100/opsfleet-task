@@ -1,9 +1,26 @@
 """Explicit evaluation limits and local-only Phoenix configuration."""
 
+import math
 from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+MAX_EVALUATION_COST_USD = 2.0
+
+
+def validate_run_budget(value: float) -> float:
+    """Enforce the project spending policy before any evaluation work starts."""
+    if not math.isfinite(value) or not 0 < value <= MAX_EVALUATION_COST_USD:
+        raise ValueError(
+            f"Evaluation budget must be finite, positive, and at most ${MAX_EVALUATION_COST_USD:g} per run."
+        )
+    return value
+
+
+def parse_run_budget(value: str) -> float:
+    """The same policy for standalone argparse entry points."""
+    return validate_run_budget(float(value))
 
 
 class EvaluationSettings(BaseModel):

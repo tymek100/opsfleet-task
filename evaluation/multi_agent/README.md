@@ -21,19 +21,19 @@ uv run --group evaluation python -m evaluation.multi_agent --publish-only
 
 # Two conversations per suite, including both follow-ups.
 uv run --group evaluation python -m evaluation.multi_agent \
-  --suite smoke --max-cost-usd 5 --deadline-seconds 900
+  --suite smoke --max-cost-usd 2 --deadline-seconds 900
 
 # All 60 conversations / 120 turns.
 uv run --group evaluation python -m evaluation.multi_agent \
-  --suite all --max-cost-usd 40 --deadline-seconds 7200
+  --suite all --max-cost-usd 2 --deadline-seconds 7200
 
 # A focused rerun creates a new experiment and retains earlier attempts.
 uv run --group evaluation python -m evaluation.multi_agent \
   --suite inventory --only scenario-05,scenario-19 \
-  --max-cost-usd 3 --deadline-seconds 600
+  --max-cost-usd 2 --deadline-seconds 600
 ```
 
-The local stack's signing key authenticates test identities. Requests go through real A2A HTTP endpoints. Every conversation has its own context; the follow-up reuses that context with a fresh per-prompt allowance. A separate run ceiling covers concurrent agent requests and independent judges. Unknown usage retains its full reservation. Limits cap execution; they do not guarantee completion.
+The local stack's signing key authenticates test identities. Requests go through real A2A HTTP endpoints. Every conversation has its own context; the follow-up reuses that context with a fresh per-prompt allowance. The shared run ceiling defaults to $2 and cannot be raised through the CLI. It covers BigQuery reference capture, agent requests (including delegated work) and independent judges. Conversations run sequentially by default; `--concurrency` can opt into shared-budget parallel execution. Unknown usage retains its full reservation. Limits cap execution; they do not guarantee completion.
 
 `--backend bigquery` independently captures raw tables across all brands at one version and forwards that snapshot timestamp to agents. All servers must already be configured for BigQuery. Reference capture is bounded to 1,000,000 rows and 500 MB billed per source query; exceeding either bound aborts instead of truncating. The primary reproducible baseline uses the frozen fixture.
 

@@ -22,6 +22,7 @@ from evaluation.reporting.phoenix_service import ensure_phoenix
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.manual import load_scenarios, run_manual
+from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import repository_root
 from retail_insight.integrations.bigquery.retail import QueryGateway
@@ -73,6 +74,7 @@ async def run_authored(
     app_factory: Callable = Analyst,
     judge=None,
 ):
+    validate_run_budget(max_cost_usd)
     deadline = time.monotonic() + deadline_seconds
     if not all(math.isfinite(value) and value > 0 for value in (max_cost_usd, deadline_seconds)):
         raise ValueError("Finite positive cost and time limits are required")

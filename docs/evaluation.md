@@ -5,6 +5,29 @@ The main Phoenix workspace retains **20 authored retail conversations** and adds
 an initial question and a fixed follow-up. The older 43-case pilot and collector integration
 tests use a separate instance. Run commands from the repository root.
 
+## Spending limit
+
+`run`, `run-conversations`, `run-multi-agent`, `grade`, and `calibrate` default to a **$2 shared run budget**. `--max-cost-usd`
+can lower it; values above $2 are rejected before execution, including standalone Python
+entry points. The project policy is `MAX_EVALUATION_COST_USD` in `evaluation/settings.py`.
+
+Agent calls, runtime reviews, delegated specialists, independent answer/trajectory judges,
+and new BigQuery reference queries consume the same allowance. Multi-agent conversations
+run sequentially by default (`--concurrency 1`); concurrent runs still reserve from one
+shared ledger. A smaller remaining allowance is passed to the next operation. Missing
+usage keeps the full reservation charged instead of counting the request as free.
+
+A full suite may stop before all answers and grades are ready. Completed results remain
+available; skipped work or unavailable grades never count as passes. Start with one
+scenario using `--only scenario-01`, then select other cases deliberately. Fixture mode
+avoids BigQuery charges but still uses paid models. Offline `pytest` tests use scripted
+providers and do not call paid services.
+
+This is an application admission limit using configured cost estimates, not a GCP billing
+cap. Each new invocation gets a fresh budget; separate invocations and unrelated cloud
+services are not covered by a single shared account limit. Historical reported costs below
+remain unchanged.
+
 ## Dataset access and historical results
 
 Agents now run with access to all brands; there are no selectable demo users. Retail's 20 conversations state brand-specific requests explicitly and record `requested_brand` for the reference calculation. The geographic-summary case uses all brands because its tool has no brand-filter argument. Inventory, distribution and coordinator suites cover all brands in their source snapshot. Reference filters define the requested analysis, not agent permissions.
@@ -19,15 +42,15 @@ credentials and does not require a Maps key for its missing-data and unavailable
 ```bash
 uv run retail-stack up --backend fixture --evaluation-fixtures
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite smoke --max-cost-usd 5 --deadline-seconds 1200
+  --suite smoke --max-cost-usd 2 --deadline-seconds 1200
 ```
 
-`smoke` runs scenarios 01 and 02 in each new suite: six conversations and twelve answers. For
-all 60 conversations and 120 answers:
+`smoke` runs scenarios 01 and 02 in each new suite: six conversations and twelve answers. To request
+all 60 conversations and 120 answers within the same $2 cap (completion is not guaranteed):
 
 ```bash
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite all --max-cost-usd 40 --deadline-seconds 7200
+  --suite all --max-cost-usd 2 --deadline-seconds 7200
 ```
 
 Choose `--suite inventory`, `distribution` or `coordinator` for one agent. Add
@@ -40,7 +63,7 @@ To evaluate the public synthetic TheLook source instead of the fixture:
 ```bash
 RETAIL_STACK_TRACE_MODE=synthetic uv run retail-stack up --backend bigquery
 uv run --group evaluation retail-eval run-multi-agent \
-  --backend bigquery --only scenario-01 --max-cost-usd 5 --deadline-seconds 1200
+  --backend bigquery --only scenario-01 --max-cost-usd 2 --deadline-seconds 1200
 ```
 
 This runs three two-turn conversations against one independently captured BigQuery snapshot.
@@ -85,8 +108,8 @@ inventory/scenario-01/judge-1.json     # Saved judge calls
 inventory/scenario-01/trajectory.json  # Conversation trajectory assessment
 ```
 
-The same structure applies to distribution and coordinator. The run budget includes agent
-work and independent judges; each user prompt still has a fresh bounded agent allowance.
+The same structure applies to distribution and coordinator. The run budget includes BigQuery
+reference capture, agent work and independent judges; each user prompt still has a fresh bounded agent allowance.
 Listed budgets are caps, not completion estimates. Fixture references are code-verified
 development data, not production conversations or a sealed holdout. Human reference review
 and judge calibration remain pending. A full-suite quality result is recorded only after
@@ -191,10 +214,10 @@ Configure `GEMINI_API_KEY` and Google Cloud application credentials as described
 ```bash
 uv sync --python 3.12 --group evaluation
 uv run --group evaluation retail-eval run-conversations \
-  --max-cost-usd 10 --deadline-seconds 3600
+  --max-cost-usd 2 --deadline-seconds 3600
 ```
 
-The command performs the complete evaluation:
+The command executes and grades conversations until the run limit is reached:
 
 1. Connect to Phoenix or start its local container.
 2. Read authorized raw data independently of the agent's SQL and calculate expected facts with
@@ -326,7 +349,7 @@ port 6006 to protect the main workspace:
 ```bash
 uv run --group evaluation retail-eval run \
   --suite smoke --repetitions 1 --phoenix-url http://127.0.0.1:6007 \
-  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
+  --max-cost-usd 2 --deadline-seconds 900 --allow-unreviewed
 ```
 
 This workflow uses local synthetic databases, needs no BigQuery credentials, and automatically
@@ -344,12 +367,12 @@ diagnostic results, not release gates.
 ```bash
 EVAL_RUN=.artifacts/evaluation/run-REPLACE-WITH-PRINTED-ID
 uv run --group evaluation retail-eval grade --run "$EVAL_RUN" \
-  --max-cost-usd 3 --deadline-seconds 900
+  --max-cost-usd 2 --deadline-seconds 900
 uv run --group evaluation retail-eval publish --run "$EVAL_RUN" \
   --grade "$EVAL_RUN/grades/grade-REPLACE-WITH-PRINTED-ID" \
   --phoenix-url http://127.0.0.1:6007
 uv run --group evaluation retail-eval calibrate \
-  --split validation --max-cost-usd 3 --deadline-seconds 900
+  --split validation --max-cost-usd 2 --deadline-seconds 900
 ```
 
 Regrading never reruns the analyst. `grade --phoenix` also requires the separate endpoint.

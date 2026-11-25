@@ -14,20 +14,24 @@ def fake_client(monkeypatch, *, total_rows: int | None = 0, billed=None):
 
     rows = Rows()
     rows.total_rows = total_rows
-    job = SimpleNamespace(total_bytes_billed=billed, result=lambda timeout: rows)
+    job = SimpleNamespace(total_bytes_billed=billed, result=lambda **kwargs: rows)
     queries = []
+    configs = []
 
-    def query(sql, job_config):
+    def query(sql, job_config, **kwargs):
         queries.append(sql)
+        configs.append(job_config)
+        assert kwargs["job_retry"] is None
         return job
 
-    client = SimpleNamespace(query=query)
+    client = SimpleNamespace(query=query, close=lambda: None)
     monkeypatch.setattr("evaluation.multi_agent.snapshot.bigquery.Client", lambda **kwargs: client)
     return SimpleNamespace(
         warehouse_source_dataset="bigquery-public-data.thelook_ecommerce",
         google_cloud_project="test-project",
         bigquery_usd_per_tib=6.25,
         captured_queries=queries,
+        captured_configs=configs,
     )
 
 
@@ -64,3 +68,20 @@ def test_full_dataset_capture_still_rejects_oversized_sources(monkeypatch):
     settings = fake_client(monkeypatch, total_rows=MAX_REFERENCE_ROWS + 1)
     with pytest.raises(ValueError, match="no truncation"):
         capture(settings, AS_OF)
+
+
+@pytest.mark.parametrize("cap", [0.001, 0.01, 2])
+def test_small_run_budget_bounds_all_five_reference_queries(monkeypatch, cap):
+    settings = fake_client(monkeypatch)
+    snapshot = capture(settings, AS_OF, max_cost_usd=cap)
+    assert len(settings.captured_configs) == 5
+    reserved_bytes = sum(cfg.maximum_bytes_billed for cfg in settings.captured_configs)
+    assert reserved_bytes * settings.bigquery_usd_per_tib / 2**40 <= cap
+    assert snapshot.capture_cost_usd <= cap
+
+
+def test_expired_capture_does_not_submit_queries(monkeypatch):
+    settings = fake_client(monkeypatch)
+    with pytest.raises(TimeoutError, match="deadline"):
+        capture(settings, AS_OF, deadline=0)
+    assert not settings.captured_queries

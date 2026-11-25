@@ -18,6 +18,7 @@ from evaluation.reporting.summary import write_summary
 from evaluation.results import RunManifest, Trial
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.conversation import run_cases
+from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.integrations.phoenix.prompts import sync_prompts
 from retail_insight.integrations.phoenix.tracing import configure_tracing
@@ -77,6 +78,7 @@ async def run_pipeline(
     costs, and the judge ceiling excludes all agent costs. Provider admission
     retains unknown usage reservations inside both existing accounting ledgers.
     """
+    validate_run_budget(max_cost_usd)
     deadline = time.monotonic() + deadline_seconds
     judge.deadline = deadline
     tracing = None

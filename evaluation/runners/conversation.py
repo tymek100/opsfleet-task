@@ -12,6 +12,7 @@ from evaluation.models import Case
 from evaluation.results import RunManifest, Trial, TurnRecord
 from evaluation.runners.artifacts import digest, prepare_run, write_json
 from evaluation.runners.faults import FaultGateway, FaultModel, FaultReports, Schedule
+from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY
@@ -284,6 +285,7 @@ async def run_cases(
     external_cost: Callable[[], float] | None = None,
     deadline: float | None = None,
 ) -> Path:
+    validate_run_budget(max_cost_usd)
     if (
         not cases
         or not 1 <= repetitions <= 20

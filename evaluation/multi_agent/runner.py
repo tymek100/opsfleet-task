@@ -20,7 +20,7 @@ import httpx
 from evaluation.graders.judge import GeminiJudge
 from evaluation.reporting.phoenix import client_for
 from evaluation.reporting.phoenix_service import ensure_phoenix
-from evaluation.settings import EvaluationSettings
+from evaluation.settings import MAX_EVALUATION_COST_USD, EvaluationSettings, validate_run_budget
 from retail_insight.config import Settings
 from retail_insight.integrations.phoenix.tracing import configure_tracing
 
@@ -87,19 +87,29 @@ class RunBudget:
         self.lock = asyncio.Condition()
 
     async def reserve(self, amount):
+        return bool(await self._reserve(amount, partial=False))
+
+    async def reserve_up_to(self, maximum):
+        """Use a smaller remaining allowance, waiting for other requests to settle first."""
+        return await self._reserve(maximum, partial=True)
+
+    async def _reserve(self, maximum, *, partial):
         async with self.lock:
-            while self.used + self.reserved + amount > self.ceiling + 1e-9:
-                if self.used + amount > self.ceiling + 1e-9 or time.monotonic() >= self.deadline:
-                    return False
+            while time.monotonic() < self.deadline:
+                remaining = max(0.0, self.ceiling - self.used)
+                amount = min(maximum, remaining) if partial else maximum
+                if amount <= 1e-9 or amount > remaining + 1e-9:
+                    return 0.0
+                if self.used + self.reserved + amount <= self.ceiling + 1e-9:
+                    self.reserved += amount
+                    return amount
                 try:
                     await asyncio.wait_for(
                         self.lock.wait(), min(30, self.deadline - time.monotonic())
                     )
                 except TimeoutError:
-                    if time.monotonic() >= self.deadline:
-                        return False
-            self.reserved += amount
-            return True
+                    continue
+            return 0.0
 
     async def settle(self, reserved, actual):
         async with self.lock:
@@ -163,18 +173,19 @@ async def run(
     *,
     suite="all",
     only=None,
-    max_cost_usd=15.0,
+    max_cost_usd=MAX_EVALUATION_COST_USD,
     deadline_seconds=7200,
     backend="fixture",
     fixture=HERE / "fixture.json",
     phoenix_url="http://127.0.0.1:6006",
     urls=None,
     token=None,
-    concurrency=3,
+    concurrency=1,
     as_of=AS_OF,
     publish_only=False,
     agent_budget_usd=2.0,
 ):
+    validate_run_budget(max_cost_usd)
     if not all(
         math.isfinite(value) and value > 0
         for value in (max_cost_usd, deadline_seconds, agent_budget_usd)
@@ -203,12 +214,27 @@ async def run(
     if suite not in {*suites, "all", "smoke"}:
         raise ValueError(f"Unknown suite: {suite}")
     chosen = list(suites) if suite in {"all", "smoke"} else [suite]
+    selected = set(only.split(",")) if only else None
+    valid_selectors = {c["id"] for cases in suites.values() for c in cases} | {
+        f"{role}/{c['id']}" for role, cases in suites.items() for c in cases
+    }
+    if selected and selected - valid_selectors:
+        raise ValueError("--only contains an unknown scenario ID")
+    tasks = [
+        (role, case)
+        for role in chosen
+        for case in suites[role]
+        if (not selected or case["id"] in selected or f"{role}/{case['id']}" in selected)
+        and (suite != "smoke" or case["id"] in {"scenario-01", "scenario-02"})
+    ]
     if backend == "fixture":
         snapshot = Snapshot.load(Path(fixture), as_of=as_of)
     elif backend == "bigquery":
         from .snapshot import capture
 
-        snapshot = await asyncio.to_thread(capture, settings, as_of)
+        snapshot = await asyncio.to_thread(
+            capture, settings, as_of, max_cost_usd=max_cost_usd, deadline=deadline
+        )
     else:
         raise ValueError("Backend must be fixture or bigquery")
     run_id = "a2a-" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
@@ -240,6 +266,7 @@ async def run(
         "snapshot_at": snapshot.snapshot_at,
         "source_sha256": snapshot.sha256,
         "reference_capture_cost_usd": snapshot.capture_cost_usd,
+        "accounted_usd": snapshot.capture_cost_usd,
         "reference_capture_billing": snapshot.capture_billing,
         "scenario_sha256": checksum(frozen),
         "reference_sha256": checksum(references),
@@ -294,25 +321,17 @@ async def run(
     print(
         f"Traces: {phoenix_url}/projects — retail-multi-agent\nArtifacts: {directory}", flush=True
     )
-    selected = set(only.split(",")) if only else None
-    valid_selectors = {c["id"] for cases in suites.values() for c in cases} | {
-        f"{role}/{c['id']}" for role, cases in suites.items() for c in cases
-    }
-    if selected and selected - valid_selectors:
-        raise ValueError("--only contains an unknown scenario ID")
-    tasks = [
-        (role, case)
-        for role in chosen
-        for case in suites[role]
-        if (not selected or case["id"] in selected or f"{role}/{case['id']}" in selected)
-        and (suite != "smoke" or case["id"] in {"scenario-01", "scenario-02"})
-    ]
     manifest["planned_conversations"] = len(tasks)
     manifest["planned_turns"] = 2 * len(tasks)
     manifest["experiments"] = {role: p.url for role, p in publishers.items()}
     save(directory / "manifest.json", manifest)
     budget = RunBudget(max_cost_usd, deadline)
     budget.used = snapshot.capture_cost_usd
+    print(
+        f"Shared evaluation limit: ${max_cost_usd:g}; {deadline_seconds:g}s; "
+        f"{concurrency} concurrent conversation(s). References, agents and judges share this limit.",
+        flush=True,
+    )
     semaphore = asyncio.Semaphore(concurrency)
     measured = Counter()
 
@@ -329,8 +348,11 @@ async def run(
                     "status": "NOT_EXECUTED",
                     "error": "Shared evaluation time or cost limit exhausted",
                 }
-                grant = agent_budget_usd if role == "coordinator" else min(1.0, agent_budget_usd)
-                if time.monotonic() < deadline and await budget.reserve(grant):
+                requested = (
+                    agent_budget_usd if role == "coordinator" else min(1.0, agent_budget_usd)
+                )
+                grant = await budget.reserve_up_to(requested)
+                if grant:
                     try:
                         raw = await client.ask(
                             role,
@@ -353,12 +375,8 @@ async def run(
                         await budget.settle(grant, cost_of(raw))
                 save(directory / role / case["id"] / f"turn-{number}.json", raw)
                 turns.append(raw)
-                allowance = min(0.65, max_cost_usd)
-                if (
-                    raw.get("markdown")
-                    and time.monotonic() < deadline
-                    and await budget.reserve(allowance)
-                ):
+                allowance = await budget.reserve_up_to(0.65) if raw.get("markdown") else 0.0
+                if allowance:
                     judge = GeminiJudge(
                         settings.gemini_api_key.get_secret_value(),
                         config,
@@ -411,17 +429,18 @@ async def run(
                     }
                 ],
             }
-            if (
-                any(t.get("trace") or t.get("observations") for t in turns)
-                and time.monotonic() < deadline
-                and await budget.reserve(0.65)
-            ):
+            trajectory_allowance = (
+                await budget.reserve_up_to(0.65)
+                if any(t.get("trace") or t.get("observations") for t in turns)
+                else 0.0
+            )
+            if trajectory_allowance:
                 from .trajectory import evaluate
 
                 judge = GeminiJudge(
                     settings.gemini_api_key.get_secret_value(),
                     config,
-                    max_cost_usd=0.65,
+                    max_cost_usd=trajectory_allowance,
                     deadline_seconds=max(0.1, deadline - time.monotonic()),
                 )
                 try:
@@ -438,7 +457,7 @@ async def run(
                         ],
                     }
                 finally:
-                    await budget.settle(0.65, judge.accounted_usd)
+                    await budget.settle(trajectory_allowance, judge.accounted_usd)
                     save(directory / role / case["id"] / "trajectory-judge.json", judge.calls)
                     with suppress(Exception):
                         await judge.close()
