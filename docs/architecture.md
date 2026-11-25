@@ -12,7 +12,7 @@ This document describes the current implementation. Setup and commands are in [Q
 
 ```mermaid
 flowchart TD
-    UI[A2A Inspector or retail-stack chat] --> C[Coordinator]
+    UI[A2A Inspector or agent-chat coordinator] --> C[Coordinator]
     C -->|A2A delegation| R[Retail analyst]
     C -->|A2A delegation| I[Inventory analyst]
     C -->|A2A delegation| D[Distribution analyst]

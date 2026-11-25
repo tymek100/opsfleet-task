@@ -42,8 +42,8 @@ Independently enumerated Q1 Calvin Klein totals are **375 revenue, 7 items, 6 or
 From the repository root, using the locked environment including development dependencies:
 
 ```bash
-uv sync --locked
-uv run --locked python scripts/validate_golden_bootstrap.py
+uv sync
+uv run python scripts/validate_golden_bootstrap.py
 ```
 
 The locked environment includes DuckDB, SQLGlot and JSON Schema validation. With dependencies already installed:

@@ -163,7 +163,7 @@ capture; a manifest's initial `independent_review: pending` marker is not a runt
 To run the same authored suite against the configured BigQuery source and save a new capture:
 
 ```bash
-uv run --locked --group evaluation python -m evaluation.runners.manual \
+uv run --group evaluation python -m evaluation.runners.manual \
   --backend bigquery \
   --phase recheck \
   --clock-utc 2026-11-22T18:56:20+00:00 \

@@ -5,7 +5,7 @@
 Use Python 3.12 and uv from the repository root:
 
 ```bash
-uv sync --locked --python 3.12
+uv sync --python 3.12
 cp .env.example .env
 ```
 
@@ -19,10 +19,23 @@ gcloud auth application-default login
 
 CLI login alone does not establish Python ADC. The configured billing project must allow BigQuery query jobs and reading the public TheLook dataset. Gemini and BigQuery calls may incur charges; the default per-question admission budget is USD 1, using configurable conservative rates.
 
-## Start a conversation
+## Chat with running agents
+
+After starting the local stack (`uv run retail-stack up --backend bigquery`), select the agent explicitly:
 
 ```bash
-uv run --locked retail-agent chat --golden-bootstrap
+uv run agent-chat coordinator
+uv run agent-chat retail
+uv run agent-chat inventory
+uv run agent-chat distribution
+```
+
+Use the coordinator for tasks combining sales, inventory and distribution. These commands connect to the Docker services, which send traces to Phoenix. See the [stack guide](infra/agents/README.md) for fixture mode and service setup.
+
+## Standalone retail conversation
+
+```bash
+uv run retail-agent chat --golden-bootstrap
 ```
 
 The CLI has no user selection. Every new question can analyze all brands; request a brand explicitly when needed, for example, "Show Calvin Klein revenue in Q1 2026." Follow-ups preserve that requested filter. Read-only SQL and privacy checks still apply.
@@ -53,7 +66,7 @@ The model generates the complete answer, including optional tables, and the eval
 This mode uses the real Gemini model with analytical queries against a frozen local fixture:
 
 ```bash
-uv run --locked retail-agent chat --backend fixture --golden-bootstrap
+uv run retail-agent chat --backend fixture --golden-bootstrap
 ```
 
 The fixture has three products sold in Q1 across Calvin Klein and Levi's, one unsold product and invented transactions. A request for five products should explain that fewer qualify. All-brand qualifying Q1 revenue is 1,275, across six orders and five customers; an explicit Calvin Klein filter gives 375. It contains no geography. These are demonstration figures, not live company results.
@@ -61,7 +74,7 @@ The fixture has three products sold in Q1 across Calvin Klein and Levi's, one un
 One-shot example:
 
 ```bash
-uv run --locked retail-agent ask \
+uv run retail-agent ask \
   "What was our average order value in Q1 2026? No table." \
   --backend fixture --golden-bootstrap
 ```
@@ -91,7 +104,7 @@ Deletion confirmation is bound to the interactive chat that displayed the previe
 The report library uses `.retail-agent/reports-v2.sqlite3`. Earlier files and their ownership are preserved. New sessions use the `workspace` owner; no reports are automatically reassigned or merged. Explicit legacy import copies only records already owned by `workspace`:
 
 ```bash
-uv run --locked retail-agent import-legacy .retail-agent/reports.db
+uv run retail-agent import-legacy .retail-agent/reports.db
 ```
 
 Supply the actual existing legacy SQLite/JSON path; the filename above is an example. The source remains unchanged. Deleting an imported report deletes the new library's copy, not the separately retained legacy source.
@@ -101,19 +114,19 @@ Supply the actual existing legacy SQLite/JSON path; the filename above is an exa
 Offline checks use isolated settings, temporary stores and scripted providers:
 
 ```bash
-uv sync --locked --group evaluation
-uv run --locked --group evaluation pytest
-uv run --locked --group evaluation retail-eval validate
-uv run --locked python scripts/validate_golden_bootstrap.py
-uv run --locked ruff check .
-uv run --locked ruff format --check .
-uv run --locked --group evaluation pyright
+uv sync --group evaluation
+uv run --group evaluation pytest
+uv run --group evaluation retail-eval validate
+uv run python scripts/validate_golden_bootstrap.py
+uv run ruff check .
+uv run ruff format --check .
+uv run --group evaluation pyright
 ```
 
 For a real-model evaluation, set `GEMINI_API_KEY`, start Docker, and run:
 
 ```bash
-uv run --locked --group evaluation retail-eval run \
+uv run --group evaluation retail-eval run \
   --suite smoke --repetitions 1 \
   --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 ```

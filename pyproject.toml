@@ -22,6 +22,7 @@ dependencies = [
   "uvicorn>=0.54,<1",
 ]
 [project.scripts]
+agent-chat = "retail_insight.interfaces.agent_cli:app"
 retail-agent = "retail_insight.interfaces.cli:app"
 retail-eval = "evaluation.cli:app"
 retail-stack = "retail_insight.interfaces.stack_cli:app"

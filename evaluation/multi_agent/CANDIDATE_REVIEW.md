@@ -80,13 +80,13 @@ Total across the five candidate-control runs: **60 model calls, $3.379072 accoun
 Prepare local control artifacts without model calls:
 
 ```bash
-uv run --locked --group evaluation python -m evaluation.multi_agent.calibration_candidate --prepare-only
+uv run --group evaluation python -m evaluation.multi_agent.calibration_candidate --prepare-only
 ```
 
 Run the actual judge with a separate budget:
 
 ```bash
-uv run --locked --group evaluation python -m evaluation.multi_agent.calibration_candidate \
+uv run --group evaluation python -m evaluation.multi_agent.calibration_candidate \
   --baseline .artifacts/multi-agent/a2a-20261124T191812Z-f59d6715 \
   --max-cost-usd 2 --deadline-seconds 600
 ```

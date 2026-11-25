@@ -7,9 +7,9 @@ Four separate agent images expose A2A endpoints. The coordinator delegates to th
 From the repository root:
 
 ```bash
-uv run --locked retail-stack up --backend fixture
-uv run --locked retail-stack status
-uv run --locked retail-stack chat
+uv run retail-stack up --backend fixture
+uv run retail-stack status
+uv run agent-chat coordinator
 ```
 
 Fixture mode uses local data but still calls Gemini. For TheLook on BigQuery, configure `GEMINI_API_KEY` and `GOOGLE_CLOUD_PROJECT` in `.env`, authenticate with `gcloud auth application-default login`, then use `--backend bigquery`.
@@ -21,14 +21,27 @@ For the independent multi-agent evaluation suite, start with `--backend fixture 
 `up` prepares configuration, starts or reuses `infra/phoenix/compose.yaml`, builds four images, and waits for healthy services. It preserves Phoenix history and per-agent volumes. Stop only the agent stack with:
 
 ```bash
-uv run --locked retail-stack down
+uv run retail-stack down
 ```
 
 Phoenix remains available on [localhost:6006](http://127.0.0.1:6006). Agent Compose reuses its `phoenix_default` network; do not start the agent Compose project alone before Phoenix exists. The startup helper can also be invoked directly:
 
 ```bash
-uv run --locked python infra/agents/start.py --backend fixture
+uv run python infra/agents/start.py --backend fixture
 ```
+
+## Chat with a specific agent
+
+```bash
+uv run agent-chat coordinator
+uv run agent-chat retail
+uv run agent-chat inventory
+uv run agent-chat distribution
+```
+
+Each command connects to the named A2A service and retains conversation context for follow-ups. `/new` starts a new conversation; `/exit` ends the chat. Use `--context-id ID` to resume a conversation with the same agent. `--max-cost-usd` and `--deadline-seconds` bound each request.
+
+The running services already send traces to Phoenix under `retail-multi-agent`; the chat client needs no tracing flag. `retail-agent chat` remains the standalone retail CLI, where tracing is enabled with `--phoenix`. The older `retail-stack chat --agent ROLE` command remains compatible, defaulting to coordinator.
 
 ## Inspector
 

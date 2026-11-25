@@ -13,7 +13,7 @@ instrumentor 1.1.9, and ADK 2.12.0.
 Keep Docker running and execute:
 
 ```bash
-uv run --locked --group evaluation retail-eval run-conversations \
+uv run --group evaluation retail-eval run-conversations \
   --max-cost-usd 6 --deadline-seconds 3600
 ```
 
@@ -61,9 +61,9 @@ docker run -d --rm --name retail-phoenix-tests \
 
 # Wait until http://127.0.0.1:6007 loads, then:
 PHOENIX_TEST_ENDPOINT=http://127.0.0.1:6007 \
-  uv run --locked --group evaluation pytest tests/integration -m phoenix
+  uv run --group evaluation pytest tests/integration -m phoenix
 
-uv run --locked --group evaluation retail-eval run \
+uv run --group evaluation retail-eval run \
   --suite smoke --phoenix-url http://127.0.0.1:6007 \
   --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 

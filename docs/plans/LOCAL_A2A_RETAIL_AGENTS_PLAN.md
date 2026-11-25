@@ -388,21 +388,21 @@ These commands are an interface proposal, **not commands that work in the curren
 
 ```bash
 # Build/start agents and Inspector; start or reuse local Phoenix; print GUI URLs.
-uv run --locked retail-stack up --backend bigquery
+uv run retail-stack up --backend bigquery
 
 # Use the coordinator through A2A from a client inside the Compose network.
-uv run --locked retail-stack chat --user alice --golden-bootstrap
+uv run retail-stack chat --user alice --golden-bootstrap
 
 # Run a bounded multi-agent smoke suite and publish live progress/results to Phoenix.
-uv run --locked --group evaluation retail-eval run-multi-agent \
+uv run --group evaluation retail-eval run-multi-agent \
   --suite smoke --max-cost-usd 3 --deadline-seconds 600
 
 # Run all 60 new conversations; limits are caps, not completion guarantees.
-uv run --locked --group evaluation retail-eval run-multi-agent \
+uv run --group evaluation retail-eval run-multi-agent \
   --suite all --max-cost-usd 30 --deadline-seconds 7200
 
 # Stop agent/Inspector services while preserving Phoenix and data volumes.
-uv run --locked retail-stack down
+uv run retail-stack down
 ```
 
 `retail-stack` should be a small Compose lifecycle wrapper, not another orchestration engine. Runtime task choices remain inside the coordinator's agent loop. Tune example evaluation caps after measuring the smoke baseline, and require an explicit BigQuery/model configuration rather than silently changing backends.

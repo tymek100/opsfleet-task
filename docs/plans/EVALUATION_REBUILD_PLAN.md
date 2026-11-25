@@ -410,7 +410,7 @@ docs/
 
 Package evaluation tooling behind a dedicated CLI; the application must not import it. Include the new package in Ruff/Pyright rather than copying the old `evals/` exclusion. Keep architecture in `docs/architecture.md`, assignment material in `docs/task/`, this plan in `docs/plans/`, and operational commands in the root README.
 
-**CLI examples** (install dependencies with `uv sync --locked --group evaluation`):
+**CLI examples** (install dependencies with `uv sync --group evaluation`):
 
 ~~~bash
 uv run retail-eval validate

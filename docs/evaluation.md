@@ -17,8 +17,8 @@ Start Docker and configure `GEMINI_API_KEY` in `.env`. The fixture evaluation ne
 credentials and does not require a Maps key for its missing-data and unavailable-provider cases.
 
 ```bash
-uv run --locked retail-stack up --backend fixture --evaluation-fixtures
-uv run --locked --group evaluation retail-eval run-multi-agent \
+uv run retail-stack up --backend fixture --evaluation-fixtures
+uv run --group evaluation retail-eval run-multi-agent \
   --suite smoke --max-cost-usd 5 --deadline-seconds 1200
 ```
 
@@ -26,7 +26,7 @@ uv run --locked --group evaluation retail-eval run-multi-agent \
 all 60 conversations and 120 answers:
 
 ```bash
-uv run --locked --group evaluation retail-eval run-multi-agent \
+uv run --group evaluation retail-eval run-multi-agent \
   --suite all --max-cost-usd 40 --deadline-seconds 7200
 ```
 
@@ -38,8 +38,8 @@ For different cases per role, use `--only inventory/scenario-05,coordinator/scen
 To evaluate the public synthetic TheLook source instead of the fixture:
 
 ```bash
-RETAIL_STACK_TRACE_MODE=synthetic uv run --locked retail-stack up --backend bigquery
-uv run --locked --group evaluation retail-eval run-multi-agent \
+RETAIL_STACK_TRACE_MODE=synthetic uv run retail-stack up --backend bigquery
+uv run --group evaluation retail-eval run-multi-agent \
   --backend bigquery --only scenario-01 --max-cost-usd 5 --deadline-seconds 1200
 ```
 
@@ -189,8 +189,8 @@ Configure `GEMINI_API_KEY` and Google Cloud application credentials as described
 [Quick Start](../QUICK_START.md), and keep Docker running:
 
 ```bash
-uv sync --locked --python 3.12 --group evaluation
-uv run --locked --group evaluation retail-eval run-conversations \
+uv sync --python 3.12 --group evaluation
+uv run --group evaluation retail-eval run-conversations \
   --max-cost-usd 10 --deadline-seconds 3600
 ```
 
@@ -219,7 +219,7 @@ LLM extraction and judgments still need human calibration.
 For a targeted retest, keep the questions fixed and select IDs:
 
 ```bash
-uv run --locked --group evaluation retail-eval run-conversations \
+uv run --group evaluation retail-eval run-conversations \
   --only scenario-01,scenario-03 --phase recheck \
   --max-cost-usd 2 --deadline-seconds 600
 ```
@@ -273,7 +273,7 @@ Do not republish that manifest into the reset workspace. New evaluations use `ru
 reference bundle without running models:
 
 ```bash
-uv run --locked --group evaluation retail-eval sync-conversations \
+uv run --group evaluation retail-eval sync-conversations \
   --reference .artifacts/manual-reference/reference-REPLACE-WITH-CAPTURE-ID
 ```
 
@@ -298,11 +298,11 @@ or categories actually shown initially, not an arbitrary default tie choice.
 | `retail-eval calibrate` | Judge behavior on valid/flawed answer pairs | Judge only |
 
 ```bash
-uv run --locked --group evaluation pytest
-uv run --locked --group evaluation retail-eval validate
-uv run --locked --group evaluation ruff check .
-uv run --locked --group evaluation ruff format --check .
-uv run --locked --group evaluation pyright
+uv run --group evaluation pytest
+uv run --group evaluation retail-eval validate
+uv run --group evaluation ruff check .
+uv run --group evaluation ruff format --check .
+uv run --group evaluation pyright
 ```
 
 Offline tests block external sockets and credential discovery. CI runs these checks with
@@ -324,7 +324,7 @@ Use a **separate disposable Phoenix on port 6007** for fixture runs and collecto
 port 6006 to protect the main workspace:
 
 ```bash
-uv run --locked --group evaluation retail-eval run \
+uv run --group evaluation retail-eval run \
   --suite smoke --repetitions 1 --phoenix-url http://127.0.0.1:6007 \
   --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 ```
@@ -343,12 +343,12 @@ diagnostic results, not release gates.
 
 ```bash
 EVAL_RUN=.artifacts/evaluation/run-REPLACE-WITH-PRINTED-ID
-uv run --locked --group evaluation retail-eval grade --run "$EVAL_RUN" \
+uv run --group evaluation retail-eval grade --run "$EVAL_RUN" \
   --max-cost-usd 3 --deadline-seconds 900
-uv run --locked --group evaluation retail-eval publish --run "$EVAL_RUN" \
+uv run --group evaluation retail-eval publish --run "$EVAL_RUN" \
   --grade "$EVAL_RUN/grades/grade-REPLACE-WITH-PRINTED-ID" \
   --phoenix-url http://127.0.0.1:6007
-uv run --locked --group evaluation retail-eval calibrate \
+uv run --group evaluation retail-eval calibrate \
   --split validation --max-cost-usd 3 --deadline-seconds 900
 ```
 
@@ -387,7 +387,7 @@ redaction. Protocol tests check recovery, revisions, invented evidence reference
 of the exact reviewed candidate. They use scripted models:
 
 ```bash
-uv run --locked --group evaluation pytest \
+uv run --group evaluation pytest \
   tests/integration/test_observability.py tests/integration/test_agent_protocol.py \
   tests/evaluation/test_grading.py tests/evaluation/test_visibility_metrics.py
 ```
@@ -408,7 +408,7 @@ Git remains authoritative. The four definitions are `retail-analyst`, `retail-re
 settings, and base output schemas. The reviewer includes its mandatory analytical-review skill.
 
 ```bash
-uv run --locked --group evaluation retail-eval sync-prompts
+uv run --group evaluation retail-eval sync-prompts
 ```
 
 This populates [Prompts](http://127.0.0.1:6006/prompts) without inference and starts Phoenix if

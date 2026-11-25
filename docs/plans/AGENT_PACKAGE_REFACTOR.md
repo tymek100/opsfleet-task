@@ -32,7 +32,7 @@ Use deterministic model doubles and fixture data to check query/review/revision 
 
 ## Verification results
 
-- `uv run --locked --group evaluation pytest -q`: 512 passed, 5 live/Phoenix tests deselected; two dependency warnings.
+- `uv run --group evaluation pytest -q`: 512 passed, 5 live/Phoenix tests deselected; two dependency warnings.
 - Ruff lint and formatting pass; Pyright reports zero errors and warnings.
 - The existing `retail-agent`, `retail-stack` and `retail-eval` commands load; A2A server module startup works with the new package.
 - The built wheel contains each agent's definition, tools, prompt and skills, plus shared review resources and warehouse fixtures. Legacy Python packages are absent.

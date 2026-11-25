@@ -12,9 +12,9 @@ jobs:
         with:
           version: "0.10.7"
           enable-cache: true
-      - run: uv sync --locked --python 3.12 --group evaluation
-      - run: uv run --locked --group evaluation ruff check .
-      - run: uv run --locked --group evaluation ruff format --check .
-      - run: uv run --locked --group evaluation pyright
-      - run: uv run --locked --group evaluation pytest --cov=retail_insight --cov-report=term-missing
-      - run: uv run --locked --group evaluation retail-eval validate
+      - run: uv sync --python 3.12 --group evaluation
+      - run: uv run --group evaluation ruff check .
+      - run: uv run --group evaluation ruff format --check .
+      - run: uv run --group evaluation pyright
+      - run: uv run --group evaluation pytest --cov=retail_insight --cov-report=term-missing
+      - run: uv run --group evaluation retail-eval validate

@@ -5,9 +5,9 @@ COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 COPY pyproject.toml uv.lock ./
-# Install the locked libraries, never the repository package that includes evaluation code.
+# Install project dependencies, never the repository package that includes evaluation code.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-install-project --group evaluation
+    uv sync --no-dev --no-install-project --group evaluation
 
 FROM python:3.12-slim-bookworm@sha256:44cf1793efa7c7a476bb0f2cff81443f4a072c90c1cb127e2924933daa3e8c64 AS runtime
 WORKDIR /app

@@ -7,9 +7,20 @@ A retail analytics application built on Google ADK and Gemini, with a standalone
 With Docker running and `GEMINI_API_KEY` configured in `.env`:
 
 ```bash
-uv run --locked retail-stack up --backend fixture
-uv run --locked retail-stack chat
+uv run retail-stack up --backend fixture
+uv run agent-chat coordinator
 ```
+
+Choose the agent explicitly when chatting with the running services:
+
+```bash
+uv run agent-chat coordinator
+uv run agent-chat retail
+uv run agent-chat inventory
+uv run agent-chat distribution
+```
+
+`retail-stack` manages service startup, status and shutdown. `retail-agent chat` runs the standalone retail analyst locally; `agent-chat retail` connects to its Docker service.
 
 This builds four separate agent images, starts the official A2A Inspector GUI and reuses local
 Phoenix. Inspector exposes all four Agent Cards; the coordinator delegates to specialists through
@@ -25,8 +36,8 @@ for endpoints, authentication, persistence and shutdown.
 To run the independent 20-question-plus-follow-up suites for each new agent:
 
 ```bash
-uv run --locked retail-stack up --backend fixture --evaluation-fixtures
-uv run --locked --group evaluation retail-eval run-multi-agent \
+uv run retail-stack up --backend fixture --evaluation-fixtures
+uv run --group evaluation retail-eval run-multi-agent \
   --suite all --max-cost-usd 40 --deadline-seconds 7200
 ```
 
@@ -39,8 +50,8 @@ See [evaluation instructions](docs/evaluation.md) and the [validation report](ev
 ## Standalone retail CLI
 
 ```bash
-uv sync --locked --python 3.12
-uv run --locked retail-agent chat --golden-bootstrap
+uv sync --python 3.12
+uv run retail-agent chat --golden-bootstrap
 ```
 
 New questions cover all brands unless you request a brand filter, for example, "Show Calvin Klein revenue in Q1 2026." Configure your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). `--golden-bootstrap` enables the repository's 11 synthetic reference methods. Current answers require fresh evidence. Without this flag, only eligible approved examples from the configured corpus are available.
@@ -48,7 +59,7 @@ New questions cover all brands unless you request a brand filter, for example, "
 For real Gemini calls against a frozen synthetic dataset, without BigQuery credentials:
 
 ```bash
-uv run --locked retail-agent chat --backend fixture --golden-bootstrap
+uv run retail-agent chat --backend fixture --golden-bootstrap
 ```
 
 The application provides schema discovery, a Golden example catalog, warehouse queries, local result analysis, prior-answer access and private report management. The analyst selects examples from eligible summaries. Application services enforce permissions, privacy, budgets and deletion confirmation. Answers contain the model's reviewed Markdown; `/details` displays supporting SQL and evidence.
@@ -62,10 +73,10 @@ Runtime analytical skills are enabled by default. The analyst reads relevant met
 - [Golden examples](knowledge/golden/README.md): provenance, offline validation and publication rules.
 
 ```bash
-uv run --locked --group evaluation pytest
-uv run --locked python scripts/validate_golden_bootstrap.py
-uv run --locked ruff check .
-uv run --locked --group evaluation pyright
+uv run --group evaluation pytest
+uv run python scripts/validate_golden_bootstrap.py
+uv run ruff check .
+uv run --group evaluation pyright
 ```
 
 Saving requires an explicit request. Deletion requires an exact preview and confirmation in the same interactive chat. New sessions use the local `workspace` report owner. Stored ownership remains isolated: earlier owners' reports are retained without being merged into the workspace. Legacy import copies only records already owned by `workspace`, leaving the source unchanged.
@@ -83,7 +94,7 @@ for its capture and diagnosis. Historical local captures remain preserved. Curre
 Run new conversations with Gemini and BigQuery credentials configured and Docker running:
 
 ```bash
-uv run --locked --group evaluation retail-eval run-conversations \
+uv run --group evaluation retail-eval run-conversations \
   --max-cost-usd 10 --deadline-seconds 3600
 ```
 
@@ -103,7 +114,7 @@ scores, evidence checks, reference versions, and unresolved evaluations.
 
 The four repository prompt definitions remain available in
 [Phoenix Prompts](http://127.0.0.1:6006/prompts). Synchronize without model calls with
-`uv run --locked --group evaluation retail-eval sync-prompts`.
+`uv run --group evaluation retail-eval sync-prompts`.
 Git remains authoritative; UI prompt edits do not change application behavior.
 
 The separate controlled pilot retains 43 synthetic cases, independent Decimal/set
