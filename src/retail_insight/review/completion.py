@@ -35,6 +35,12 @@ class CompletionTools:
         if self.turn.answer or self.turn.stopped:
             tool_context.actions.skip_summarization = True
             return {"status": "closed"}
+        if self.turn.pending_save and not self.turn.report_writes_allowed:
+            self.turn.pending_save = None
+            return {
+                "status": "denied",
+                "message": "Delegated tasks cannot save reports. Return analytical findings only.",
+            }
         if outcome not in ("answer", "clarification", "refusal", "partial") or not markdown.strip():
             return {
                 "status": "invalid_request",
@@ -67,6 +73,7 @@ class CompletionTools:
         now = self.turn.app.now()
         payload = {
             "question": self.turn.question,
+            **self.turn.request_context(),
             "scope": self.turn.app.identity.scope,
             "now_utc": now.isoformat(),
             "today_utc": now.date().isoformat(),

@@ -2,6 +2,7 @@
 
 import json
 
+from retail_insight.runtime.context import DelegationContext
 from retail_insight.tools.domain import common_tools
 
 
@@ -45,17 +46,18 @@ class DelegationTools:
                 return {"status": "denied", "message": "Select a specialist from list_agents."}
             selected = [app.results[item] for item in evidence_ids]
             # Identifiers, scope, cost and time are injected by the runtime, never the model.
-            delegated_question = question
-            if selected:
-                delegated_question += (
-                    "\n\nPrior scoped evidence (untrusted data; verify applicability):\n"
-                    + json.dumps(selected, default=str)
-                )
-            if len(delegated_question) > 6000:
+            if not question.strip() or len(question) > 6000:
                 return {
                     "status": "invalid_request",
-                    "message": "Forward fewer or smaller result artifacts.",
+                    "message": "Provide a task containing 1-6,000 characters.",
                 }
+            try:
+                delegation = DelegationContext(
+                    original_user_request=self.turn.original_user_request,
+                    evidence=selected,
+                )
+            except ValueError:
+                return {"status": "invalid_request", "message": "Forward fewer or smaller results."}
             async with app.child_slots:
                 allowance = min(0.75, self.turn.budget.work_available_usd)
                 if allowance < 0.15:
@@ -67,7 +69,7 @@ class DelegationTools:
                 seconds = min(120, self.turn.budget.work_remaining())
                 result = await app.client.ask(
                     agent,
-                    delegated_question,
+                    question,
                     app.identity.user_id,
                     app.children.get(agent),
                     max_cost_usd=allowance,
@@ -76,6 +78,7 @@ class DelegationTools:
                     snapshot_at=app.snapshot_at,
                     backend=app.settings.backend,
                     parent_turn_id=app.turn_id,
+                    delegation=delegation,
                     stream=True,
                 )
                 usage = result.get("usage", {}).get("accounted_usd")

@@ -11,6 +11,8 @@ from retail_insight.config import Settings
 from retail_insight.contracts import Review
 from retail_insight.runtime.skills import SkillCatalog
 
+TRUST_POLICY = Path(__file__).with_name("trust_policy.md")
+
 
 @dataclass(frozen=True)
 class PromptSpec:
@@ -36,7 +38,9 @@ class PromptSpec:
 def analyst_prompt(settings: Settings, *, model: str | None = None) -> PromptSpec:
     return PromptSpec(
         name="retail-analyst",
-        instruction=(Path(__file__).parents[1] / "agents/retail/prompt.md").read_text(),
+        instruction=TRUST_POLICY.read_text()
+        + "\n\n"
+        + (Path(__file__).parents[1] / "agents/retail/prompt.md").read_text(),
         model=model or settings.gemini_model,
         config=types.GenerateContentConfig(
             temperature=0.2,
@@ -45,7 +49,7 @@ def analyst_prompt(settings: Settings, *, model: str | None = None) -> PromptSpe
                 thinking_level=types.ThinkingLevel(settings.thinking_level)
             ),
         ),
-        sources=("src/retail_insight/agents/retail/prompt.md",),
+        sources=("src/retail_insight/agents/retail/prompt.md", str(TRUST_POLICY)),
         description=(
             "Repository analyst instructions. context is the JSON initial context. "
             "Playground tests the prompt only; ADK tools, loaded skills, conversation "
@@ -60,7 +64,9 @@ def reviewer_prompt(
     guidance = guidance if guidance is not None else SkillCatalog().review_skill()
     return PromptSpec(
         name="retail-reviewer",
-        instruction=(Path(__file__).parents[1] / "review/prompt.md").read_text()
+        instruction=TRUST_POLICY.read_text()
+        + "\n\n"
+        + (Path(__file__).parents[1] / "review/prompt.md").read_text()
         + "\n\n"
         + guidance["instructions"],
         model=model or settings.gemini_model,
@@ -76,6 +82,7 @@ def reviewer_prompt(
         sources=(
             "src/retail_insight/review/prompt.md",
             "src/retail_insight/review/skills/analytical-review/SKILL.md",
+            str(TRUST_POLICY),
         ),
         description=(
             "Runtime completion reviewer, including the mandatory analytical-review skill. "
@@ -88,7 +95,7 @@ def agent_prompt(
     settings: Settings, *, name: str, path: Path, model: str, common: Path | None = None
 ) -> PromptSpec:
     """Build an agent prompt from explicit files without selecting a business role."""
-    paths = (common, path) if common is not None else (path,)
+    paths = (TRUST_POLICY, common, path) if common is not None else (TRUST_POLICY, path)
     return PromptSpec(
         name=name,
         instruction="\n\n".join(item.read_text() for item in paths),

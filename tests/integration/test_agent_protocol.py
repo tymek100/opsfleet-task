@@ -88,7 +88,10 @@ async def test_every_prompt_gets_fresh_budget_while_approved_context_survives(ma
     assert first.status == second.status == "approved"
     assert first.usage["model_calls"] == second.usage["model_calls"] == 2
     assert first.usage["spent_usd"] == second.usage["spent_usd"]
-    assert "Which year?" in json.dumps(app.model.requests[1])
+    # Prior text is available through read_context; only its handle is eager context.
+    assert first.answer.id in json.dumps(app.model.requests[1])
+    assert "Which year?" not in json.dumps(app.model.requests[1])
+    assert app.context_history()[0]["markdown"] == "Which year?"
     assert len(app.history) == 2
 
 

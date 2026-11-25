@@ -92,6 +92,8 @@ class ReportTools:
         """Propose saving an answer only on an explicit current user request. Does not commit."""
 
         def stage():
+            if not self.turn.report_writes_allowed:
+                return {"status": "denied", "message": "Delegated tasks cannot save reports."}
             screen(title)
             if target_answer_id != "current" and target_answer_id not in self.turn.app.answers:
                 return {"status": "invalid_request", "message": "Unknown approved answer ID."}
@@ -104,6 +106,8 @@ class ReportTools:
         """Preview owned deletions with evidence_id. Only the application can request confirmation."""
 
         def preview():
+            if not self.turn.report_writes_allowed:
+                return {"status": "denied", "message": "Delegated tasks cannot request deletion."}
             self.turn.deletion_preview = self.turn.app.reports.preview_delete(
                 self.turn.app.identity.user_id, self.turn.app.conversation_id, query
             )
@@ -123,12 +127,18 @@ class ReportTools:
 
     async def cancel_report_deletion(self) -> dict:
         """Cancel pending deletion without deleting reports; evidence_id supports the receipt."""
-        return await self.turn.run_tool(
-            "cancel_report_deletion",
-            lambda: self._observation(
+
+        def cancel():
+            if not self.turn.report_writes_allowed:
+                return {
+                    "status": "denied",
+                    "message": "Delegated tasks cannot change report operations.",
+                }
+            return self._observation(
                 "cancel_report_deletion",
                 self.turn.app.reports.cancel_delete(
                     self.turn.app.identity.user_id, self.turn.app.conversation_id
                 ),
-            ),
-        )
+            )
+
+        return await self.turn.run_tool("cancel_report_deletion", cancel)

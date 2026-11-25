@@ -186,6 +186,25 @@ def deterministic_turn(turn: TurnRecord, reference: TurnReference) -> list[Score
             if options.get("exact_previous"):
                 history = turn.context.get("prior_approved_conversation", [])
                 previous = history[-1] if history else {}
+                # New runs expose only answer handles in the initial model request.
+                # The reviewer capture contains the actual historical text, if available.
+                if previous and "markdown" not in previous:
+                    captured = next(
+                        (
+                            candidate.get("conversation", [])
+                            for candidate in reversed(turn.candidates)
+                            if candidate.get("conversation")
+                        ),
+                        [],
+                    )
+                    previous = next(
+                        (
+                            item
+                            for item in captured
+                            if item.get("answer_id") == previous.get("answer_id")
+                        ),
+                        {},
+                    )
                 created = [r for r in turn.reports_after if r not in turn.reports_before]
                 if previous.get("excerpt_only"):
                     scores.append(

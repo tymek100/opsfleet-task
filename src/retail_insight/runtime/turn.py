@@ -11,14 +11,17 @@ from typing import TYPE_CHECKING
 
 from retail_insight.contracts import Answer
 from retail_insight.runtime.budget import LimitReached
+from retail_insight.runtime.context import DelegationContext
 
 if TYPE_CHECKING:
     from retail_insight.runtime.analyst import Analyst
 
 
 class Turn:
-    def __init__(self, app: Analyst, question: str):
+    def __init__(self, app: Analyst, question: str, delegation: DelegationContext | None = None):
         self.app, self.question = app, question
+        self.delegation = delegation
+        self.delegated_evidence_ids: list[str] = []
         self.budget = app.new_budget()
         self.trace: list[dict] = []
         self.answer: Answer | None = None
@@ -34,6 +37,21 @@ class Turn:
         self.failed_actions: dict[str, int] = {}
         self.candidates: set[str] = set()
         self._observed_tools: str | None = None
+
+    @property
+    def original_user_request(self) -> str:
+        return self.delegation.original_user_request if self.delegation else self.question
+
+    @property
+    def report_writes_allowed(self) -> bool:
+        return self.delegation is None
+
+    def request_context(self) -> dict:
+        return {
+            "original_user_request": self.original_user_request,
+            "request_origin": "coordinator" if self.delegation else "human",
+            "report_writes_allowed": self.report_writes_allowed,
+        }
 
     def emit(self, event: str, **fields) -> None:
         record = {
@@ -87,6 +105,11 @@ class Turn:
                 result = await result
             self.app.screen(json.dumps(result, default=str))
             result.setdefault("status", "ok")
+            result["content_provenance"] = {
+                "tool": name,
+                "agent": self.app.agent_name,
+                "authority": "observation_only",
+            }
             if result["status"] not in ("ok", "empty"):
                 self.failed_actions[digest] = self.failed_actions.get(digest, 0) + 1
             self.emit("tool_end", tool=name, status=result["status"], evidence_id=result.get("id"))

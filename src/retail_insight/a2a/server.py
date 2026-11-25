@@ -45,6 +45,7 @@ from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY, Answer
 from retail_insight.integrations.maps.privacy import contains_maps, persistent_result
 from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.runtime.context import DelegationContext
 
 ROLES = {
     "retail": "Scoped sales, products, customers, revenue and order analysis",
@@ -149,6 +150,17 @@ class Executor(AgentExecutor):
         self.running = {}
         self.slots = asyncio.Semaphore(4)
 
+    @staticmethod
+    def delegation_context(metadata, principal) -> DelegationContext | None:
+        """Accept handoffs only from authenticated service code, never a user token."""
+        delegated = "delegation" in metadata
+        parent = metadata.get("parent_turn_id")
+        if not delegated and not parent:
+            return None
+        if not principal.service or not delegated or not isinstance(parent, str) or not parent:
+            raise ValueError("Delegation requires service authentication and a complete handoff")
+        return DelegationContext.model_validate(metadata["delegation"])
+
     def create_runtime(self, identity, context_id, request_id, metadata, state):
         if metadata.get("backend") not in {None, self.settings.backend}:
             raise ValueError("Requested backend does not match the running service")
@@ -216,6 +228,7 @@ class Executor(AgentExecutor):
         ).hexdigest()
         self.running[task_id] = asyncio.current_task()
         try:
+            delegation = self.delegation_context(context.metadata, call_context.state["principal"])
             async with self.slots, self.locks.setdefault(context_id, asyncio.Lock()):
                 state = self.store.context(context_id, owner)
                 cached = self.store.claim(request_id, owner, digest)
@@ -237,7 +250,11 @@ class Executor(AgentExecutor):
                     WORKSPACE_IDENTITY, context_id, request_id, metadata, state
                 )
                 try:
-                    result = await app.ask(question)
+                    result = (
+                        await app.ask(question, delegation=delegation)
+                        if delegation is not None
+                        else await app.ask(question)
+                    )
                 finally:
                     reports = getattr(app, "reports", None)
                     if reports is not None:

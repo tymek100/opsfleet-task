@@ -27,9 +27,11 @@ from retail_insight.integrations.phoenix.tracing import (
 )
 from retail_insight.integrations.reports import ReportStore
 from retail_insight.runtime.budget import Budget, LimitReached
+from retail_insight.runtime.context import DelegationContext
 from retail_insight.runtime.privacy import screen
 from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable, make_gemini
 from retail_insight.runtime.turn import Turn
+from retail_insight.tools.context import ContextTools
 
 
 class Analyst:
@@ -102,7 +104,9 @@ class Analyst:
         self.last_result: TurnResult | None = None
         self._result_counter = 0
 
-    async def ask(self, question: str) -> TurnResult:
+    async def ask(
+        self, question: str, *, delegation: DelegationContext | None = None
+    ) -> TurnResult:
         self.turn_id = uuid.uuid4().hex
         self.observer_errors = 0
         with span(
@@ -130,7 +134,7 @@ class Analyst:
             except Exception:
                 self.observer_errors += 1
             try:
-                result = await self._ask(question)
+                result = await self._ask(question, delegation=delegation)
             except BaseException:
                 self.observe("prompt_error", status="interrupted")
                 raise
@@ -165,12 +169,18 @@ class Analyst:
         except Exception:
             self.observer_errors += 1
 
-    async def _ask(self, question: str) -> TurnResult:
+    async def _ask(
+        self, question: str, *, delegation: DelegationContext | None = None
+    ) -> TurnResult:
         started = time.monotonic()
         try:
             question = self.screen(question.strip())
             if not question or len(question) > 6000:
                 raise ValueError("Ask a question containing 1-6,000 characters.")
+            if delegation is not None:
+                # Copy and validate at entry: later caller mutations cannot change authority.
+                delegation = DelegationContext.model_validate_json(delegation.model_dump_json())
+                self.screen(delegation.model_dump_json())
         except ValueError as exc:
             return TurnResult(None, "input_rejected", str(exc), [], {}, [], 0)
         # Approved context is bounded and ephemeral. No raw ADK reasoning is persisted.
@@ -179,10 +189,21 @@ class Analyst:
         begin_turn = getattr(self.gateway, "begin_turn", None)
         if begin_turn:
             begin_turn()
-        turn = Turn(self, question)
+        turn = Turn(self, question, delegation)
         status, message = "incomplete", "The analyst could not complete a reviewed answer."
         runner = None
         try:
+            if delegation:
+                for source in delegation.evidence:
+                    artifact = turn.artifact(
+                        {
+                            **source,
+                            "forwarded_by": delegation.source_agent,
+                            "forwarded_evidence_id": source.get("id"),
+                        },
+                        "Forwarded evidence; verify source, scope and applicability",
+                    )
+                    turn.delegated_evidence_ids.append(artifact["id"])
             if self.model is None:
                 self.model = make_gemini(self.settings)
             async with asyncio.timeout(self.settings.turn_timeout_seconds):
@@ -193,7 +214,7 @@ class Analyst:
                         turn.budget, turn.emit, prompt=prompt_spec, screener=self.screen
                     ),
                     instruction=prompt_spec.instruction,
-                    tools=self.build_tools(turn),
+                    tools=[ContextTools(turn).read_context, *self.build_tools(turn)],
                     before_model_callback=turn.observe_request,
                     after_model_callback=turn.observe_model,
                     generate_content_config=prompt_spec.config,
@@ -209,10 +230,16 @@ class Analyst:
                     "now_utc": now.isoformat(),
                     "today_utc": now.date().isoformat(),
                     **self.extra_context(),
-                    "prior_approved_conversation": self.context_history(),
-                    "available_results": self.result_manifest(),
+                    # Only application-generated handles/counts are eager context.
+                    # Historical text and evidence descriptions require a real tool call.
+                    "prior_approved_conversation": [
+                        {"answer_id": item["answer_id"]} for item in self.history
+                    ],
+                    "available_result_count": len(self.results),
+                    "delegated_evidence_count": len(turn.delegated_evidence_ids),
                     "available_skills": self.skills.list(role="analyst"),
                     "user_question": question,
+                    **turn.request_context(),
                 }
                 self.observe("initial_context", context=context)
                 prompt = json.dumps(context, ensure_ascii=False)

@@ -9,6 +9,7 @@ import httpx
 from opentelemetry.propagate import inject
 
 from retail_insight.a2a.auth import canonical_json, signed_headers
+from retail_insight.runtime.context import DelegationContext
 
 
 class AgentClient:
@@ -65,6 +66,7 @@ class AgentClient:
         backend: str | None = None,
         request_id: str | None = None,
         parent_turn_id: str | None = None,
+        delegation: DelegationContext | None = None,
         stream: bool = False,
     ) -> dict:
         message_id = request_id or uuid.uuid4().hex
@@ -83,6 +85,10 @@ class AgentClient:
             "backend": backend,
             "parent_turn_id": parent_turn_id,
         }
+        if delegation is not None:
+            if not parent_turn_id:
+                raise ValueError("Delegation requires a parent turn")
+            metadata["delegation"] = delegation.model_dump(mode="json")
         payload = {
             "jsonrpc": "2.0",
             "id": message_id,

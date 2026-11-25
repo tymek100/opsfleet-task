@@ -5,10 +5,15 @@ from typing import Literal
 
 import pytest
 
-from evaluation.graders.checks import grounding_scores, numeric_scores, value_matches
+from evaluation.graders.checks import (
+    deterministic_turn,
+    grounding_scores,
+    numeric_scores,
+    value_matches,
+)
 from evaluation.graders.judge import judge_input, validate_judgment
 from evaluation.graders.runner import grade_trial, grade_turn
-from evaluation.models import Case, Fact, Step, TurnReference
+from evaluation.models import Case, Criterion, Fact, Step, TurnReference
 from evaluation.results import Claim, ExtractedFact, Judgment, Trial, TurnRecord
 
 
@@ -76,6 +81,36 @@ def test_numeric_truth_does_not_establish_grounding():
     result = judgment(turn, label="UNSUPPORTED")
     assert numeric_scores(reference(), result)[0].status == "PASS"
     assert grounding_scores(turn, result, [])[0].status == "FAIL"
+
+
+@pytest.mark.parametrize("saved", ["Exact prior answer", "Rewritten answer"])
+def test_previous_answer_save_is_graded_when_initial_context_contains_only_handles(saved):
+    turn = TurnRecord(
+        step_id="save",
+        status="approved",
+        outcome="answer",
+        markdown="Saved.",
+        context={"prior_approved_conversation": [{"answer_id": "Aprevious"}]},
+        candidates=[
+            {"conversation": [{"answer_id": "Aprevious", "markdown": "Exact prior answer"}]}
+        ],
+        reports_after=[{"markdown": saved}],
+    )
+    reference = TurnReference(
+        reference_answer="Save the exact previous answer.",
+        criteria=[
+            Criterion(
+                id="save-exact",
+                kind="state",
+                description="Preserve content",
+                options={"exact_previous": True},
+            )
+        ],
+    )
+    score = next(
+        item for item in deterministic_turn(turn, reference) if item.name == "report_state"
+    )
+    assert score.status == ("PASS" if saved == "Exact prior answer" else "FAIL")
 
 
 def test_nonfactual_padding_is_not_a_grounding_success():
