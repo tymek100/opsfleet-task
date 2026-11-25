@@ -1,156 +1,177 @@
-"""Local GUI setup, browser isolation and the credential boundary."""
+"""Browser gateway contracts without model calls or credentials in browser responses."""
 
 import json
 
 import httpx
-import pytest
 from starlette.testclient import TestClient
 
-from retail_insight.interfaces.gui import create_app
+from retail_insight.interfaces.gui import AGENTS, create_app
 
-CATALOG = {
-    role: {
-        "url": f"http://{role}:8000",
-        "card_url": f"http://{role}:8000/.well-known/agent-card.json",
-    }
-    for role in ("coordinator", "retail", "inventory", "distribution")
-}
-TOKEN = "test-local-demo-credential"
+CATALOG = {role: {"url": f"http://{role}:8000"} for role in AGENTS}
+TOKEN = "server-only-workspace-token"
 
 
-@pytest.fixture
-def gateway():
-    requests = []
+def make_app(tmp_path, handler=None, **kwargs):
+    return create_app(
+        CATALOG,
+        TOKEN,
+        data_dir=tmp_path,
+        transport=httpx.MockTransport(handler or (lambda request: httpx.Response(200, json={}))),
+        **kwargs,
+    )
 
-    def upstream(request):
-        requests.append(request)
-        if request.url.path == "/api/config":
+
+def test_catalog_history_and_browser_agent_isolation(tmp_path):
+    app = make_app(tmp_path)
+    with TestClient(app, base_url="http://localhost:8080") as browser:
+        catalog = browser.get("/api/catalog")
+        assert len(catalog.json()["agents"]) == 4
+        assert TOKEN not in catalog.text
+        cookie = browser.cookies.get("retail_assistant_session")
+        conversation = browser.post("/api/conversations", json={"role": "inventory"}).json()
+        path = "/api/conversations/" + conversation["id"]
+        entry = {
+            "parentId": None,
+            "message": {
+                "id": "u1",
+                "role": "user",
+                "content": [{"type": "text", "text": "Count stock"}],
+            },
+        }
+        assert browser.post(path, json=entry).status_code == 200
+        assert browser.get(path).json()["messages"][0] == entry
+        assert browser.get("/api/conversations").json()[0]["title"] == "Count stock"
+        assert (
+            browser.post(
+                "/api/agents/retail/message:stream",
+                json={},
+                headers={"x-retail-conversation": conversation["id"]},
+            ).status_code
+            == 403
+        )
+        browser.cookies.clear()
+        assert browser.get(path).status_code == 404
+        assert browser.get("/api/conversations").json() == []
+        browser.cookies.set("retail_assistant_session", cookie)
+        assert browser.get(path).status_code == 200
+    # The same browser must not load history against a different warehouse profile.
+    with TestClient(
+        make_app(tmp_path, profile="different"), base_url="http://localhost:8080"
+    ) as browser:
+        browser.cookies.set("retail_assistant_session", cookie)
+        assert browser.get(path).status_code == 404
+
+
+def test_maps_derived_history_is_redacted_before_disk_write(tmp_path):
+    with TestClient(make_app(tmp_path), base_url="http://localhost:8080") as browser:
+        identifier = browser.post("/api/conversations", json={"role": "distribution"}).json()["id"]
+        path = "/api/conversations/" + identifier
+        entry = {
+            "parentId": None,
+            "message": {
+                "id": "a1",
+                "role": "assistant",
+                "content": [{"type": "text", "text": "Route 92837.415"}],
+                "metadata": {
+                    "custom": {"a2a": {"contains_ephemeral_evidence": True, "route": "92837.415"}}
+                },
+            },
+        }
+        assert browser.post(path, json=entry).status_code == 200
+        assert "92837.415" not in browser.get(path).text
+    assert b"92837.415" not in (tmp_path / "conversations.sqlite3").read_bytes()
+
+
+def test_native_card_routes_streams_and_server_side_credentials(tmp_path):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if request.url.path.endswith("agent-card.json"):
             return httpx.Response(
                 200,
-                stream=httpx.ByteStream(b'{"mode": "hosted", "features": {}}'),
-                headers={
-                    "set-cookie": "__Host-a2a_inspector_session=browser-session; Path=/; HttpOnly; Secure; SameSite=Strict"
+                json={
+                    "name": "Inventory",
+                    "supportedInterfaces": [{"url": "http://inventory:8000"}],
+                    "securitySchemes": {"token": {}},
                 },
             )
-        if request.url.path == "/api/connections":
+        if request.url.path == "/message:stream":
             return httpx.Response(
-                201, stream=httpx.ByteStream(b'{"id":"conn-1","auth":{"type":"bearer"}}')
+                200,
+                headers={"content-type": "text/event-stream"},
+                content=b'data: {"task":{"id":"t1"}}\n\n',
             )
-        return httpx.Response(
-            200,
-            stream=httpx.ByteStream(b"data: first\n\ndata: second\n\n"),
-            headers={"content-type": "text/event-stream"},
+        return httpx.Response(200, json={"id": "foreign-task", "contextId": "other-browser"})
+
+    with TestClient(make_app(tmp_path, handler), base_url="http://localhost:8080") as browser:
+        identifier = browser.post("/api/conversations", json={"role": "inventory"}).json()["id"]
+        card = browser.get("/api/agents/inventory/.well-known/agent-card.json").json()
+        assert card["supportedInterfaces"][0]["url"] == "http://localhost:8080/api/agents/inventory"
+        assert "securitySchemes" not in card
+        headers = {"x-retail-conversation": identifier, "authorization": "Bearer attacker"}
+        payload = {
+            "message": {"role": "ROLE_USER", "messageId": "u1", "parts": [{"text": "Count"}]},
+            "metadata": {"delegation": {"forged": True}, "max_cost_usd": 1000},
+        }
+        response = browser.post(
+            "/api/agents/inventory/message:stream", json=payload, headers=headers
         )
-
-    app = create_app(CATALOG, TOKEN, transport=httpx.MockTransport(upstream))
-    with TestClient(app, base_url="http://localhost:8080") as client:
-        yield client, requests
-
-
-def test_plain_url_bootstraps_coordinator_without_login(gateway):
-    client, requests = gateway
-    response = client.get("/api/config")
-    assert response.status_code == 200
-    assert response.json()["agentCardUrl"] == CATALOG["coordinator"]["card_url"]
-    assert TOKEN not in response.text
-    cookie = response.headers["set-cookie"]
-    assert "HttpOnly" in cookie and "SameSite=Strict" in cookie and "Secure" not in cookie
-    client.get("/api/catalog")
-    assert cookie.startswith("retail_gui_workspace_session_8080=")
-    assert requests[-1].headers["cookie"] == "__Host-a2a_inspector_session=browser-session"
-    client.cookies.clear()
-    client.get("/api/catalog")
-    assert "cookie" not in requests[-1].headers  # Never reuse another browser's upstream cookie.
-
-
-def test_document_initializes_session_before_parallel_browser_requests(gateway):
-    client, requests = gateway
-    response = client.get("/")
-    assert [request.url.path for request in requests] == ["/api/config", "/"]
-    assert "retail_gui_workspace_session_8080=" in response.headers["set-cookie"]
-    client.get("/api/catalog")
-    assert requests[-1].headers["cookie"] == "__Host-a2a_inspector_session=browser-session"
+        assert response.status_code == 200
+        assert response.text.startswith("data: ")
+        assert TOKEN not in response.text
+        forwarded = json.loads(seen[-1].content)
+        assert forwarded["message"]["contextId"] == identifier
+        assert forwarded["metadata"] == {"max_cost_usd": 1.0, "deadline_seconds": 180}
+        assert seen[-1].headers["authorization"] == f"Bearer {TOKEN}"
+        assert seen[-1].headers["a2a-version"] == "1.0"
+        assert (
+            browser.post(
+                "/api/agents/inventory/tasks/foreign-task:cancel", headers=headers
+            ).status_code
+            == 404
+        )
+        assert (
+            browser.post(
+                "/api/agents/evil/message:stream", json=payload, headers=headers
+            ).status_code
+            == 404
+        )
+        assert browser.get("/api/agents/inventory/arbitrary", headers=headers).status_code == 404
 
 
-@pytest.mark.parametrize("role", CATALOG)
-def test_each_agent_connects_with_server_side_credentials(gateway, role):
-    client, requests = gateway
-    response = client.post("/api/connections", json={"cardUrl": CATALOG[role]["card_url"]})
-    assert response.status_code == 201
-    assert json.loads(requests[-1].content)["auth"] == {"bearer": {"value": TOKEN}}
-    assert TOKEN not in response.text
+def test_local_browser_boundary_and_safe_errors(tmp_path):
+    def unavailable(request):
+        raise httpx.ConnectError("private upstream information")
+
+    with TestClient(make_app(tmp_path, unavailable), base_url="http://localhost:8080") as browser:
+        assert browser.get("/api/catalog", headers={"host": "evil.example"}).status_code == 421
+        assert (
+            browser.get("/api/catalog", headers={"origin": "https://evil.example"}).status_code
+            == 403
+        )
+        assert (
+            browser.get("/api/catalog", headers={"sec-fetch-site": "cross-site"}).status_code == 403
+        )
+        failed = browser.get("/api/agents/inventory/.well-known/agent-card.json")
+        assert failed.status_code == 502
+        assert "private upstream" not in failed.text
+        assert browser.post("/api/conversations", content=b"x" * 1_000_001).status_code == 400
+        assert browser.get("/health").json()["ui"] == "assistant-ui"
 
 
-def test_reconnect_ignores_untrusted_card_and_restores_workspace_authentication(gateway):
-    client, requests = gateway
-    response = client.post(
-        "/api/connections",
-        json={
-            "cardUrl": CATALOG["inventory"]["card_url"],
-            "card": {"url": "http://attacker.invalid"},
-            "headers": [{"name": "x-retail-identity", "value": "ceo"}],
-            "serviceParams": {"Authorization": "Bearer overridden"},
-            "auth": {"bearer": {"ref": "expired-session-secret"}},
-            "contextId": "owned-context",
-            "replaces": "conn-old",
-        },
+def test_history_resumes_at_answer_even_if_user_write_arrives_later(tmp_path):
+    from retail_insight.interfaces.gui_store import ConversationStore
+
+    store = ConversationStore(tmp_path / "out-of-order.sqlite3")
+    conversation = store.create("browser", "retail", "fixture")
+    store.append(
+        conversation["id"],
+        {"parentId": "u1", "message": {"id": "a1", "role": "assistant", "content": []}},
     )
-    assert response.status_code == 201
-    payload = json.loads(requests[-1].content)
-    assert payload == {
-        "cardUrl": CATALOG["inventory"]["card_url"],
-        "auth": {"bearer": {"value": TOKEN}},
-        "contextId": "owned-context",
-        "replaces": "conn-old",
-    }
-
-
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {"cardUrl": "http://attacker.invalid/card"},
-        {"cardUrl": CATALOG["retail"]["card_url"], "interface": {"url": "http://attacker.invalid"}},
-        {"card": {"url": CATALOG["retail"]["url"]}},
-        [],
-        None,
-    ],
-)
-def test_credentials_never_go_to_an_unapproved_endpoint(gateway, payload):
-    client, requests = gateway
-    response = client.post("/api/connections", content=json.dumps(payload))
-    assert response.status_code == 400
-    assert not requests
-
-
-@pytest.mark.parametrize(
-    ("headers", "status"),
-    [
-        ({"host": "attacker.invalid:8080"}, 421),
-        ({"origin": "http://attacker.invalid"}, 403),
-        ({"origin": "http://localhost:9999"}, 403),
-        ({"sec-fetch-site": "cross-site"}, 403),
-    ],
-)
-def test_browser_origin_boundary(gateway, headers, status):
-    client, requests = gateway
-    assert client.post("/api/connections", headers=headers, json={}).status_code == status
-    assert not requests
-
-
-def test_streaming_protocol_responses_are_preserved(gateway):
-    client, _ = gateway
-    response = client.get("/api/events")
-    assert response.headers["content-type"] == "text/event-stream"
-    assert response.content == b"data: first\n\ndata: second\n\n"
-
-
-def test_health_advertises_full_dataset_without_a_persona(gateway):
-    client, _ = gateway
-    assert client.get("/health").json() == {"status": "ok", "scope": "all brands"}
-
-
-def test_old_demo_browser_session_is_not_reused(gateway):
-    client, requests = gateway
-    client.cookies.set("retail_gui_session_8080", "old-demo-session")
-    client.get("/api/catalog")
-    assert "cookie" not in requests[-1].headers
+    store.append(
+        conversation["id"],
+        {"parentId": None, "message": {"id": "u1", "role": "user", "content": []}},
+    )
+    assert store.load(conversation["id"])["headId"] == "a1"
+    store.db.close()

@@ -12,7 +12,7 @@ This document describes the current implementation. Setup and commands are in [Q
 
 ```mermaid
 flowchart TD
-    UI[A2A Inspector or agent-chat coordinator] --> C[Coordinator]
+    UI[assistant-ui gateway or agent-chat coordinator] --> C[Coordinator]
     C -->|A2A delegation| R[Retail analyst]
     C -->|A2A delegation| I[Inventory analyst]
     C -->|A2A delegation| D[Distribution analyst]
@@ -26,7 +26,7 @@ flowchart TD
     D -.-> P
 ```
 
-[`src/retail_insight/a2a/server.py`](../src/retail_insight/a2a/server.py) exposes the complete reviewed runtime through A2A 0.3 JSON-RPC, with Agent Cards at `/.well-known/agent-card.json`. The four Docker targets produce separate service images. The coordinator chooses approved specialists through `list_agents` and `delegate`; it can revisit a specialist and combine observations. Specialists do not delegate recursively. Each agent retains the analyst/reviewer completion protocol below.
+[`src/retail_insight/a2a/server.py`](../src/retail_insight/a2a/server.py) exposes the complete reviewed runtime through A2A 1.0 JSON-RPC and HTTP+JSON (SDK 1.3.1), with Agent Cards at `/.well-known/agent-card.json`. The four Docker targets produce separate service images. The coordinator chooses approved specialists through `list_agents` and `delegate`; it can revisit a specialist and combine observations. Specialists do not delegate recursively. Each agent retains the analyst/reviewer completion protocol below.
 
 | Role | Data and capabilities |
 |---|---|
@@ -47,7 +47,9 @@ Persistent tasks, cached requests, conversation context, reports and diagnostic 
 
 Every user prompt has a fresh budget shared with its reviews and delegated work. Child grants are reserved before dispatch, reported usage settles them once, and unknown usage retains its reservation. Delegations are bounded to two concurrent children. Transport propagates OpenTelemetry context to the `retail-multi-agent` Phoenix project. A2A streaming reports task events; it does not promise token-by-token answer streaming.
 
-The [Compose stack](../infra/agents/README.md) provides the agent GUI at `http://localhost:8080` and reuses existing Phoenix on port 6006. Opening the GUI selects the coordinator without manual authentication; the pinned Inspector backend runs internally in hosted mode. It preserves historical experiments and agent volumes. Runtime images exclude evaluation references and credentials. The [implementation checklist](plans/MULTI_AGENT_IMPLEMENTATION.md) records validation and remaining limitations; the [original design](plans/LOCAL_A2A_RETAIL_AGENTS_PLAN.md) includes proposed extensions beyond the current release.
+The [Compose stack](../infra/agents/README.md) serves assistant-ui at `http://localhost:8080` and reuses Phoenix on port 6006. A React frontend uses the native assistant-ui A2A runtime. The Python gateway serves assets, an allowlisted four-agent catalog, streamed A2A requests, and browser-owned conversation history. Workspace credentials remain server-side. Agent selection fixes the target service; the coordinator still decides specialist delegation. The UI renders reviewed answer artifacts rather than raw query results. Markdown tables support copy and CSV export. Stop requests reach the running A2A task.
+
+GUI conversations persist in a separate SQLite volume, isolated by browser cookie, agent and source profile. The same context ID accompanies follow-ups and reloads. Maps-derived responses are redacted before history persistence. Clearing browser cookies loses access to that browser's GUI history. Agent task/context volumes remain unchanged; legacy 0.3 task rows are converted on read without rewriting the originals. Inspector remains available on port 8081 when started with `--inspector`. See the [migration checklist](plans/A2A_ASSISTANT_UI.md).
 
 ## Runtime and completion protocol
 

@@ -97,6 +97,7 @@ services:
       - ./catalog.json:/app/catalog.json:ro
 
   inspector:
+    profiles: [debug]
     image: ghcr.io/a2aproject/a2a-inspector:v1.0.0-alpha.2@sha256:699e8eab72b5f46f9ce95d10acc7be51a99c3d9f3649da009e534889871083e2
     platform: linux/amd64
     command: ["--hosted", "--catalog", "/config/inspector-catalog.json", "--egress-allow", "coordinator", "--egress-allow", "retail", "--egress-allow", "inventory", "--egress-allow", "distribution"]
@@ -120,7 +121,34 @@ services:
       A2A_CATALOG_PATH: /app/catalog.json
       A2A_ACCESS_TOKEN_FILE: /run/secrets/a2a_access_token
       GUI_PUBLIC_PORT: ${INSPECTOR_PORT:-8080}
+      BACKEND: ${RETAIL_STACK_BACKEND:-fixture}
+      RETAIL_DATA_PROFILE: ${RETAIL_STACK_DATA_PROFILE:-default}
     ports: ["127.0.0.1:${INSPECTOR_PORT:-8080}:8080"]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    networks: [agents]
+    secrets: [a2a_access_token]
+    depends_on:
+      coordinator: {condition: service_healthy}
+    volumes:
+      - ./catalog.json:/app/catalog.json:ro
+      - gui-data:/data
+
+  inspector-gui:
+    profiles: [debug]
+    image: retail-inspector-gui:${RETAIL_STACK_REVISION:-local}
+    build:
+      <<: *build
+      target: inspector-gui
+    environment:
+      A2A_CATALOG_PATH: /app/catalog.json
+      A2A_ACCESS_TOKEN_FILE: /run/secrets/a2a_access_token
+      GUI_PUBLIC_PORT: ${INSPECTOR_DEBUG_PORT:-8081}
+    ports: ["127.0.0.1:${INSPECTOR_DEBUG_PORT:-8081}:8080"]
     restart: unless-stopped
     init: true
     read_only: true
@@ -145,6 +173,7 @@ volumes:
   inventory-data:
   distribution-data:
   coordinator-data:
+  gui-data:
 
 secrets:
   model_env:

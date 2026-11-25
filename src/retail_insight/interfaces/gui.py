@@ -1,186 +1,244 @@
-"""Loopback-only Inspector gateway with automatic workspace authentication."""
+"""Local assistant-ui gateway: static assets, owned history and allowlisted A2A REST."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
+import uuid
 from contextlib import asynccontextmanager
-from http.cookies import SimpleCookie
 from pathlib import Path
 
 import httpx
 from starlette.applications import Starlette
 from starlette.background import BackgroundTask
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response, StreamingResponse
+from starlette.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 
-HOP_HEADERS = {
-    "connection",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "te",
-    "trailer",
-    "transfer-encoding",
-    "upgrade",
-    "content-length",
+from retail_insight.a2a.client import AgentClient
+from retail_insight.interfaces.gui_store import ConversationStore
+
+AGENTS = {
+    "coordinator": ("Coordinator", "Connect sales, stock and distribution in one investigation."),
+    "retail": ("Retail agent", "Explore revenue, products, customers and orders."),
+    "inventory": ("Inventory agent", "Understand unsold stock, inventory age and cost."),
+    "distribution": ("Distribution agent", "Compare distribution centers and stock allocation."),
 }
-INSPECTOR_COOKIE = "__Host-a2a_inspector_session"
-
-
-def connection_payload(payload: dict, catalog: dict, token: str) -> dict:
-    """Attach credentials only to an approved endpoint; never trust a submitted card."""
-    interface = payload.get("interface") or {}
-    card_url = payload.get("cardUrl")
-    target = next(
-        (
-            item
-            for item in catalog.values()
-            if (card_url == item["card_url"] if card_url else interface.get("url") == item["url"])
-        ),
-        None,
-    )
-    if target is None or (interface and interface.get("url") != target["url"]):
-        raise ValueError("Choose an agent from the local Retail Insight catalog.")
-    # Refetch the real card. Browser-supplied cards/interfaces must not redirect credentials.
-    result = {key: payload[key] for key in ("contextId", "openTask", "replaces") if key in payload}
-    result.update({"cardUrl": target["card_url"], "auth": {"bearer": {"value": token}}})
-    return result
+COOKIE = "retail_assistant_session"
+TASK_PATH = re.compile(r"tasks/([A-Za-z0-9_-]{1,128})(:cancel)?")
 
 
 def create_app(
     catalog: dict,
     token: str,
-    upstream: str = "http://inspector:8080",
+    *,
+    data_dir: Path = Path(".artifacts/gui"),
+    static_dir: Path = Path("web/dist"),
+    profile: str = "default",
+    backend: str = "fixture",
     port: int = 8080,
     transport: httpx.AsyncBaseTransport | None = None,
 ) -> Starlette:
-    if not token.strip():
-        raise ValueError("The local demo credential is missing.")
-    allowed_hosts = {
-        f"{host}:{p}" for host in ("localhost", "127.0.0.1", "[::1]") for p in (port, 8080)
-    }
-    local_cookie = f"retail_gui_workspace_session_{port}"
+    if not token.strip() or set(catalog) != set(AGENTS):
+        raise ValueError("A workspace credential and the four-agent catalog are required")
+    urls = {role: item["url"].rstrip("/") for role, item in catalog.items()}
+    AgentClient(urls, token, signed=False)  # Apply the same fixed-target validation as CLI callers.
+    store = ConversationStore(data_dir / "conversations.sqlite3")
+    profile = f"{backend}:{profile}"
+    allowed_hosts = {f"{host}:{port}" for host in ("localhost", "127.0.0.1", "[::1]")}
 
     @asynccontextmanager
     async def lifespan(app):
         async with httpx.AsyncClient(
             transport=transport,
-            timeout=httpx.Timeout(30, read=None),
+            timeout=httpx.Timeout(10, read=300),
             follow_redirects=False,
             trust_env=False,
         ) as client:
             app.state.client = client
             yield
+        store.db.close()
 
-    async def proxy(request: Request) -> Response:
+    async def handle(request: Request) -> Response:
         host = request.headers.get("host", "").lower()
         if host not in allowed_hosts:
-            return JSONResponse({"error": "Use the localhost GUI address."}, status_code=421)
-        if request.headers.get("sec-fetch-site", "") not in {"", "none", "same-origin"}:
+            return JSONResponse({"error": "Open the localhost GUI address."}, status_code=421)
+        if request.headers.get("sec-fetch-site", "") not in {"", "none", "same-origin"} or (
+            request.headers.get("origin") not in {None, f"http://{host}"}
+        ):
             return JSONResponse(
                 {"error": "Cross-origin requests are not allowed."}, status_code=403
             )
-        origin = request.headers.get("origin")
-        if origin and origin != f"http://{host}":
-            return JSONResponse(
-                {"error": "Cross-origin requests are not allowed."}, status_code=403
-            )
-
-        path = request.url.path
-        if path == "/health":
-            try:
-                response = await request.app.state.client.get(upstream + "/", timeout=3)
-                response.raise_for_status()
-            except httpx.HTTPError:
-                return JSONResponse({"status": "unavailable"}, status_code=503)
-            return JSONResponse({"status": "ok", "scope": "all brands"})
-
-        body = await request.body()
-        if path == "/api/connections" and request.method == "POST":
-            try:
-                payload = connection_payload(json.loads(body), catalog, token)
-            except (ValueError, TypeError, AttributeError):
-                return JSONResponse(
-                    {"error": "Choose an agent from the local Retail Insight catalog."},
-                    status_code=400,
-                )
-            body = json.dumps(payload).encode()
-
-        # Keep each browser's cookie separate; do not use the shared client's cookie jar.
-        headers = {key: value for key, value in request.headers.items() if key not in HOP_HEADERS}
-        cookies = SimpleCookie(request.headers.get("cookie", ""))
-        headers.pop("cookie", None)
-        if local_cookie in cookies:
-            headers["cookie"] = f"{INSPECTOR_COOKIE}={cookies[local_cookie].value}"
-        headers["accept-encoding"] = "identity"
-        session_headers = []
-        if path == "/" and request.method == "GET":
-            # Establish or renew the session before React starts concurrent API requests.
-            try:
-                bootstrap = await request.app.state.client.send(
-                    httpx.Request("GET", upstream + "/api/config", headers=headers)
-                )
-            except httpx.HTTPError:
-                return JSONResponse(
-                    {"error": "Inspector is starting. Refresh in a moment."}, status_code=502
-                )
-            session_headers = [
-                ("set-cookie", value) for value in bootstrap.headers.get_list("set-cookie")
-            ]
-        url = upstream + path
-        if request.url.query:
-            url += "?" + request.url.query
-        outgoing = httpx.Request(request.method, url, headers=headers, content=body)
+        owner = request.cookies.get(COOKIE, "")
+        fresh = not re.fullmatch(r"[a-f0-9]{32}", owner)
+        if fresh:
+            owner = uuid.uuid4().hex
         try:
-            response = await request.app.state.client.send(outgoing, stream=True)
+            response = await dispatch(request, owner)
+        except (ValueError, KeyError, TypeError, AttributeError):
+            response = JSONResponse({"error": "Invalid request."}, status_code=400)
         except httpx.HTTPError:
+            response = JSONResponse(
+                {"error": "The agent is unavailable. Check the stack and try again."},
+                status_code=502,
+            )
+        if fresh:
+            response.set_cookie(COOKIE, owner, httponly=True, samesite="strict", max_age=31536000)
+        response.headers["x-content-type-options"] = "nosniff"
+        response.headers["referrer-policy"] = "same-origin"
+        response.headers["cache-control"] = "no-store"
+        response.headers["content-security-policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        )
+        return response
+
+    async def body_json(request: Request, limit: int = 1_000_000) -> dict:
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > limit:
+                raise ValueError("Request too large")
+        value = json.loads(body or b"{}")
+        if not isinstance(value, dict):
+            raise ValueError("Expected object")
+        return value
+
+    async def dispatch(request: Request, owner: str) -> Response:
+        path, method = request.url.path, request.method
+        if path == "/health" and method == "GET":
+            return JSONResponse({"status": "ok", "ui": "assistant-ui", "profile": profile})
+        if path == "/api/catalog" and method == "GET":
             return JSONResponse(
-                {"error": "Inspector is starting. Refresh in a moment."}, status_code=502
+                {
+                    "profile": profile,
+                    "backend": backend,
+                    "agents": [
+                        {
+                            "id": role,
+                            "name": name,
+                            "description": description,
+                            "url": f"/api/agents/{role}",
+                        }
+                        for role, (name, description) in AGENTS.items()
+                    ],
+                }
             )
-        response_headers = session_headers + [
-            (key, value)
-            for key, value in response.headers.multi_items()
-            if key.lower() not in HOP_HEADERS
-        ]
-        # Local HTTP needs a non-__Host name together with the removal of Secure.
-        # Keep HttpOnly and SameSite=Strict; translate back only on the internal hop.
-        response_headers = [
-            (
-                key,
-                value.replace(INSPECTOR_COOKIE + "=", local_cookie + "=", 1).replace(
-                    "; Secure", ""
+        if path == "/api/conversations":
+            if method == "GET":
+                return JSONResponse(store.list(owner, profile))
+            if method == "POST":
+                payload = await body_json(request)
+                if payload.get("role") not in AGENTS:
+                    raise ValueError("Unknown agent")
+                return JSONResponse(store.create(owner, payload["role"], profile), status_code=201)
+        if path.startswith("/api/conversations/"):
+            identifier = path.removeprefix("/api/conversations/")
+            if not store.owned(identifier, owner, profile):
+                return JSONResponse({"error": "Conversation not found."}, status_code=404)
+            if method == "GET":
+                return JSONResponse(store.load(identifier))
+            if method == "POST":
+                store.append(identifier, await body_json(request))
+                return JSONResponse({"saved": True})
+            if method == "DELETE":
+                store.delete(identifier)
+                return Response(status_code=204)
+        if path.startswith("/api/agents/"):
+            pieces = path.removeprefix("/api/agents/").split("/", 1)
+            if len(pieces) != 2 or pieces[0] not in AGENTS:
+                return Response(status_code=404)
+            role, endpoint = pieces
+            client = request.app.state.client
+            headers = {
+                "authorization": f"Bearer {token}",
+                "a2a-version": "1.0",
+                "accept-encoding": "identity",
+            }
+            if endpoint == ".well-known/agent-card.json" and method == "GET":
+                result = await client.get(urls[role] + "/" + endpoint, headers=headers)
+                result.raise_for_status()
+                card = result.json()
+                card["supportedInterfaces"] = [
+                    {
+                        "url": f"http://{request.headers['host']}/api/agents/{role}",
+                        "protocolBinding": "HTTP+JSON",
+                        "protocolVersion": "1.0",
+                    }
+                ]
+                # This is a local gateway view; upstream signatures would no longer describe it.
+                for field in ("securitySchemes", "securityRequirements", "signatures"):
+                    card.pop(field, None)
+                return JSONResponse(card)
+            identifier = request.headers.get("x-retail-conversation", "")
+            if not store.owned(identifier, owner, profile, role):
+                return JSONResponse(
+                    {"error": "Choose a conversation for this agent."}, status_code=403
+                )
+            payload = None
+            if endpoint in {"message:send", "message:stream"} and method == "POST":
+                payload = await body_json(request, 100_000)
+                message = payload.get("message", {})
+                if message.get("contextId") not in {None, identifier} or message.get("taskId"):
+                    raise ValueError("Conversation mismatch")
+                message["contextId"] = identifier
+                # Browser requests cannot create service handoffs or expand runtime limits.
+                payload = {
+                    "message": message,
+                    "configuration": payload.get("configuration", {}),
+                    "metadata": {"max_cost_usd": 1.0, "deadline_seconds": 180},
+                }
+            else:
+                match = TASK_PATH.fullmatch(endpoint)
+                if not match or method != ("POST" if match[2] else "GET"):
+                    return Response(status_code=404)
+                task = await client.get(urls[role] + "/tasks/" + match[1], headers=headers)
+                if task.status_code != 200 or task.json().get("contextId") != identifier:
+                    return JSONResponse(
+                        {"error": "Task not found in this conversation."}, status_code=404
+                    )
+                if method == "GET":
+                    return JSONResponse(task.json())
+                payload = {}
+            upstream = await client.send(
+                client.build_request(
+                    method, urls[role] + "/" + endpoint, json=payload, headers=headers
                 ),
+                stream=True,
             )
-            if key.lower() == "set-cookie"
-            else (key, value)
-            for key, value in response_headers
-        ]
-        if path == "/api/config" and request.method == "GET" and response.status_code == 200:
-            await response.aread()
-            config = response.json()
-            config["agentCardUrl"] = catalog["coordinator"]["card_url"]
-            result = JSONResponse(config)
-            await response.aclose()
-        else:
-            result = StreamingResponse(
-                response.aiter_raw(),
-                status_code=response.status_code,
-                background=BackgroundTask(response.aclose),
+            if upstream.status_code >= 400:
+                await upstream.aclose()
+                return JSONResponse(
+                    {"error": "The agent could not accept this request."}, status_code=502
+                )
+            return StreamingResponse(
+                upstream.aiter_bytes(),
+                status_code=upstream.status_code,
+                headers={
+                    "content-type": upstream.headers.get("content-type", "application/json"),
+                    "x-accel-buffering": "no",
+                },
+                background=BackgroundTask(upstream.aclose),
             )
-        result.raw_headers = [
-            (key.encode("latin-1"), value.encode("latin-1")) for key, value in response_headers
-        ]
-        return result
+        if method in {"GET", "HEAD"} and not path.startswith("/api/"):
+            target = (static_dir / path.lstrip("/")).resolve()
+            if not target.is_relative_to(static_dir.resolve()):
+                return Response(status_code=404)
+            if path == "/":
+                target = static_dir / "index.html"
+            if target.is_file():
+                return FileResponse(target)
+            return JSONResponse(
+                {"error": "GUI assets not found. Build web/ or rebuild the stack."},
+                status_code=503 if path == "/" else 404,
+            )
+        return Response(status_code=404)
 
     return Starlette(
         lifespan=lifespan,
         routes=[
             Route(
-                "/{path:path}",
-                proxy,
-                methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                "/{path:path}", handle, methods=["GET", "HEAD", "POST", "DELETE", "PUT", "OPTIONS"]
             )
         ],
     )
@@ -191,7 +249,15 @@ def main() -> None:
 
     catalog = json.loads(Path(os.environ["A2A_CATALOG_PATH"]).read_text())
     token = Path(os.environ["A2A_ACCESS_TOKEN_FILE"]).read_text().strip()
-    app = create_app(catalog, token, port=int(os.environ.get("GUI_PUBLIC_PORT", "8080")))
+    app = create_app(
+        catalog,
+        token,
+        data_dir=Path(os.getenv("GUI_DATA_DIR", "/data/gui")),
+        static_dir=Path(os.getenv("GUI_STATIC_DIR", "/app/web/dist")),
+        backend=os.getenv("BACKEND", "fixture"),
+        profile=os.getenv("RETAIL_DATA_PROFILE", "default"),
+        port=int(os.getenv("GUI_PUBLIC_PORT", "8080")),
+    )
     uvicorn.run(app, host="0.0.0.0", port=8080, access_log=False)
 
 

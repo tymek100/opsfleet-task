@@ -19,6 +19,22 @@ gcloud auth application-default login
 
 CLI login alone does not establish Python ADC. The configured billing project must allow BigQuery query jobs and reading the public TheLook dataset. Gemini and BigQuery calls may incur charges; the default per-question admission budget is USD 1, using configurable conservative rates.
 
+## Web chat
+
+```bash
+uv run retail-stack up --backend bigquery
+```
+
+Open [localhost:8080](http://localhost:8080). Choose Coordinator, Retail, Inventory, or
+Distribution in the sidebar. Each agent has separate saved conversations. Follow-ups and
+page reloads retain the same context. Changing the warehouse profile selects separate history.
+The model chooses the answer format; Markdown tables include copy and CSV download controls.
+Stop cancels the active A2A task. Requests have a $1 admission cap and a 180-second deadline,
+also bounded by the service settings.
+
+The GUI needs no Node installation or copied token: Docker builds and serves it. For protocol
+inspection, start with `--inspector` and open [localhost:8081](http://localhost:8081).
+
 ## Chat with running agents
 
 After starting the local stack (`uv run retail-stack up --backend bigquery`), select the agent explicitly:

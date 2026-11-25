@@ -22,11 +22,15 @@ uv run agent-chat distribution
 
 `retail-stack` manages service startup, status and shutdown. `retail-agent chat` runs the standalone retail analyst locally; `agent-chat retail` connects to its Docker service.
 
-This builds four separate agent images, starts the official A2A Inspector GUI and reuses local
-Phoenix. Inspector exposes all four Agent Cards; the coordinator delegates to specialists through
-A2A. Open [localhost:8080](http://localhost:8080): the coordinator opens automatically and all
-four agents can analyze all brands, without selecting a user or configuring browser
-authentication. Phoenix is at [localhost:6006](http://127.0.0.1:6006).
+This builds four agent images and the assistant-ui frontend, and reuses local Phoenix.
+Open [localhost:8080](http://localhost:8080), choose an agent, and start a conversation.
+The coordinator is selected initially. Answers render as Markdown with readable tables,
+copy/CSV controls, saved follow-ups, and a Stop button. Browser authentication is automatic;
+credentials stay in the gateway. All agents use A2A 1.0 (Python SDK 1.3.1).
+Phoenix remains at [localhost:6006](http://127.0.0.1:6006).
+
+For protocol debugging, add `--inspector` to the startup command and open
+[localhost:8081](http://localhost:8081). Inspector is optional; assistant-ui is the default chat.
 
 Fixture mode still calls Gemini. Use `--backend bigquery` with Google Cloud application credentials
 for TheLook. Only distribution connects to Google Maps MCP; it needs `GOOGLE_MAPS_API_KEY` and

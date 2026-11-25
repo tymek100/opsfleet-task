@@ -5,7 +5,9 @@ import sqlite3
 from pathlib import Path
 
 from a2a.server.tasks import TaskStore
-from a2a.types import Task
+from a2a.types import ListTasksRequest, ListTasksResponse, Task
+from a2a.utils.errors import InvalidParamsError
+from google.protobuf.json_format import MessageToDict, Parse
 
 from retail_insight.integrations.maps.privacy import contains_maps, persistent_result
 
@@ -80,13 +82,20 @@ class Store(TaskStore):
             ).fetchone()[0]
         )
         self.context(task.context_id, owner)
-        serialized = task.model_dump(mode="json", by_alias=True)
+        serialized = MessageToDict(task)
         if contains_maps(serialized):
+            redacted = {"text": "Ephemeral Maps-derived answer; request a fresh lookup."}
+            status_message = serialized.get("status", {}).get("message")
+            if status_message:
+                status_message["parts"] = [redacted]
+            for message in serialized.get("history", []):
+                if message.get("role") == "ROLE_AGENT":
+                    message["parts"] = [redacted]
             for artifact in serialized.get("artifacts", []):
                 for part in artifact.get("parts", []):
-                    if part.get("kind") == "data":
+                    if "data" in part:
                         part["data"] = persistent_result(part["data"])
-                    if part.get("kind") == "text":
+                    if "text" in part:
                         part["text"] = "Ephemeral Maps-derived answer; request a fresh lookup."
         with self.db:
             self.db.execute(
@@ -100,7 +109,60 @@ class Store(TaskStore):
             return None
         if context and row[0] != context.state["principal"].identity:
             return None
-        return Task.model_validate_json(row[1])
+        return self.decode_task(row[1])
+
+    @staticmethod
+    def decode_task(value: str) -> Task:
+        """Read old rows without rewriting or deleting the original persisted data."""
+        if json.loads(value).get("kind") == "task":
+            from a2a.compat.v0_3.conversions import to_core_task
+            from a2a.compat.v0_3.types import Task as LegacyTask
+
+            return to_core_task(LegacyTask.model_validate_json(value))
+        return Parse(value, Task())
+
+    async def list(self, params: ListTasksRequest, context) -> ListTasksResponse:
+        owner = context.state["principal"].identity
+        try:
+            offset = int(params.page_token or "0")
+            if offset < 0:
+                raise ValueError
+        except ValueError as exc:
+            raise InvalidParamsError(message="Invalid page token") from exc
+        size = min(params.page_size or 50, 100)
+        if size < 1:
+            raise InvalidParamsError(message="Invalid page size")
+        rows = self.db.execute(
+            "SELECT value FROM tasks WHERE owner=? ORDER BY rowid DESC", (owner,)
+        ).fetchall()
+        tasks = []
+        for (value,) in rows:
+            task = self.decode_task(value)
+            if params.context_id and task.context_id != params.context_id:
+                continue
+            if params.status and task.status.state != params.status:
+                continue
+            if params.HasField("status_timestamp_after") and (
+                not task.status.HasField("timestamp")
+                or task.status.timestamp.ToNanoseconds()
+                <= params.status_timestamp_after.ToNanoseconds()
+            ):
+                continue
+            tasks.append(task)
+        page = tasks[offset : offset + size]
+        for task in page:
+            if not params.include_artifacts:
+                task.ClearField("artifacts")
+            if params.history_length:
+                del task.history[: -params.history_length]
+            else:
+                task.ClearField("history")
+        return ListTasksResponse(
+            tasks=page,
+            page_size=size,
+            total_size=len(tasks),
+            next_page_token=str(offset + size) if offset + size < len(tasks) else "",
+        )
 
     async def delete(self, task_id: str, context=None) -> None:
         if await self.get(task_id, context):

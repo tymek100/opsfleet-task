@@ -29,7 +29,7 @@ class AgentClient:
                 raise ValueError("The catalog must contain approved local agent endpoints")
 
     def headers(self, body, identity, role):
-        headers = {"content-type": "application/json"}
+        headers = {"content-type": "application/json", "a2a-version": "1.0"}
         headers.update(
             signed_headers(self.token, body, identity, role)
             if self.signed
@@ -43,7 +43,7 @@ class AgentClient:
             {
                 "jsonrpc": "2.0",
                 "id": uuid.uuid4().hex,
-                "method": "tasks/cancel",
+                "method": "CancelTask",
                 "params": {"id": task_id},
             }
         )
@@ -71,9 +71,9 @@ class AgentClient:
     ) -> dict:
         message_id = request_id or uuid.uuid4().hex
         message = {
-            "role": "user",
+            "role": "ROLE_USER",
             "messageId": message_id,
-            "parts": [{"kind": "text", "text": question}],
+            "parts": [{"text": question}],
         }
         if context_id:
             message["contextId"] = context_id
@@ -92,11 +92,11 @@ class AgentClient:
         payload = {
             "jsonrpc": "2.0",
             "id": message_id,
-            "method": "message/stream" if stream else "message/send",
+            "method": "SendStreamingMessage" if stream else "SendMessage",
             "params": {
                 "message": message,
                 "metadata": metadata,
-                "configuration": {"blocking": True},
+                "configuration": {"returnImmediately": False},
             },
         }
         body = canonical_json(payload)
@@ -123,17 +123,19 @@ class AgentClient:
                                     f"A2A request failed: {event['error'].get('code', 'unknown')}"
                                 )
                             value = event["result"]
-                            if value.get("kind") == "task":
-                                task.update(value)
-                            elif value.get("taskId"):
-                                task.update(id=value["taskId"], contextId=value["contextId"])
-                                if "artifact" in value:
-                                    task.setdefault("artifacts", []).append(value["artifact"])
-                                if "status" in value:
-                                    task["status"] = value["status"]
-                            if value.get("final"):
-                                break
-                    document = {"result": task}
+                            if "task" in value:
+                                task.update(value["task"])
+                            else:
+                                update = value.get("artifactUpdate") or value.get(
+                                    "statusUpdate", {}
+                                )
+                                if update.get("taskId"):
+                                    task.update(id=update["taskId"], contextId=update["contextId"])
+                                if "artifact" in update:
+                                    task.setdefault("artifacts", []).append(update["artifact"])
+                                if "status" in update:
+                                    task["status"] = update["status"]
+                    document = {"result": {"task": task}}
                 else:
                     response = await client.post(self.urls[role], content=body, headers=headers)
                     response.raise_for_status()
@@ -148,16 +150,16 @@ class AgentClient:
             raise
         if "error" in document:
             raise RuntimeError(f"A2A request failed: {document['error'].get('code', 'unknown')}")
-        task = document["result"]
+        task = document["result"].get("task", {})
         for artifact in task.get("artifacts", []):
             for part in artifact.get("parts", []):
-                if (
-                    part.get("kind") == "data"
-                    and part.get("data", {}).get("schema_version") == "retail-agent-result-v1"
-                ):
+                if part.get("data", {}).get("schema_version") == "retail-agent-result-v1":
                     return {**part["data"], "task_id": task["id"], "context_id": task["contextId"]}
         return {
-            "status": task.get("status", {}).get("state", "failed"),
+            "status": task.get("status", {})
+            .get("state", "failed")
+            .removeprefix("TASK_STATE_")
+            .lower(),
             "markdown": "No reviewed answer was returned.",
             "evidence": [],
             "usage": {},

@@ -1,6 +1,7 @@
 """Authenticated A2A behavior with a deterministic reviewed-runtime boundary."""
 
 import asyncio
+import json
 import sqlite3
 import time
 from typing import ClassVar
@@ -42,7 +43,7 @@ class ReviewedRuntime:
         if question == "Wait for cancellation":
             self.entered.set()
             await asyncio.Event().wait()
-        if question == "Read ephemeral route":
+        if question in {"Read ephemeral route", "Read incomplete ephemeral route"}:
             self.results["E1"] = {
                 "id": "E1",
                 "storage_policy": "ephemeral-provider-content",
@@ -60,7 +61,7 @@ class ReviewedRuntime:
         self.history.append({"question": question, "answer": answer.markdown})
         return TurnResult(
             answer,
-            "approved",
+            "incomplete" if question == "Read incomplete ephemeral route" else "approved",
             "",
             trace,
             {"accounted_usd": 0.01},
@@ -87,27 +88,27 @@ def request_payload(
     message_id="message-1", question="Count our stock", context_id=None, **metadata
 ):
     message = {
-        "role": "user",
+        "role": "ROLE_USER",
         "messageId": message_id,
-        "parts": [{"kind": "text", "text": question}],
+        "parts": [{"text": question}],
     }
     if context_id:
         message["contextId"] = context_id
     return {
         "jsonrpc": "2.0",
         "id": message_id,
-        "method": "message/send",
+        "method": "SendMessage",
         "params": {
             "message": message,
             "metadata": {"as_of": AS_OF, **metadata},
-            "configuration": {"blocking": True},
+            "configuration": {"returnImmediately": False},
         },
     }
 
 
 async def call(client, payload, *, identity="workspace", audience="inventory", bearer=False):
     body = canonical_json(payload)
-    headers = {"content-type": "application/json"}
+    headers = {"content-type": "application/json", "a2a-version": "1.0"}
     headers.update(
         {"authorization": f"Bearer {ACCESS_TOKEN}"}
         if bearer
@@ -120,7 +121,7 @@ def task_result(response):
     assert response.status_code == 200, response.text
     payload = response.json()
     assert "error" not in payload, payload
-    return payload["result"]
+    return payload["result"].get("task", payload["result"])
 
 
 def test_transport_signature_covers_identity_body_audience_and_expiry(monkeypatch):
@@ -160,14 +161,15 @@ async def test_public_card_and_authenticated_message(app):
     ) as client:
         card = await client.get("/.well-known/agent-card.json")
         assert card.status_code == 200
-        assert card.json()["url"] == "http://inventory:8000"
+        assert card.json()["supportedInterfaces"][0]["url"] == "http://inventory:8000"
+        assert all(i["protocolVersion"] == "1.0" for i in card.json()["supportedInterfaces"])
         assert "securitySchemes" in card.json()
         denied = await client.post("/", json=request_payload())
         assert denied.status_code == 401
         wrong_service = await call(client, request_payload(), audience="distribution")
         assert wrong_service.status_code == 401
         task = task_result(await call(client, request_payload()))
-        assert task["status"]["state"] == "completed"
+        assert task["status"]["state"] == "TASK_STATE_COMPLETED"
         assert ReviewedRuntime.calls == [
             (
                 "workspace",
@@ -188,7 +190,7 @@ async def test_duplicate_completed_request_is_replayed_without_model_work(app):
         assert first["artifacts"][0]["parts"] == second["artifacts"][0]["parts"]
         assert len(ReviewedRuntime.calls) == 1
         conflict = task_result(await call(client, request_payload(question="Different content")))
-        assert conflict["status"]["state"] == "failed"
+        assert conflict["status"]["state"] == "TASK_STATE_FAILED"
         assert len(ReviewedRuntime.calls) == 1
 
 
@@ -201,7 +203,7 @@ async def test_context_and_task_reads_require_workspace_authentication(app):
         query = {
             "jsonrpc": "2.0",
             "id": "get-task",
-            "method": "tasks/get",
+            "method": "GetTask",
             "params": {"id": workspace_task["id"]},
         }
         assert task_result(await call(client, query))["id"] == workspace_task["id"]
@@ -234,7 +236,7 @@ async def test_followup_gets_new_budget_and_preserves_approved_history(app):
                 ),
             )
         )
-        assert second["status"]["state"] == "completed"
+        assert second["status"]["state"] == "TASK_STATE_COMPLETED"
         assert [row[2] for row in ReviewedRuntime.calls] == [0.2, 0.3]
         assert len(ReviewedRuntime.instances[-1].history) == 2
         invalid_snapshot = task_result(
@@ -248,7 +250,7 @@ async def test_followup_gets_new_budget_and_preserves_approved_history(app):
                 ),
             )
         )
-        assert invalid_snapshot["status"]["state"] == "failed"
+        assert invalid_snapshot["status"]["state"] == "TASK_STATE_FAILED"
         assert len(ReviewedRuntime.calls) == 2
 
 
@@ -270,7 +272,7 @@ async def test_invalid_budget_parameters_do_not_start_runtime(app, metadata):
         transport=httpx.ASGITransport(app=app), base_url="http://inventory"
     ) as client:
         task = task_result(await call(client, request_payload(**metadata)))
-        assert task["status"]["state"] == "failed"
+        assert task["status"]["state"] == "TASK_STATE_FAILED"
         assert not ReviewedRuntime.calls
 
 
@@ -291,7 +293,7 @@ async def test_budget_ceiling_and_demo_identity_are_not_model_editable(app, sett
                 bearer=True,
             )
         )
-        assert task["status"]["state"] == "completed"
+        assert task["status"]["state"] == "TASK_STATE_COMPLETED"
         runtime = ReviewedRuntime.instances[0]
         assert runtime.identity.user_id == "workspace"
         assert runtime.settings.question_budget_usd == settings.question_budget_usd
@@ -304,21 +306,21 @@ async def test_cancellation_requires_task_ownership(app):
         transport=httpx.ASGITransport(app=app), base_url="http://inventory"
     ) as client:
         payload = request_payload(question="Wait for cancellation")
-        payload["params"]["configuration"]["blocking"] = False
+        payload["params"]["configuration"]["returnImmediately"] = True
         task = task_result(await call(client, payload))
         await asyncio.wait_for(ReviewedRuntime.entered.wait(), 2)
         cancel = {
             "jsonrpc": "2.0",
             "id": "cancel",
-            "method": "tasks/cancel",
+            "method": "CancelTask",
             "params": {"id": task["id"]},
         }
         unauthorized = (await call(client, cancel, identity="forged-persona")).json()
         assert "error" in unauthorized
         canceled = task_result(await call(client, cancel))
-        assert canceled["status"]["state"] == "canceled"
+        assert canceled["status"]["state"] == "TASK_STATE_CANCELED"
         replay = task_result(await call(client, request_payload(question="Wait for cancellation")))
-        assert replay["status"]["state"] == "failed"
+        assert replay["status"]["state"] == "TASK_STATE_FAILED"
         assert len(ReviewedRuntime.calls) == 1
 
 
@@ -422,7 +424,7 @@ async def test_forged_or_incomplete_delegation_never_starts_runtime(app, metadat
         transport=httpx.ASGITransport(app=app), base_url="http://inventory"
     ) as client:
         task = task_result(await call(client, request_payload(**metadata), bearer=bearer))
-    assert task["status"]["state"] == "failed"
+    assert task["status"]["state"] == "TASK_STATE_FAILED"
     assert not ReviewedRuntime.instances
 
 
@@ -442,16 +444,19 @@ def test_catalog_cannot_redirect_delegation_to_external_endpoints(url):
 
 
 @pytest.mark.asyncio
-async def test_maps_content_is_returned_live_but_never_persisted_in_tasks_or_context(app, settings):
+@pytest.mark.parametrize("question", ["Read ephemeral route", "Read incomplete ephemeral route"])
+async def test_maps_content_is_returned_live_but_never_persisted_in_tasks_or_context(
+    app, settings, question
+):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://inventory"
     ) as client:
-        task = task_result(await call(client, request_payload(question="Read ephemeral route")))
+        task = task_result(await call(client, request_payload(question=question)))
         assert "92837.415" in str(task)
         query = {
             "jsonrpc": "2.0",
             "id": "get-maps",
-            "method": "tasks/get",
+            "method": "GetTask",
             "params": {"id": task["id"]},
         }
         stored = task_result(await call(client, query))
@@ -460,3 +465,62 @@ async def test_maps_content_is_returned_live_but_never_persisted_in_tasks_or_con
         for table in ("contexts", "tasks", "requests"):
             rows = db.execute(f"SELECT * FROM {table}").fetchall()
             assert "92837.415" not in str(rows), table
+
+
+async def test_native_rest_send_and_context_filtered_list(app):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://inventory",
+        headers={"authorization": f"Bearer {ACCESS_TOKEN}", "a2a-version": "1.0"},
+    ) as client:
+        first = await client.post("/message:send", json=request_payload()["params"])
+        assert first.status_code == 200, first.text
+        task = first.json()["task"]
+        assert task["status"]["state"] == "TASK_STATE_COMPLETED"
+        follow = request_payload(message_id="rest-follow", context_id=task["contextId"])
+        response = await client.post("/message:send", json=follow["params"])
+        assert response.json()["task"]["contextId"] == task["contextId"]
+        listed = await client.get("/tasks", params={"contextId": task["contextId"], "pageSize": 1})
+        assert listed.status_code == 200, listed.text
+        assert len(listed.json()["tasks"]) == 1
+        assert listed.json()["totalSize"] == 2
+        assert "artifacts" not in listed.json()["tasks"][0]
+        page = await client.get(
+            "/tasks", params={"pageToken": listed.json()["nextPageToken"], "pageSize": 1}
+        )
+        assert page.json()["tasks"][0]["id"] != listed.json()["tasks"][0]["id"]
+
+
+async def test_legacy_tasks_remain_readable_without_rewriting_data(tmp_path):
+    from retail_insight.a2a.store import Store
+
+    store = Store(tmp_path / "old.sqlite3")
+    legacy = json.dumps(
+        {
+            "kind": "task",
+            "id": "old-task",
+            "contextId": "old-context",
+            "status": {"state": "completed"},
+            "artifacts": [
+                {"artifactId": "old-answer", "parts": [{"kind": "text", "text": "Original answer"}]}
+            ],
+        }
+    )
+    store.db.execute("INSERT INTO tasks VALUES (?, ?, ?)", ("old-task", "workspace", legacy))
+    task = await store.get("old-task")
+    assert task is not None
+    assert task.artifacts[0].parts[0].text == "Original answer"
+    assert store.db.execute("SELECT value FROM tasks").fetchone()[0] == legacy
+    store.db.close()
+
+
+async def test_native_failure_preserves_application_status(app, monkeypatch):
+    original = httpx.AsyncClient
+    monkeypatch.setattr(
+        "retail_insight.a2a.client.httpx.AsyncClient",
+        lambda **kwargs: original(transport=httpx.ASGITransport(app=app), **kwargs),
+    )
+    client = AgentClient({"inventory": "http://inventory:8000"}, SECRET)
+    result = await client.ask("inventory", "Count stock", as_of="invalid timestamp", stream=True)
+    assert result["status"] == "failed"
+    assert not ReviewedRuntime.instances

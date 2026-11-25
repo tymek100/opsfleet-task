@@ -2,6 +2,8 @@
 
 > Historical configuration note (2026-11-25): demo users and assigned-brand permissions described below are superseded by [full dataset access](FULL_DATASET_ACCESS.md). Current commands have no `--user` option. Historical findings and captures retain their original scope.
 
+> The original A2A 0.3 transport and default Inspector GUI below are superseded by the completed [A2A 1.0 and assistant-ui migration](A2A_ASSISTANT_UI.md). Historical evaluation results remain unchanged.
+
 Status: implemented and running on BigQuery. The full fixture baseline, targeted rechecks and live validation are complete. Remaining semantic errors are documented below and in Phoenix. This checklist tracks execution of [the architecture proposal](LOCAL_A2A_RETAIL_AGENTS_PLAN.md). Existing retail conversations and Phoenix history remain intact.
 
 ## Scope and decisions

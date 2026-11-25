@@ -13,26 +13,28 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import uvicorn
+from a2a.helpers import new_data_part, new_task_from_user_message, new_text_message
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps import A2AStarletteApplication
-from a2a.server.apps.jsonrpc.jsonrpc_app import CallContextBuilder
 from a2a.server.context import ServerCallContext
 from a2a.server.request_handlers import DefaultRequestHandler
+from a2a.server.routes import create_agent_card_routes, create_jsonrpc_routes, create_rest_routes
+from a2a.server.routes.common import ServerCallContextBuilder
 from a2a.server.tasks import TaskUpdater
 from a2a.types import (
     AgentCapabilities,
     AgentCard,
+    AgentInterface,
     AgentSkill,
-    DataPart,
     HTTPAuthSecurityScheme,
     Part,
+    SecurityRequirement,
     SecurityScheme,
+    StringList,
     TaskState,
-    TextPart,
 )
-from a2a.utils import new_agent_text_message
 from opentelemetry import context as otel_context
 from opentelemetry.propagate import extract
+from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -71,12 +73,13 @@ def timestamp(value: str | None) -> datetime | None:
     return parsed.astimezone(UTC)
 
 
-class ContextBuilder(CallContextBuilder):
+class ContextBuilder(ServerCallContextBuilder):
     def build(self, request: Request) -> ServerCallContext:
         return ServerCallContext(
             state={
                 "principal": request.scope["principal"],
                 "received_at": request.scope["received_at"],
+                "headers": {"a2a-version": request.headers.get("a2a-version", "")},
             }
         )
 
@@ -117,8 +120,10 @@ class Authentication:
         # the caller has not yet received the generated conversation identifier.
         try:
             envelope = json.loads(body)
-            if envelope.get("method") in {"message/send", "message/stream"}:
-                incoming = envelope.get("params", {}).get("message", {})
+            if envelope.get("method") in {"SendMessage", "SendStreamingMessage"} or scope[
+                "path"
+            ] in {"/message:send", "/message:stream"}:
+                incoming = envelope.get("params", envelope).get("message", {})
                 if incoming.get("messageId") and not incoming.get("contextId"):
                     incoming["contextId"] = uuid.uuid5(
                         uuid.NAMESPACE_URL,
@@ -223,11 +228,14 @@ class Executor(AgentExecutor):
         updater = TaskUpdater(event_queue, task_id, context_id)
         request_id = message.message_id
         question = context.get_user_input()
-        digest = hashlib.sha256(
-            json.dumps([question, context.metadata, message.context_id], sort_keys=True).encode()
-        ).hexdigest()
         self.running[task_id] = asyncio.current_task()
+        await event_queue.enqueue_event(context.current_task or new_task_from_user_message(message))
         try:
+            digest = hashlib.sha256(
+                json.dumps(
+                    [question, context.metadata, message.context_id], sort_keys=True
+                ).encode()
+            ).hexdigest()
             delegation = self.delegation_context(context.metadata, call_context.state["principal"])
             async with self.slots, self.locks.setdefault(context_id, asyncio.Lock()):
                 state = self.store.context(context_id, owner)
@@ -236,8 +244,8 @@ class Executor(AgentExecutor):
                     await self.publish(updater, cached)
                     return
                 await updater.update_status(
-                    TaskState.working,
-                    new_agent_text_message(f"{self.role.title()} is investigating."),
+                    TaskState.TASK_STATE_WORKING,
+                    new_text_message(f"{self.role.title()} is investigating."),
                 )
                 metadata = dict(context.metadata)
                 requested_seconds = float(
@@ -303,16 +311,14 @@ class Executor(AgentExecutor):
                 await self.publish(updater, output)
         except asyncio.CancelledError:
             await updater.update_status(
-                TaskState.canceled,
-                new_agent_text_message("Task canceled; incomplete work was not published."),
-                final=True,
+                TaskState.TASK_STATE_CANCELED,
+                new_text_message("Task canceled; incomplete work was not published."),
             )
         except Exception as exc:
             # Never expose provider errors, credentials or unreviewed model text.
             await updater.update_status(
-                TaskState.failed,
-                new_agent_text_message(f"Task could not complete ({type(exc).__name__})."),
-                final=True,
+                TaskState.TASK_STATE_FAILED,
+                new_text_message(f"Task could not complete ({type(exc).__name__})."),
             )
         finally:
             self.running.pop(task_id, None)
@@ -320,16 +326,17 @@ class Executor(AgentExecutor):
     @staticmethod
     async def publish(updater, result):
         await updater.add_artifact(
-            [Part(root=DataPart(data=result))], name="Scoped evidence and usage"
+            [new_data_part(json.loads(json.dumps(result, default=str)))],
+            name="Scoped evidence and usage",
         )
         await updater.add_artifact(
-            [Part(root=TextPart(text=result["markdown"]))], name="Reviewed answer"
+            [Part(text=result["markdown"], media_type="text/markdown")], name="Reviewed answer"
         )
         if result["status"] == "approved":
             await updater.complete()
         else:
             await updater.update_status(
-                TaskState.failed, new_agent_text_message(result["markdown"]), final=True
+                TaskState.TASK_STATE_FAILED, new_text_message(result["markdown"])
             )
 
     async def cancel(self, context, event_queue):
@@ -341,7 +348,7 @@ class Executor(AgentExecutor):
             running.cancel()
             return
         updater = TaskUpdater(event_queue, task_id, context_id)
-        await updater.update_status(TaskState.canceled, final=True)
+        await updater.update_status(TaskState.TASK_STATE_CANCELED)
 
 
 def create_app(
@@ -358,9 +365,11 @@ def create_app(
     card = AgentCard(
         name=f"Retail Insight — {role.title()}",
         description=ROLES[role],
-        url=public_url,
-        version="0.1.0",
-        protocol_version="0.3.0",
+        supported_interfaces=[
+            AgentInterface(url=public_url, protocol_binding=binding, protocol_version="1.0")
+            for binding in ("JSONRPC", "HTTP+JSON")
+        ],
+        version="1.0.0",
         capabilities=AgentCapabilities(streaming=True),
         default_input_modes=["text/plain"],
         default_output_modes=["text/markdown", "application/json"],
@@ -369,18 +378,24 @@ def create_app(
         ],
         security_schemes={
             "workspaceBearer": SecurityScheme(
-                root=HTTPAuthSecurityScheme(scheme="bearer", bearer_format="local-workspace-token")
+                http_auth_security_scheme=HTTPAuthSecurityScheme(
+                    scheme="bearer", bearer_format="local-workspace-token"
+                )
             )
         },
-        security=[{"workspaceBearer": []}],
+        security_requirements=[SecurityRequirement(schemes={"workspaceBearer": StringList()})],
     )
     store = Store(settings.data_dir / "a2a.sqlite3")
     client = AgentClient(urls or {r: f"http://{r}:8000" for r in ROLES}, secret)
     executor = Executor(role, settings, store, client)
-    handler = DefaultRequestHandler(executor, store)
-    app = A2AStarletteApplication(
-        card, handler, context_builder=ContextBuilder(), max_content_length=100_000
-    ).build()
+    handler = DefaultRequestHandler(executor, store, card)
+    app = Starlette(
+        routes=[
+            *create_agent_card_routes(card),
+            *create_jsonrpc_routes(handler, rpc_url="/", context_builder=ContextBuilder()),
+            *create_rest_routes(handler, context_builder=ContextBuilder()),
+        ]
+    )
 
     async def health(request):
         fixture_hash = None

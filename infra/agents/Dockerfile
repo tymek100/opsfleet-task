@@ -1,4 +1,11 @@
 # syntax=docker/dockerfile:1
+FROM node:24-bookworm-slim@sha256:873f586f3794f52281bd039bf02c048a0be08fde619338f9941bad1eb6b34530 AS frontend
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+COPY web/ ./
+RUN npm run build
+
 FROM ghcr.io/astral-sh/uv:0.10.7@sha256:edd1fd89f3e5b005814cc8f777610445d7b7e3ed05361f9ddfae67bebfe8456a AS uv
 FROM python:3.12-slim-bookworm@sha256:44cf1793efa7c7a476bb0f2cff81443f4a072c90c1cb127e2924933daa3e8c64 AS dependencies
 COPY --from=uv /uv /usr/local/bin/uv
@@ -42,7 +49,14 @@ ENV RETAIL_AGENT_ROLE=coordinator
 CMD ["--role", "coordinator", "--port", "8000"]
 
 FROM runtime AS gui
+COPY --from=frontend /web/dist /app/web/dist
 ENTRYPOINT ["python", "-m", "retail_insight.interfaces.gui"]
+CMD []
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=6 \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"]
+
+FROM runtime AS inspector-gui
+ENTRYPOINT ["python", "-m", "retail_insight.interfaces.inspector"]
 CMD []
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=6 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"]

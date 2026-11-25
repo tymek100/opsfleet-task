@@ -21,3 +21,8 @@ htmlcov/
 .retail-agent-*/
 dist/
 .artifacts/
+
+web/node_modules/
+web/test-results/
+web/playwright-report/
+web/*.tsbuildinfo

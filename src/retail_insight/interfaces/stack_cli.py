@@ -33,12 +33,18 @@ def up(
     evaluation_fixtures: bool = typer.Option(
         False, help="Mount independent evaluation warehouse rows."
     ),
+    inspector: bool = typer.Option(False, help="Also start the A2A Inspector on localhost:8081."),
 ) -> None:
-    """Prepare local configuration and start healthy agents, Inspector and Phoenix."""
+    """Start healthy agents, assistant-ui and Phoenix; optionally include Inspector."""
     if backend not in {"fixture", "bigquery"}:
         raise typer.BadParameter("Backend must be fixture or bigquery.")
     try:
-        _infra().up(backend, build=not no_build, evaluation_fixtures=evaluation_fixtures)
+        _infra().up(
+            backend,
+            build=not no_build,
+            evaluation_fixtures=evaluation_fixtures,
+            inspector=inspector,
+        )
     except (RuntimeError, subprocess.CalledProcessError, OSError) as exc:
         console.print(f"[red]Stack startup failed:[/red] {exc}")
         raise typer.Exit(1) from exc

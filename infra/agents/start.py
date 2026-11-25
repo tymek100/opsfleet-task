@@ -152,7 +152,12 @@ def compose_args(*args: str) -> list[str]:
     return [*prefix, *args]
 
 
-def up(backend: str = "fixture", build: bool = True, evaluation_fixtures: bool = False) -> None:
+def up(
+    backend: str = "fixture",
+    build: bool = True,
+    evaluation_fixtures: bool = False,
+    inspector: bool = False,
+) -> None:
     prepare(backend, evaluation_fixtures=evaluation_fixtures)
     subprocess.run(
         ["docker", "compose", "-f", str(PHOENIX_COMPOSE), "up", "-d"],
@@ -160,6 +165,8 @@ def up(backend: str = "fixture", build: bool = True, evaluation_fixtures: bool =
         check=True,
     )
     args = ["up", "-d", "--wait", "--wait-timeout", "180"]
+    if inspector:
+        args = ["--profile", "debug", *args]
     if build:
         args.append("--build")
     subprocess.run(compose_args(*args), cwd=ROOT, check=True)
@@ -190,8 +197,10 @@ def up(backend: str = "fixture", build: bool = True, evaluation_fixtures: bool =
     (STATE / "images.json").write_text(json.dumps(image_manifest, indent=2) + "\n")
     print("Agent stack ready. Phoenix: http://127.0.0.1:6006")
     port = os.environ.get("INSPECTOR_PORT", "8080")
-    print(f"Agent GUI: http://localhost:{port} — ready with full dataset access.")
+    print(f"assistant-ui: http://localhost:{port} — ready with full dataset access.")
     print("Open the link to chat with the coordinator or select a specialist. No tokens required.")
+    if inspector:
+        print(f"A2A Inspector: http://localhost:{os.environ.get('INSPECTOR_DEBUG_PORT', '8081')}")
 
 
 def main() -> None:
@@ -200,6 +209,7 @@ def main() -> None:
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--no-build", action="store_true")
     parser.add_argument("--evaluation-fixtures", action="store_true")
+    parser.add_argument("--inspector", action="store_true")
     options = parser.parse_args()
     if options.prepare_only:
         prepare(options.backend, evaluation_fixtures=options.evaluation_fixtures)
@@ -208,6 +218,7 @@ def main() -> None:
             options.backend,
             build=not options.no_build,
             evaluation_fixtures=options.evaluation_fixtures,
+            inspector=options.inspector,
         )
 
 
