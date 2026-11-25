@@ -29,7 +29,7 @@ async def test_reviewer_feedback_returns_to_same_analyst_and_exact_candidate_is_
     make_agent,
 ):
     draft = "Revenue increased because shoppers preferred premium coats."
-    final = "Qualifying revenue was **65.65** in Q1 2026 [E1]. The query does not establish why."
+    final = "Qualifying revenue was **16065.65** in Q1 2026 [E1]. The query does not establish why."
     app = make_agent(
         [query(), finish(draft, ["E1"]), finish(final, ["E1"])], [verdict("revise"), verdict()]
     )
@@ -38,9 +38,9 @@ async def test_reviewer_feedback_returns_to_same_analyst_and_exact_candidate_is_
     assert len(app.model.requests) == 3 and len(app.reviewer_model.requests) == 2
     assert "Verify the claim" in json.dumps(app.model.requests[-1])
     assert all(r["registered_tools"] == [] for r in app.reviewer_model.requests)
-    assert Decimal(str(result.evidence[0]["rows"][0]["revenue"])) == Decimal("65.65")
+    assert Decimal(str(result.evidence[0]["rows"][0]["revenue"])) == Decimal("16065.65")
     assert app.history[-1]["markdown"] == final
-    assert app.reports.search("alice") == []
+    assert app.reports.search("workspace") == []
 
 
 async def test_query_failure_is_observed_then_model_selects_a_different_query(make_agent):
@@ -48,7 +48,7 @@ async def test_query_failure_is_observed_then_model_selects_a_different_query(ma
         [
             query("SELECT missing_column FROM sales"),
             query(),
-            finish("Revenue: 65.65 [E1].", ["E1"]),
+            finish("Revenue: 16065.65 [E1].", ["E1"]),
         ],
         [verdict()],
     )
@@ -93,7 +93,7 @@ async def test_every_prompt_gets_fresh_budget_while_approved_context_survives(ma
 
 
 async def test_authorized_save_uses_exact_reviewed_text_and_evidence(make_agent):
-    markdown = "## Q1 result\n\nRevenue: **65.65** [E1].\n"
+    markdown = "## Q1 result\n\nRevenue: **16065.65** [E1].\n"
     app = make_agent(
         [
             query(),
@@ -106,10 +106,10 @@ async def test_authorized_save_uses_exact_reviewed_text_and_evidence(make_agent)
     assert result.answer.markdown == markdown
     receipt = result.answer.receipts[0]
     assert receipt["status"] == "saved"
-    stored = app.reports.read("alice", receipt["id"])
+    stored = app.reports.read("workspace", receipt["id"])
     assert stored["markdown"] == markdown
     assert stored["evidence"] == result.evidence
-    assert app.reports.read("bob", receipt["id"]) is None
+    assert app.reports.read("other-workspace", receipt["id"]) is None
 
 
 async def test_stop_never_publishes_or_saves_an_unapproved_candidate(make_agent):
@@ -134,7 +134,7 @@ async def test_unapproved_save_intent_is_removed_before_a_revised_answer(make_ag
     )
     result = await app.ask("Describe sales without saving a report.")
     assert result.answer is not None and result.answer.receipts == []
-    assert app.reports.search("alice") == []
+    assert app.reports.search("workspace") == []
 
 
 @pytest.mark.parametrize("invalid", ["not JSON", '{"decision":"approve"}'])
@@ -157,7 +157,7 @@ async def test_repeated_candidate_and_review_limit_terminate_without_publication
     result = await app.ask("Describe qualifying sales.")
     assert result.answer is None
     assert len(app.reviewer_model.requests) == 2
-    assert app.history == [] and app.reports.search("alice") == []
+    assert app.history == [] and app.reports.search("workspace") == []
 
 
 async def test_deletion_token_is_trusted_control_and_never_enters_model_requests(make_agent):
@@ -168,14 +168,14 @@ async def test_deletion_token_is_trusted_control_and_never_enters_model_requests
         ],
         [verdict()],
     )
-    report = app.reports.save("alice", "Quarterly", "Historical report.", [], "A-old")
+    report = app.reports.save("workspace", "Quarterly", "Historical report.", [], "A-old")
     result = await app.ask("Delete my Quarterly report.")
     token = result.deletion_preview["token"]
     captured = json.dumps(app.model.requests + app.reviewer_model.requests)
     assert token not in captured
-    assert app.reports.read("alice", report["id"]) is not None
+    assert app.reports.read("workspace", report["id"]) is not None
     assert app.confirm_delete(token)["status"] == "ok"
-    assert app.reports.read("alice", report["id"]) is None
+    assert app.reports.read("workspace", report["id"]) is None
     assert app.history == [] and app.answers == {} and app.results == {}
 
 
@@ -294,7 +294,7 @@ async def test_saving_previous_answer_preserves_original_not_confirmation_text(m
     )
     app.reviewer_model.script.append(verdict(save=True))
     result = await app.ask("Save the previous answer exactly.")
-    saved = app.reports.read("alice", result.answer.receipts[0]["id"])
+    saved = app.reports.read("workspace", result.answer.receipts[0]["id"])
     assert saved["markdown"] == original.answer.markdown
     assert saved["answer_id"] == original.answer.id
     assert saved["markdown"] != result.answer.markdown
@@ -374,7 +374,7 @@ async def test_failed_storage_commit_emits_failure_receipt_without_partial_save(
     result = await app.ask("Save your answer.")
     assert result.answer is not None
     assert result.answer.receipts[0]["status"] == "failed"
-    assert app.reports.search("alice") == []
+    assert app.reports.search("workspace") == []
     assert app.reports.db.execute("SELECT COUNT(*) FROM report_audit").fetchone()[0] == 0
 
 

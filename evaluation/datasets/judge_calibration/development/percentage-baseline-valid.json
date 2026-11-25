@@ -3,7 +3,7 @@
   "id": "percentage-baseline-valid",
   "family": "percentage-baseline",
   "split": "development",
-  "question": "Show Q1 2026 revenue growth from Q4 2025.",
+  "question": "For Calvin Klein: Show Q1 2026 revenue growth from Q4 2025.",
   "answer": "Revenue increased by 228, or 40%, relative to Q4 2025.",
   "reference": {
     "facts": [

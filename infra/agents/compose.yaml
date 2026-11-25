@@ -6,7 +6,7 @@ x-common-environment: &common-environment
   RETAIL_DATA_PROFILE: ${RETAIL_STACK_DATA_PROFILE:-default}
   GOLDEN_BOOTSTRAP: ${RETAIL_STACK_GOLDEN_BOOTSTRAP:-true}
   A2A_SIGNING_KEY_FILE: /run/secrets/a2a_signing_key
-  A2A_DEMO_TOKEN_FILE: /run/secrets/a2a_demo_token
+  A2A_ACCESS_TOKEN_FILE: /run/secrets/a2a_access_token
   A2A_CATALOG_PATH: /app/catalog.json
   PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
   PHOENIX_PROJECT_NAME: retail-multi-agent
@@ -20,7 +20,7 @@ x-common-service: &common-service
   security_opt: [no-new-privileges:true]
   tmpfs: ["/tmp:size=128m,mode=1777"]
   networks: [agents, phoenix]
-  secrets: [model_env, a2a_signing_key, a2a_demo_token]
+  secrets: [model_env, a2a_signing_key, a2a_access_token]
 
 x-build: &build
   context: ../..
@@ -39,7 +39,7 @@ services:
       RETAIL_WAREHOUSE_ENV_FILE: /run/secrets/warehouse_env
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/warehouse_adc
     ports: ["127.0.0.1:${RETAIL_PORT:-8001}:8000"]
-    secrets: [model_env, warehouse_env, warehouse_adc, a2a_signing_key, a2a_demo_token]
+    secrets: [model_env, warehouse_env, warehouse_adc, a2a_signing_key, a2a_access_token]
     volumes:
       - retail-data:/data
       - ./catalog.json:/app/catalog.json:ro
@@ -56,7 +56,7 @@ services:
       RETAIL_WAREHOUSE_ENV_FILE: /run/secrets/warehouse_env
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/warehouse_adc
     ports: ["127.0.0.1:${INVENTORY_PORT:-8002}:8000"]
-    secrets: [model_env, warehouse_env, warehouse_adc, a2a_signing_key, a2a_demo_token]
+    secrets: [model_env, warehouse_env, warehouse_adc, a2a_signing_key, a2a_access_token]
     volumes:
       - inventory-data:/data
       - ./catalog.json:/app/catalog.json:ro
@@ -74,7 +74,7 @@ services:
       RETAIL_MAPS_ENV_FILE: /run/secrets/maps_env
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/warehouse_adc
     ports: ["127.0.0.1:${DISTRIBUTION_PORT:-8003}:8000"]
-    secrets: [model_env, warehouse_env, warehouse_adc, maps_env, a2a_signing_key, a2a_demo_token]
+    secrets: [model_env, warehouse_env, warehouse_adc, maps_env, a2a_signing_key, a2a_access_token]
     volumes:
       - distribution-data:/data
       - ./catalog.json:/app/catalog.json:ro
@@ -119,7 +119,7 @@ services:
       target: gui
     environment:
       A2A_CATALOG_PATH: /app/catalog.json
-      A2A_DEMO_TOKEN_FILE: /run/secrets/a2a_demo_token
+      A2A_ACCESS_TOKEN_FILE: /run/secrets/a2a_access_token
       GUI_PUBLIC_PORT: ${INSPECTOR_PORT:-8080}
     ports: ["127.0.0.1:${INSPECTOR_PORT:-8080}:8080"]
     restart: unless-stopped
@@ -129,7 +129,7 @@ services:
     security_opt: [no-new-privileges:true]
     tmpfs: ["/tmp:size=32m,mode=1777"]
     networks: [agents]
-    secrets: [a2a_demo_token]
+    secrets: [a2a_access_token]
     depends_on:
       inspector: {condition: service_started}
     volumes:
@@ -158,5 +158,5 @@ secrets:
     file: ../../.artifacts/agents/secrets/maps.env
   a2a_signing_key:
     file: ../../.artifacts/agents/secrets/a2a_signing_key
-  a2a_demo_token:
-    file: ../../.artifacts/agents/secrets/a2a_demo_token
+  a2a_access_token:
+    file: ../../.artifacts/agents/secrets/a2a_access_token

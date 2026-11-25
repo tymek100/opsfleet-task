@@ -3,7 +3,7 @@
   "id": "causal-overreach-mutated",
   "family": "causal-overreach",
   "split": "development",
-  "question": "Did higher demand cause the revenue increase?",
+  "question": "For Calvin Klein: Did higher demand cause the revenue increase?",
   "answer": "Revenue increased by 228 because customer demand improved.",
   "reference": {
     "facts": [

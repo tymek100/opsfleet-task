@@ -4,7 +4,8 @@
   "family": "causal-restraint",
   "split": "regression",
   "purpose": "regression",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "retail_v1",
   "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -16,7 +17,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "Did our Q1 2026 revenue increase versus Q4 2025 because demand improved? Show qualifying revenue in each quarter and the absolute and percentage change, then tell me what the data establish and what would need investigation.",
+      "message": "For Calvin Klein: Did our Q1 2026 revenue increase versus Q4 2025 because demand improved? Show qualifying revenue in each quarter and the absolute and percentage change, then tell me what the data establish and what would need investigation.",
       "when_previous_outcome": []
     }
   ],

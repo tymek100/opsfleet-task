@@ -19,7 +19,7 @@ from rich.text import Text
 
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
-from retail_insight.contracts import DEMO_USERS, TurnResult
+from retail_insight.contracts import WORKSPACE_IDENTITY, TurnResult
 from retail_insight.integrations.phoenix.tracing import TracingSession, configure_tracing
 from retail_insight.interfaces.terminal import command_help, create_prompt_session
 from retail_insight.runtime.privacy import screen
@@ -59,9 +59,7 @@ def _close_tracing(session: TracingSession | None) -> None:
         console.print("Phoenix tracing could not finish; the answer is unaffected.")
 
 
-def build(user: str, backend: str | None, bootstrap: bool) -> Analyst:
-    if user not in DEMO_USERS:
-        raise typer.BadParameter("Choose alice, bob or ceo; these are simulated demo identities.")
+def build(backend: str | None, bootstrap: bool) -> Analyst:
     settings = Settings.load()
     if backend:
         if backend not in ("bigquery", "fixture"):
@@ -73,7 +71,7 @@ def build(user: str, backend: str | None, bootstrap: bool) -> Analyst:
     for name in ("google.adk", "google_genai", "httpx", "httpcore"):
         logging.getLogger(name).setLevel(logging.CRITICAL)
     warnings.filterwarnings("ignore", message=r".*FeatureName.JSON_SCHEMA_FOR_FUNC_DECL.*")
-    return Analyst(settings, DEMO_USERS[user])
+    return Analyst(settings, WORKSPACE_IDENTITY)
 
 
 def show_preview(preview: dict) -> None:
@@ -173,14 +171,13 @@ async def run_question(analyst: Analyst, prompt: str) -> TurnResult:
 @app.command()
 def ask(
     prompt: Annotated[str, typer.Argument(help="Question in English.")],
-    user: str = "alice",
     backend: str | None = None,
     golden_bootstrap: bool = False,
     output_json: Path | None = None,
     phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
 ) -> None:
     """Answer one question; optionally capture its answer, evidence and metadata."""
-    analyst = build(user, backend, golden_bootstrap)
+    analyst = build(backend, golden_bootstrap)
     tracing = _start_tracing(phoenix, analyst.settings)
     try:
         result = asyncio.run(run_question(analyst, prompt))
@@ -199,9 +196,7 @@ HELP = command_help()
 
 
 async def conversation(analyst: Analyst) -> None:
-    console.print(
-        f"Retail Insight Agent - DEMO identity: {analyst.identity.user_id}; scope: {analyst.identity.scope}"
-    )
+    console.print("Retail Insight Agent — full dataset access (all brands)")
     console.print(
         f"Conversation: {analyst.conversation_id}. Type / for commands. Reports save only on request."
     )
@@ -284,13 +279,12 @@ async def conversation(analyst: Analyst) -> None:
 
 @app.command()
 def chat(
-    user: str = "alice",
     backend: str | None = None,
     golden_bootstrap: bool = False,
     phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
 ) -> None:
     """Start an interactive conversation with ephemeral history and persistent reports."""
-    analyst = build(user, backend, golden_bootstrap)
+    analyst = build(backend, golden_bootstrap)
     tracing = _start_tracing(phoenix, analyst.settings)
     try:
         asyncio.run(conversation(analyst))
@@ -300,9 +294,9 @@ def chat(
 
 
 @app.command()
-def import_legacy(path: Path, user: str = "alice") -> None:
+def import_legacy(path: Path) -> None:
     """Copy your legacy reports into the new library; the source remains unchanged."""
-    analyst = build(user, "fixture", False)
+    analyst = build("fixture", False)
     try:
         console.print_json(data=analyst.reports.import_legacy(path, analyst.identity.user_id))
         console.print(

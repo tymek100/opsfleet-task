@@ -9,7 +9,7 @@ from pydantic import SecretStr
 
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from retail_insight.integrations.bigquery.retail import QueryGateway
 from retail_insight.integrations.reports import ReportStore
 from tests.support.models import ScriptedModel
@@ -113,7 +113,7 @@ def reports(tmp_path):
 def make_agent(settings):
     applications = []
 
-    def create(script=(), reviews=(), *, user="alice", **changes):
+    def create(script=(), reviews=(), **changes):
         config = settings.model_copy(
             update={
                 "data_dir": settings.data_dir / str(len(applications)),
@@ -122,7 +122,7 @@ def make_agent(settings):
         )
         app = Analyst(
             config,
-            DEMO_USERS[user],
+            WORKSPACE_IDENTITY,
             model=ScriptedModel(script=list(script)),
             reviewer_model=ScriptedModel(script=list(reviews)),
         )

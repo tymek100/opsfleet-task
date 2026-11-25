@@ -17,12 +17,12 @@ from evaluation.results import ExtractedFact, Judgment
 def setup():
     snapshot = Snapshot(build())
     base = reference(snapshot, load_suites()["coordinator"][2], 1)
-    ref = with_partitions(snapshot, "alice", base)
+    ref = with_partitions(snapshot, "workspace", base)
     group = groups(ref)[0]
     return base, ref, group
 
 
-def judgment(ref, group, *, total=None, parts=("3", "3")):
+def judgment(ref, group, *, total=None, parts=("5", "4")):
     facts = [
         ExtractedFact(id=f.id, value=f.value, span=f"{f.entity}: {f.value}")
         for f in ref.facts
@@ -54,7 +54,7 @@ def test_split_components_are_verified_without_requiring_a_printed_sum():
     assert len(ref.facts) == len(base.facts)
     assert len(extraction_reference(ref).facts) == len(base.facts) + 2
     assert target_score(ref, group, judgment(ref, group)).status == "PASS"
-    assert target_score(ref, group, judgment(ref, group, total="6", parts=())).status == "PASS"
+    assert target_score(ref, group, judgment(ref, group, total="9", parts=())).status == "PASS"
 
 
 def test_wrong_missing_or_contradictory_partitions_fail():
@@ -72,7 +72,7 @@ def test_wrong_missing_or_contradictory_partitions_fail():
 def test_product_partition_preserves_entity_binding():
     snapshot = Snapshot(build())
     base = reference(snapshot, load_suites()["coordinator"][4], 1)
-    ref = with_partitions(snapshot, "alice", base)
+    ref = with_partitions(snapshot, "workspace", base)
     assert len(groups(ref)) == 3
     assert [g["components"][0]["value"] for g in groups(ref)] == ["1", "1", "1"]
     assert all("product 710" in p["entity"] for p in groups(ref)[0]["components"])
@@ -81,7 +81,7 @@ def test_product_partition_preserves_entity_binding():
 def test_distinct_product_counts_are_never_summed_across_unknown_centers():
     snapshot = Snapshot(build())
     base = reference(snapshot, load_suites()["coordinator"][11], 1)
-    assert not groups(with_partitions(snapshot, "alice", base))
+    assert not groups(with_partitions(snapshot, "workspace", base))
 
 
 def test_null_partition_reference_fails_validation_instead_of_becoming_zero():

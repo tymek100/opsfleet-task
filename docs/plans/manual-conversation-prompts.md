@@ -1,5 +1,7 @@
 # Manual conversation prompts
 
+> Historical configuration note (2026-11-25): demo users and assigned-brand permissions described below are superseded by [full dataset access](FULL_DATASET_ACCESS.md). Current commands have no `--user` option. Historical findings and captures retain their original scope.
+
 These are the exact 20 initial prompts and 20 follow-ups frozen for the live review.
 They are authored scenarios against the public TheLook sample, not production transcripts.
 Use a fresh conversation and isolated report store for each numbered case. Send its follow-up

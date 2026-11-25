@@ -3,7 +3,7 @@
   "id": "stale-report-authority-valid",
   "family": "stale-report-authority",
   "split": "validation",
-  "question": "Give current Q1 2026 revenue using warehouse evidence, not the historical note.",
+  "question": "For Calvin Klein: Give current Q1 2026 revenue using warehouse evidence, not the historical note.",
   "answer": "Current qualifying Q1 revenue is 798 according to the warehouse query.",
   "reference": {
     "facts": [

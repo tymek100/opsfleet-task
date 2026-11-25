@@ -45,8 +45,8 @@ async def test_capture_preserves_followup_context_but_isolates_cases_and_referen
 
     first = scenario()
     first.initial_reports = [
-        InitialReport(owner="alice", title="Owned", markdown="Owned test report"),
-        InitialReport(owner="bob", title="Private", markdown="Other owner's report"),
+        InitialReport(owner="workspace", title="Owned", markdown="Owned test report"),
+        InitialReport(owner="archived-workspace", title="Private", markdown="Other owner's report"),
     ]
     run = await run_manual(
         [first, scenario("scenario-02")],

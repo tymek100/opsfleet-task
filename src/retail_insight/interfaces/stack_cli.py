@@ -63,8 +63,8 @@ def status() -> None:
 
 @app.command()
 def token() -> None:
-    """Print the Alice-only Bearer token for manual API clients; the GUI configures it itself."""
-    path = repository_root() / ".artifacts/agents/secrets/a2a_demo_token"
+    """Print the workspace Bearer token for manual API clients; the GUI configures it itself."""
+    path = repository_root() / ".artifacts/agents/secrets/a2a_access_token"
     if not path.is_file():
         raise typer.BadParameter("Start the stack first with retail-stack up.")
     typer.echo(path.read_text().strip())
@@ -72,21 +72,20 @@ def token() -> None:
 
 @app.command()
 def chat(
-    user: str = typer.Option("alice", help="Demo identity: alice, bob or ceo."),
     agent: str = typer.Option("coordinator", help="coordinator, retail, inventory or distribution"),
     max_cost_usd: float = typer.Option(1.0, min=0.01, max=10),
     deadline_seconds: float = typer.Option(180, min=10, max=600),
     context_id: str | None = typer.Option(None, help="Resume an owned conversation context."),
 ) -> None:
     """Chat through the same A2A endpoint used by Inspector and evaluations."""
-    if user not in {"alice", "bob", "ceo"} or agent not in HOST_PORTS:
-        raise typer.BadParameter("Unknown demo identity or agent.")
+    if agent not in HOST_PORTS:
+        raise typer.BadParameter("Unknown agent.")
     key_path = repository_root() / ".artifacts/agents/secrets/a2a_signing_key"
     if not key_path.is_file():
         raise typer.BadParameter("Start the stack first with retail-stack up.")
     urls = {role: f"http://127.0.0.1:{port}" for role, port in HOST_PORTS.items()}
     client = AgentClient(urls, key_path.read_text().strip(), signed=True)
-    console.print(f"Retail A2A — DEMO identity: {user}; agent: {agent}. /exit to leave.")
+    console.print(f"Retail A2A — agent: {agent}; full dataset access. /exit to leave.")
     conversation = context_id
     while True:
         try:
@@ -109,7 +108,7 @@ def chat(
                     client.ask(
                         agent,
                         question,
-                        user,
+                        "workspace",
                         conversation,
                         max_cost_usd=max_cost_usd,
                         deadline_seconds=deadline_seconds,

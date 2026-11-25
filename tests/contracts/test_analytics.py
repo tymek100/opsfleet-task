@@ -90,7 +90,7 @@ async def test_scope_is_applied_before_lifetime_history_and_cohort_joins(gateway
 
 
 @pytest.mark.parametrize("brands,expected", [((), 0), (("Calvin Klein",), 4), (None, 6)])
-async def test_scope_identity_controls_rows_even_without_model_filter(
+async def test_explicit_reference_filter_controls_rows_even_without_sql_filter(
     warehouse_fixture, brands, expected
 ):
     query = QueryGateway(brands, backend="fixture", fixture_path=warehouse_fixture)

@@ -56,7 +56,7 @@ def test_plain_url_bootstraps_coordinator_without_login(gateway):
     cookie = response.headers["set-cookie"]
     assert "HttpOnly" in cookie and "SameSite=Strict" in cookie and "Secure" not in cookie
     client.get("/api/catalog")
-    assert cookie.startswith("retail_gui_session_8080=")
+    assert cookie.startswith("retail_gui_workspace_session_8080=")
     assert requests[-1].headers["cookie"] == "__Host-a2a_inspector_session=browser-session"
     client.cookies.clear()
     client.get("/api/catalog")
@@ -67,7 +67,7 @@ def test_document_initializes_session_before_parallel_browser_requests(gateway):
     client, requests = gateway
     response = client.get("/")
     assert [request.url.path for request in requests] == ["/api/config", "/"]
-    assert "retail_gui_session_8080=" in response.headers["set-cookie"]
+    assert "retail_gui_workspace_session_8080=" in response.headers["set-cookie"]
     client.get("/api/catalog")
     assert requests[-1].headers["cookie"] == "__Host-a2a_inspector_session=browser-session"
 
@@ -81,7 +81,7 @@ def test_each_agent_connects_with_server_side_credentials(gateway, role):
     assert TOKEN not in response.text
 
 
-def test_reconnect_ignores_untrusted_card_and_restores_demo_identity(gateway):
+def test_reconnect_ignores_untrusted_card_and_restores_workspace_authentication(gateway):
     client, requests = gateway
     response = client.post(
         "/api/connections",
@@ -142,3 +142,15 @@ def test_streaming_protocol_responses_are_preserved(gateway):
     response = client.get("/api/events")
     assert response.headers["content-type"] == "text/event-stream"
     assert response.content == b"data: first\n\ndata: second\n\n"
+
+
+def test_health_advertises_full_dataset_without_a_persona(gateway):
+    client, _ = gateway
+    assert client.get("/health").json() == {"status": "ok", "scope": "all brands"}
+
+
+def test_old_demo_browser_session_is_not_reused(gateway):
+    client, requests = gateway
+    client.cookies.set("retail_gui_session_8080", "old-demo-session")
+    client.get("/api/catalog")
+    assert "cookie" not in requests[-1].headers

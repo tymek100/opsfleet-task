@@ -11,8 +11,7 @@ from evaluation.manual_reference import during, qualifying, serializable, summar
 from evaluation.models import Criterion, Fact, TurnReference
 from evaluation.runners.artifacts import digest, read_json
 
-REFERENCE_VERSION = "authored-conversations-v1"
-BRANDS = {"alice": "Calvin Klein", "bob": "Levi's"}
+REFERENCE_VERSION = "authored-conversations-v2-workspace"
 
 
 def decimal(value) -> Decimal:
@@ -97,8 +96,14 @@ def reference_for(
     """The default export shows canonical ties; grading resolves permitted alternative ties."""
     if scenario.id not in {f"scenario-{i:02d}" for i in range(1, 21)} or number not in (1, 2):
         raise ValueError("No reference specification for this conversation turn")
-    brand = BRANDS[scenario.identity]
+    brand = scenario.requested_brand
     data = snapshot.summary[brand]
+    if scenario.id == "scenario-19":
+        if snapshot.manifest.get("geography_scope") != "all brands":
+            raise ValueError(
+                "Capture fresh all-brand geography references for this workspace suite"
+            )
+        brand = "all brands"
     q1, q4 = (data["qualifying"][period] for period in ("q1_2026", "q4_2025"))
     facts: list[Fact] = []
     criteria = [
@@ -508,7 +513,7 @@ def reference_for(
         if number == 1:
             select(
                 "states",
-                data["q1_visible_state_groups"],
+                snapshot.summary["all_brand_states"],
                 5,
                 "revenue",
                 revenue_metric + customers_metric,

@@ -3,7 +3,7 @@
   "id": "distinct-grain-valid",
   "family": "distinct-grain",
   "split": "development",
-  "question": "Show Q1 2026 item, order, and customer counts.",
+  "question": "For Calvin Klein: Show Q1 2026 item, order, and customer counts.",
   "answer": "There were 22 qualifying items, 20 distinct orders, and 12 distinct customers in Q1 2026.",
   "reference": {
     "facts": [

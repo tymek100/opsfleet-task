@@ -65,7 +65,11 @@ def prepare(backend: str, evaluation_fixtures: bool = False) -> None:
             if configured.get(key)
         )
         write_private(secret_dir / filename, text)
-    for filename in ("a2a_signing_key", "a2a_demo_token"):
+    old_token = STATE / "secrets/a2a_demo_token"
+    access_token = STATE / "secrets/a2a_access_token"
+    if old_token.is_file() and not access_token.exists():
+        old_token.rename(access_token)
+    for filename in ("a2a_signing_key", "a2a_access_token"):
         path = secret_dir / filename
         if not path.exists():
             write_private(path, secrets.token_urlsafe(48) + "\n")
@@ -104,6 +108,7 @@ def prepare(backend: str, evaluation_fixtures: bool = False) -> None:
     }
     (STATE / "inspector-catalog.json").write_text(json.dumps(inspector, indent=2) + "\n")
     source_profile = {
+        "access_mode": "workspace-all-brands-v1",
         "backend": backend,
         "source_dataset": configured.get(
             "WAREHOUSE_SOURCE_DATASET", "bigquery-public-data.thelook_ecommerce"
@@ -185,7 +190,7 @@ def up(backend: str = "fixture", build: bool = True, evaluation_fixtures: bool =
     (STATE / "images.json").write_text(json.dumps(image_manifest, indent=2) + "\n")
     print("Agent stack ready. Phoenix: http://127.0.0.1:6006")
     port = os.environ.get("INSPECTOR_PORT", "8080")
-    print(f"Agent GUI: http://localhost:{port} — ready as Alice (Calvin Klein).")
+    print(f"Agent GUI: http://localhost:{port} — ready with full dataset access.")
     print("Open the link to chat with the coordinator or select a specialist. No tokens required.")
 
 

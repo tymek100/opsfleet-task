@@ -5,6 +5,12 @@ The main Phoenix workspace retains **20 authored retail conversations** and adds
 an initial question and a fixed follow-up. The older 43-case pilot and collector integration
 tests use a separate instance. Run commands from the repository root.
 
+## Dataset access and historical results
+
+Agents now run with access to all brands; there are no selectable demo users. Retail's 20 conversations state brand-specific requests explicitly and record `requested_brand` for the reference calculation. The geographic-summary case uses all brands because its tool has no brand-filter argument. Inventory, distribution and coordinator suites cover all brands in their source snapshot. Reference filters define the requested analysis, not agent permissions.
+
+The migrated suites have not yet been run and graded live in this mode. Scores and captures described below predate this change and retain their original population and questions; they are not quality results for the new access mode. New runs require compatible fresh references, including all-brand geography for the retail state-summary case. Old captures, Phoenix versions and report ownership remain unchanged.
+
 ## Run the multi-agent suites
 
 Start Docker and configure `GEMINI_API_KEY` in `.env`. The fixture evaluation needs no BigQuery
@@ -103,7 +109,7 @@ profile while an evaluation is running.
 Open [Datasets & Experiments](http://127.0.0.1:6006/datasets) and select
 **Retail agent — 20 conversations**. Each of its 20 rows contains:
 
-- Input: scenario ID (`scenario-01` through `scenario-20`), identity, initial question, and follow-up.
+- Input: scenario ID (`scenario-01` through `scenario-20`), workspace identity, requested brand when applicable, initial question, and follow-up.
 - Output: independent reference facts and behavioral criteria for the initial question and
   follow-up, plus source timestamps and hashes. These define expected answers without requiring
   identical wording or tables. For example, a revenue fact identifies the expected value,
@@ -124,7 +130,7 @@ retain their original content. A full database backup and migration receipts are
 `.artifacts/phoenix/cleanup/20261123-scenarios/`; earlier local run artifacts remain unchanged.
 The [historical review report](plans/manual-conversation-review.md) describes the archived runs.
 
-The fresh [20-conversation baseline](http://127.0.0.1:6006/datasets/RGF0YXNldDo5/compare?experimentId=RXhwZXJpbWVudDox)
+The historical [20-conversation baseline](http://127.0.0.1:6006/datasets/RGF0YXNldDo5/compare?experimentId=RXhwZXJpbWVudDox)
 published all 40 answers: 37 answer grades are PASS and three are ERROR. The report-evidence
 validator omits singular `evidence_id` fields, incorrectly rejecting observed IDs in
 `scenario-17` follow-up and both `scenario-18` turns. Separately, the trajectory judge returned

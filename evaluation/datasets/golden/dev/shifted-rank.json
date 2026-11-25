@@ -4,7 +4,8 @@
   "family": "distinguishing-data",
   "split": "dev",
   "purpose": "diagnostic",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "shifted_v1",
   "fixture_sha256": "8f3cd56b1439e0bc28268455a99d8147a6b9398d71374a21c767516da242ab77",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -14,7 +15,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "Show our top five products by qualifying revenue in Q1 2026. Include each product's ID and revenue; break ties by ascending product ID.",
+      "message": "For Calvin Klein: Show our top five products by qualifying revenue in Q1 2026. Include each product's ID and revenue; break ties by ascending product ID.",
       "when_previous_outcome": []
     }
   ],

@@ -14,7 +14,7 @@ from evaluation.runners.artifacts import digest, prepare_run, write_json
 from evaluation.runners.faults import FaultGateway, FaultModel, FaultReports, Schedule
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from retail_insight.integrations.phoenix.tracing import span
 from retail_insight.runtime.provider import make_gemini
 
@@ -125,7 +125,7 @@ async def run_trial(
             reports.save(seed.owner, seed.title, seed.markdown, [], f"seed-{seed_index}")
         reports.schedule = schedule
         gateway = FaultGateway(
-            brands=DEMO_USERS[case.identity].brands,
+            brands=WORKSPACE_IDENTITY.brands,
             backend="fixture",
             fixture_path=fixture,
             clock=lambda: case.clock_utc,
@@ -143,7 +143,7 @@ async def run_trial(
             kwargs["model"] = FaultModel(model=delegate.model, delegate=delegate).bind(schedule)
         app = None
         try:
-            app = app_factory(isolated, DEMO_USERS[case.identity], **kwargs)
+            app = app_factory(isolated, WORKSPACE_IDENTITY, **kwargs)
             preview = None
             previous_outcome = None
             for step in case.steps:

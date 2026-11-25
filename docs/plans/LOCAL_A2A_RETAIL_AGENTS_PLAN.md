@@ -1,5 +1,7 @@
 # Local A2A Retail Agents
 
+> Historical configuration note (2026-11-25): demo users and assigned-brand permissions described below are superseded by [full dataset access](FULL_DATASET_ACCESS.md). Current commands have no `--user` option. Historical findings and captures retain their original scope.
+
 Date: 2026-11-24. Status: implementation proposal; the services, images, commands and new datasets below do not exist yet.
 
 ## 1. Objective and decisions

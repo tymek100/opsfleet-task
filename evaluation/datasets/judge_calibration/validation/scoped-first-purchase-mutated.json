@@ -3,7 +3,7 @@
   "id": "scoped-first-purchase-mutated",
   "family": "scoped-first-purchase",
   "split": "validation",
-  "question": "How many Q1 customers were new to Calvin Klein versus returning?",
+  "question": "For Calvin Klein: How many Q1 customers were new to Calvin Klein versus returning?",
   "answer": "There were 3 new Calvin Klein customers and 9 returning customers in Q1.",
   "reference": {
     "facts": [

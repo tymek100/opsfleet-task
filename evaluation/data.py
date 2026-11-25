@@ -59,8 +59,8 @@ def reference_for(case: Case, step: str | int) -> TurnReference:
 def validate_case(case: Case) -> None:
     """Reject changed environments, unresolved oracle keys, and invalid controls."""
     fixture_path(case)
-    truth = snapshot(case.fixture, case.identity)
-    expected_scope = {"alice": "Calvin Klein", "bob": "Levi's", "ceo": "All brands"}[case.identity]
+    truth = snapshot(case.fixture, case.reference_scope)
+    expected_scope = case.reference_scope
     for reference in case.references.values():
         if not reference.reference_procedure.strip():
             raise ValueError(f"Missing feasible reference procedure: {case.id}")
@@ -69,7 +69,7 @@ def validate_case(case: Case) -> None:
                 raise ValueError(f"Invalid oracle fact: {case.id}/{fact.id}")
             if fact.scope != expected_scope:
                 raise ValueError(
-                    f"Fact scope differs from authorized identity: {case.id}/{fact.id}"
+                    f"Fact scope differs from requested analytical filter: {case.id}/{fact.id}"
                 )
         if (
             reference.answerability == "clarification_required"

@@ -35,7 +35,7 @@ uv run --locked --group evaluation python -m evaluation.multi_agent \
 
 The local stack's signing key authenticates test identities. Requests go through real A2A HTTP endpoints. Every conversation has its own context; the follow-up reuses that context with a fresh per-prompt allowance. A separate run ceiling covers concurrent agent requests and independent judges. Unknown usage retains its full reservation. Limits cap execution; they do not guarantee completion.
 
-`--backend bigquery` independently captures scoped raw tables at one version and forwards that snapshot timestamp to agents. All servers must already be configured for BigQuery. Reference capture is bounded to 100,000 rows and 500 MB billed per source query; exceeding either bound aborts instead of truncating. The primary reproducible baseline uses the frozen fixture.
+`--backend bigquery` independently captures raw tables across all brands at one version and forwards that snapshot timestamp to agents. All servers must already be configured for BigQuery. Reference capture is bounded to 1,000,000 rows and 500 MB billed per source query; exceeding either bound aborts instead of truncating. The primary reproducible baseline uses the frozen fixture.
 
 For complete process inspection of public synthetic TheLook data, start with `RETAIL_STACK_TRACE_MODE=synthetic uv run --locked retail-stack up --backend bigquery`, then run the evaluation with `--backend bigquery`. Ordinary startup defaults to metadata-only tracing. Select different cases per role with `--only inventory/scenario-05,coordinator/scenario-08`. A source switch selects a separate persisted conversation/report profile.
 
@@ -65,3 +65,11 @@ uv run --locked --group evaluation python -m evaluation.multi_agent.inspections
 ```
 
 This importer covers only the completed reports bundled with this implementation. New runs need their own independently inspected report and explicit mapping; it does not copy an earlier run's verdict to a new answer.
+
+## Full-access workspace revision
+
+All 60 conversations now run under the same workspace identity and include every brand. Former
+persona-access refusal scenarios now require supported all-brand answers. Independent Decimal/set
+oracles and optional-claim controls include the full captured dataset; the capture SQL has no brand
+allowlist. Historical captures keep their original references and scores. New definitions have not
+been live-run or human-reviewed merely because the offline reference checks pass.

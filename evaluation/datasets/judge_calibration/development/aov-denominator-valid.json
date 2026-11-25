@@ -3,7 +3,7 @@
   "id": "aov-denominator-valid",
   "family": "aov-denominator",
   "split": "development",
-  "question": "Show Q1 2026 revenue, distinct orders and average order value.",
+  "question": "For Calvin Klein: Show Q1 2026 revenue, distinct orders and average order value.",
   "answer": "Q1 2026 revenue was 798 over 20 distinct orders, giving AOV 39.90.",
   "reference": {
     "facts": [

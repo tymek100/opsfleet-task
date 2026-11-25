@@ -26,7 +26,7 @@ from evaluation.runners.artifacts import digest, identifier, read_json, write_js
 from evaluation.runners.conversation import _capture_turn, report_state
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings, repository_root
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from retail_insight.integrations.phoenix.tracing import sanitize_capture, trace_context
 
 
@@ -40,7 +40,8 @@ class InitialReport(BaseModel):
 class Scenario(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,79}$")
-    identity: str = "alice"
+    identity: str = "workspace"
+    requested_brand: str = "Calvin Klein"
     prompt: str = Field(min_length=1, max_length=6000)
     follow_up: str = Field(min_length=1, max_length=6000)
     intent: str
@@ -54,12 +55,10 @@ def load_scenarios(path: Path, only: str | None = None) -> list[Scenario]:
     cases = [Scenario.model_validate(item) for item in read_json(path)]
     if not cases or len({case.id for case in cases}) != len(cases):
         raise ValueError("Scenario IDs must be unique and the selection must be nonempty")
-    if any(
-        case.identity not in DEMO_USERS
-        or any(report.owner not in DEMO_USERS for report in case.initial_reports)
-        for case in cases
-    ):
-        raise ValueError("Unknown demo identity in scenario")
+    if any(case.identity != "workspace" for case in cases):
+        raise ValueError("Evaluation runs use the full-access workspace")
+    if any(case.requested_brand not in {"Calvin Klein", "Levi's"} for case in cases):
+        raise ValueError("No reference capture for the requested analytical brand filter")
     if only:
         selected = set(only.split(","))
         if not selected <= {case.id for case in cases}:
@@ -286,7 +285,7 @@ async def run_manual(
                             if app is None:
                                 app = app_factory(
                                     isolated,
-                                    DEMO_USERS[scenario.identity],
+                                    WORKSPACE_IDENTITY,
                                     clock=lambda: now,
                                     observer=events.append,
                                     observation_mode="synthetic",

@@ -1,5 +1,7 @@
 # Multi-agent evaluation results
 
+> Access-mode update (2026-11-25): these recorded runs predate removal of demo users and brand permissions. Current suites use all-brand workspace access and have not yet been rerun live. Historical scores and findings below are unchanged; see the [current evaluation guide](../../docs/evaluation.md).
+
 Status: the full baseline, two focused candidates and live BigQuery validation are complete. All three Phoenix datasets have 20 initial questions and 20 follow-ups, with independent references. Human reference review and human judge calibration remain pending.
 
 ## Smoke run — 24 November 2026

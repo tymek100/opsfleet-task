@@ -2,7 +2,7 @@
 
 **Status:** 43 synthetic pilot cases and 40 paired judge controls are implemented and independently checked in code. Human reference review, human judge calibration, and a sealed holdout remain pending. These assets support diagnostics; they do not establish production accuracy.
 
-`golden/` contains evaluation tasks and trusted references. It is separate from runtime `knowledge/golden/`, which provides reusable methods to the analyst. Only identity and user steps enter the task adapter. The harness configures frozen SQL fixtures, the clock, report seeds, faults, and Golden Knowledge availability; reference answers, facts, and criteria remain grader-only.
+`golden/` contains evaluation tasks and trusted references. It is separate from runtime `knowledge/golden/`, which provides reusable methods to the analyst. Only the fixed workspace identity and user steps enter the task adapter. Every agent has all-brand access. A case's `reference_scope` describes an explicit analytical filter in its question, not an authorization boundary; it remains grader-only. The harness configures frozen SQL fixtures, the clock, report seeds, faults, and Golden Knowledge availability; reference answers, facts, and criteria remain grader-only.
 
 - `golden/dev/`: 36 development cases, including three focused challenges.
 - `golden/regression/`: 7 synthetic reproductions of reported failure families.
@@ -19,6 +19,8 @@ Pilot v2 adds these three cases without changing the original 40 case files or s
 Pilot v3 aligns mandatory grading with explicit requests. Ranking prompts request IDs and metric values; overlap requests its count and precise word limit; causal, cohort, and inactivity prompts request every required aggregate. The category-summary follow-up explicitly requests its signed category contributions and combined remainder. The quarter-boundary criterion no longer demands an unasked July explanation. Fixtures, numerical truth, case IDs, and suite counts are unchanged.
 
 Frozen v1/v2 experiments retain their original prompts and references. A failure caused solely by one of these former extra requirements is a case-validity finding, not evidence of poorer agent quality. Report that limitation and use newly frozen v3 runs for comparisons; do not silently repair historical run inputs.
+
+Pilot v4 removes demo personas. All cases run as `workspace`; brand-specific cases explicitly request Calvin Klein or Levi's in the user prompt, while all-brand cases cover the complete fixture. The former identity-impersonation refusal case becomes a supported brand-selection question. Four persona-related IDs are renamed, with no suite-count change. Numeric facts remain independently computed for the requested filter. Report-isolation fixtures use a separate archived workspace, not a selectable demo user. Judge controls also state their requested brand explicitly. Historical experiments retain their frozen inputs; use new v4 runs for current comparisons.
 
 The authoring recipes are retained for reproducibility:
 

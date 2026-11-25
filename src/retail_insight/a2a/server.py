@@ -42,7 +42,7 @@ from retail_insight.a2a.client import AgentClient
 from retail_insight.a2a.store import Store
 from retail_insight.agents.registry import create_agent
 from retail_insight.config import Settings
-from retail_insight.contracts import DEMO_USERS, Answer
+from retail_insight.contracts import WORKSPACE_IDENTITY, Answer
 from retail_insight.integrations.maps.privacy import contains_maps, persistent_result
 from retail_insight.integrations.phoenix.tracing import configure_tracing
 
@@ -81,8 +81,8 @@ class ContextBuilder(CallContextBuilder):
 
 
 class Authentication:
-    def __init__(self, app, secret: str, demo_token: str, role: str):
-        self.app, self.secret, self.demo_token, self.role = app, secret, demo_token, role
+    def __init__(self, app, secret: str, access_token: str, role: str):
+        self.app, self.secret, self.access_token, self.role = app, secret, access_token, role
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or scope["path"] in {
@@ -105,7 +105,7 @@ class Authentication:
                 break
         headers = {k.decode().lower(): v.decode() for k, v in scope["headers"]}
         try:
-            principal = authenticate(headers, body, self.secret, self.demo_token, self.role)
+            principal = authenticate(headers, body, self.secret, self.access_token, self.role)
         except ValueError:
             return await JSONResponse({"error": "Authentication required"}, status_code=401)(
                 scope, receive, send
@@ -234,7 +234,7 @@ class Executor(AgentExecutor):
                     requested_seconds, self.settings.turn_timeout_seconds
                 ) - (time.monotonic() - call_context.state["received_at"])
                 app = self.create_runtime(
-                    DEMO_USERS[owner], context_id, request_id, metadata, state
+                    WORKSPACE_IDENTITY, context_id, request_id, metadata, state
                 )
                 try:
                     result = await app.ask(question)
@@ -332,7 +332,7 @@ def create_app(
     settings: Settings,
     *,
     secret: str,
-    demo_token: str,
+    access_token: str,
     public_url: str,
     urls: dict | None = None,
 ):
@@ -351,11 +351,11 @@ def create_app(
             AgentSkill(id=role, name=role.title(), description=ROLES[role], tags=["retail", role])
         ],
         security_schemes={
-            "demoBearer": SecurityScheme(
-                root=HTTPAuthSecurityScheme(scheme="bearer", bearer_format="local-demo-token")
+            "workspaceBearer": SecurityScheme(
+                root=HTTPAuthSecurityScheme(scheme="bearer", bearer_format="local-workspace-token")
             )
         },
-        security=[{"demoBearer": []}],
+        security=[{"workspaceBearer": []}],
     )
     store = Store(settings.data_dir / "a2a.sqlite3")
     client = AgentClient(urls or {r: f"http://{r}:8000" for r in ROLES}, secret)
@@ -389,7 +389,7 @@ def create_app(
         )
 
     app.routes.append(Route("/health", health))
-    return Authentication(app, secret, demo_token, role)
+    return Authentication(app, secret, access_token, role)
 
 
 def main():
@@ -412,7 +412,7 @@ def main():
         }
     )
     secret = Path(os.environ["A2A_SIGNING_KEY_FILE"]).read_text().strip()
-    demo = Path(os.environ["A2A_DEMO_TOKEN_FILE"]).read_text().strip()
+    access_token = Path(os.environ["A2A_ACCESS_TOKEN_FILE"]).read_text().strip()
     catalog = json.loads(Path(os.environ["A2A_CATALOG_PATH"]).read_text())
     urls = {role: item["url"] for role, item in catalog.items()}
     tracing = None
@@ -433,7 +433,7 @@ def main():
                 args.role,
                 settings,
                 secret=secret,
-                demo_token=demo,
+                access_token=access_token,
                 public_url=os.getenv("A2A_PUBLIC_URL", f"http://{args.role}:8000"),
                 urls=urls,
             ),

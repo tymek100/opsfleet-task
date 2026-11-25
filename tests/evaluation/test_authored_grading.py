@@ -44,6 +44,7 @@ def snapshot(tmp_path):
         {
             "status": "completed",
             "brands": ["Calvin Klein", "Levi's"],
+            "geography_scope": "all brands",
             "created_at": "2026-11-22T00:00:00+00:00",
             "snapshot_at": "2026-11-22T00:00:00+00:00",
             "source_dataset": "bigquery-public-data.thelook_ecommerce",
@@ -245,7 +246,7 @@ def test_same_snapshot_applies_to_every_physical_relation_and_reference_query():
     assert sql.count("FOR SYSTEM_TIME AS OF") == 4
     assert "2026-11-22T00:00:00+00:00" in sql
     references = queries("bigquery-public-data.thelook_ecommerce", timestamp)
-    assert references["states"].count("FOR SYSTEM_TIME AS OF") == 4
+    assert references["states"].count("FOR SYSTEM_TIME AS OF") == 8
     assert references["transactions"].count("FOR SYSTEM_TIME AS OF") == 3
     with pytest.raises(ValueError, match="timezone"):
         compile_query("SELECT * FROM products", (), snapshot_at=datetime(2026, 11, 22))

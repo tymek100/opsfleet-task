@@ -224,7 +224,7 @@ async def test_diagnostic_trajectory_failure_preserves_answer_grade_and_event_li
 
     case = Case.model_construct(
         id=trial.case_id,
-        identity="alice",
+        identity="workspace",
         steps=[Step(id="ask", message=trial.turns[0].prompt)],
         references={
             "ask": TurnReference(

@@ -76,7 +76,7 @@ Without `PHOENIX_TEST_ENDPOINT`, tests marked `phoenix` are skipped even when ex
 
 ## Tracing and prompts
 
-Normal chat tracing remains opt-in with `retail-agent chat --user alice --phoenix`.
+Normal chat tracing remains opt-in with `retail-agent chat --phoenix`.
 It creates application traces separately from evaluation; using it on port 6006 will intentionally
 add an application project. Normal traces contain metadata only; explicit evaluation capture can
 include sanitized prompts, results, and answers.

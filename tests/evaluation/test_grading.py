@@ -123,7 +123,7 @@ async def test_later_correction_does_not_erase_a_wrong_published_turn():
     last = answer().model_copy(update={"step_id": "last"})
     case = Case.model_construct(
         id="conversation",
-        identity="alice",
+        identity="workspace",
         steps=[Step(id="first", message="First?"), Step(id="last", message="Correct it.")],
         references={"first": reference(), "last": reference()},
         expected_report_count=0,

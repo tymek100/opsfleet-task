@@ -13,7 +13,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from opentelemetry.trace import Status, StatusCode
 
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from retail_insight.integrations.phoenix.tracing import (
     configure_tracing,
     record_observation,
@@ -46,7 +46,7 @@ async def test_two_turns_have_separate_roots_and_shared_session_without_payloads
     )
     analyst = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         model=ScriptedModel(script=[response, response]),
         reviewer_model=ScriptedModel(script=[verdict(), verdict()]),
     )
@@ -113,7 +113,7 @@ async def test_synthetic_observer_records_visible_evidence_and_exact_review_cand
     final = "Product results are available [E1]."
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observer=records.append,
         observation_mode="synthetic",
         clock=lambda: fixed,
@@ -157,7 +157,7 @@ async def test_synthetic_capture_omits_delete_tokens_and_known_secrets(settings)
     records = []
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observer=records.append,
         observation_mode="synthetic",
         model=ScriptedModel(
@@ -169,7 +169,7 @@ async def test_synthetic_capture_omits_delete_tokens_and_known_secrets(settings)
         reviewer_model=ScriptedModel(script=[verdict()]),
     )
     try:
-        app.reports.save("alice", "Quarterly", "Saved result", [], "A1")
+        app.reports.save("workspace", "Quarterly", "Saved result", [], "A1")
         result = await app.ask("Delete my Quarterly report.")
         assert result.deletion_preview is not None
         token = result.deletion_preview["token"]
@@ -203,7 +203,7 @@ async def test_phoenix_prompt_preview_has_exact_answer_and_evaluation_context(se
     tracing = configure_tracing(exporter=exporter, mode="synthetic")
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observation_mode="synthetic",
         model=ScriptedModel(script=[finish("Which quarter?", outcome="clarification")]),
         reviewer_model=ScriptedModel(script=[verdict()]),
@@ -246,7 +246,7 @@ async def test_phoenix_provider_outage_shows_question_and_error_without_fabricat
     )
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observation_mode="synthetic",
         model=ScriptedModel(script=[error]),
         reviewer_model=ScriptedModel(script=[]),
@@ -308,7 +308,7 @@ async def test_preview_export_failure_does_not_abort_answer(settings, monkeypatc
     monkeypatch.setattr("retail_insight.runtime.analyst.record_observation", broken)
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         model=ScriptedModel(script=[finish("Which quarter?", outcome="clarification")]),
         reviewer_model=ScriptedModel(script=[verdict()]),
     )
@@ -324,7 +324,7 @@ async def test_metadata_observer_remains_private_inside_synthetic_session(settin
     tracing = configure_tracing(exporter=exporter, mode="synthetic")
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observation_mode="metadata",
         model=ScriptedModel(script=[finish("Private answer", outcome="clarification")]),
         reviewer_model=ScriptedModel(script=[verdict()]),
@@ -347,7 +347,7 @@ async def test_observer_failure_never_blocks_reviewed_result(settings):
 
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         observer=unavailable,
         observation_mode="synthetic",
         model=ScriptedModel(script=[finish("Which period?", outcome="clarification")]),

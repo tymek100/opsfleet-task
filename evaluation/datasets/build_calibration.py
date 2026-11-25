@@ -50,7 +50,7 @@ def build_controls() -> list[dict]:
                     "id": family + ("-valid" if passing else "-mutated"),
                     "family": family,
                     "split": split,
-                    "question": question,
+                    "question": "For Calvin Klein: " + question,
                     "answer": answer,
                     "reference": ref.model_dump(mode="json"),
                     "evidence": evidence,

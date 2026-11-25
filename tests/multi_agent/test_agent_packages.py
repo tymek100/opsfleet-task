@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from retail_insight.agents.registry import create_agent
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from tests.support.models import ScriptedModel, finish, verdict
 
 
@@ -48,7 +48,7 @@ async def test_each_agent_keeps_its_capabilities_and_reviewed_completion(
     app = create_agent(
         role,
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         gateway=object(),
         model=model,
         reviewer_model=reviewer,
@@ -75,7 +75,7 @@ async def test_each_agent_keeps_its_capabilities_and_reviewed_completion(
 
 def test_unknown_agent_cannot_fall_back_to_an_authorized_role(settings):
     with pytest.raises(ValueError):
-        create_agent("unknown", settings, DEMO_USERS["alice"], gateway=object())
+        create_agent("unknown", settings, WORKSPACE_IDENTITY, gateway=object())
 
 
 @pytest.mark.parametrize("role", ["retail", "inventory", "distribution", "coordinator"])
@@ -91,7 +91,7 @@ def test_service_business_cutoff_does_not_replace_operational_clock(settings, ro
     before = datetime.now(UTC)
     executor = Executor(role, settings, store=object(), client=object())
     app = executor.create_runtime(
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         "clock-contract",
         "request-clock-contract",
         {"as_of": cutoff.isoformat(), "snapshot_at": snapshot.isoformat()},

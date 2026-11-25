@@ -4,7 +4,8 @@
   "family": "false-premise",
   "split": "regression",
   "purpose": "regression",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "retail_v1",
   "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -14,7 +15,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "Our customer inactivity rate spiked in Q1. Check that premise by comparing January 1 and April 1, 2026 UTC. Show the eligible count, inactive count, and rate at each date. Define inactivity as strictly more than 90 days since the most recent qualifying purchase, among customers with a purchase before each date.",
+      "message": "For Calvin Klein: Our customer inactivity rate spiked in Q1. Check that premise by comparing January 1 and April 1, 2026 UTC. Show the eligible count, inactive count, and rate at each date. Define inactivity as strictly more than 90 days since the most recent qualifying purchase, among customers with a purchase before each date.",
       "when_previous_outcome": []
     }
   ],

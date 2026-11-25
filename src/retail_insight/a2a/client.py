@@ -55,7 +55,7 @@ class AgentClient:
         self,
         role: str,
         question: str,
-        identity: str = "alice",
+        identity: str = "workspace",
         context_id: str | None = None,
         *,
         max_cost_usd: float = 1,

@@ -116,7 +116,8 @@ class Case(Record):
     family: str
     split: Literal["dev", "regression", "holdout"] = "dev"
     purpose: Literal["diagnostic", "regression", "challenge"] = "diagnostic"
-    identity: Literal["alice", "bob", "ceo"] = "alice"
+    identity: Literal["workspace"] = "workspace"
+    reference_scope: Literal["Calvin Klein", "Levi's", "all brands"] = "Calvin Klein"
     fixture: str
     fixture_sha256: str
     clock_utc: datetime

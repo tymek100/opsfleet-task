@@ -16,7 +16,7 @@ flowchart TD
     C -->|A2A delegation| R[Retail analyst]
     C -->|A2A delegation| I[Inventory analyst]
     C -->|A2A delegation| D[Distribution analyst]
-    R --> B[Scoped BigQuery or fixture queries]
+    R --> B[Read-only BigQuery or fixture queries]
     I --> B
     D --> B
     D --> M[Google Maps MCP]
@@ -30,9 +30,9 @@ flowchart TD
 
 | Role | Data and capabilities |
 |---|---|
-| Retail | Existing scoped sales, customer, order, product and report tools |
-| Inventory | Scoped inventory records, modeled unsold units, recorded cost and stock age |
-| Distribution | Scoped center attribution, facility metadata, stock reconciliation and optional Maps observations |
+| Retail | All-brand sales, customer, order, product and report tools |
+| Inventory | All-brand inventory records, modeled unsold units, recorded cost and stock age |
+| Distribution | All-brand center attribution, facility metadata, stock reconciliation and optional Maps observations |
 | Coordinator | Specialist delegation, evidence reconciliation, result calculations and combined reports; no direct warehouse queries |
 
 Each role has its own `agent.py`, `tools.py`, `prompt.md` and `skills/` under [`src/retail_insight/agents/`](../src/retail_insight/agents/). The [agent registry](../src/retail_insight/agents/registry.py) selects an explicit agent implementation; the shared runtime contains the ADK execution loop. Inventory and distribution use read-only logical relations over `inventory_items`, `products` and `distribution_centers`. Modeled unsold stock at T requires `created_at <= T` and an absent or later `sold_at`; it does not prove physical availability or reservations. Cost is not revenue or profit. Unknown centers remain explicit, and customer geography is not exposed. Warehouse snapshots and business cutoffs are distinct values.
@@ -41,9 +41,9 @@ Distribution and the coordinator may reproduce public facility coordinate pairs 
 
 Google Maps is the only external MCP integration. Distribution discovers allowlisted route/weather tools from the managed endpoint through the MCP client. Credentials stay outside prompts. Missing credentials or failed lookups return explicit unavailable observations; coordinates alone do not establish road travel time, truck feasibility or delivery commitments. Maps content and derived answers are ephemeral: persisted records retain provenance, and later requests must fetch fresh observations. Live Maps access has not been verified without a configured key.
 
-A shared approved [catalog](../infra/agents/catalog.json) supplies endpoints to the coordinator and Inspector. Short-lived HMAC-signed transport requests bind demo identity and audience. The local GUI automatically authenticates as Alice through a loopback gateway; its Bearer credential is supplied server-side only to approved agents. User text cannot grant another brand's access. Each service persists owned tasks and conversation context in its own SQLite volume. This extends persistence beyond the legacy CLI's in-memory conversation; interrupted work is not automatically resumed after a process restart.
+A shared approved [catalog](../infra/agents/catalog.json) supplies endpoints to the coordinator and Inspector. Short-lived HMAC-signed transport requests bind the local workspace and destination audience. The GUI authenticates through a loopback gateway; its Bearer access token is supplied server-side only to approved agents. There is no selectable persona or brand authorization map. All agents can analyze all brands through their existing role capabilities; requested brand filters are analytical conditions. Each service persists owned tasks and conversation context in its own SQLite volume. This extends persistence beyond the legacy CLI's in-memory conversation; interrupted work is not automatically resumed after a process restart.
 
-Persistent tasks, cached requests, conversation context, reports and diagnostic events share a source-specific directory, `/data/<backend>/<source-profile>/`. `retail-stack up` derives the profile from the backend, warehouse source dataset and, for fixtures, both source-file hashes. Normal fixtures, evaluation fixtures and BigQuery retain separate histories; returning to an identical profile restores its state. Existing images require rebuilding to adopt this layout, and legacy top-level data is not migrated automatically. Direct server/Compose launches must configure the profile explicitly to isolate same-backend source changes. This storage boundary does not freeze live data: each conversation separately fixes its business cutoff and optional warehouse snapshot.
+Persistent tasks, cached requests, conversation context, reports and diagnostic events share a source-specific directory, `/data/<backend>/<source-profile>/`. `retail-stack up` derives the profile from the `workspace-all-brands-v1` access mode, backend, warehouse source dataset and, for fixtures, both source-file hashes. The access-mode change starts fresh conversation context; old persona-specific profiles and report ownership remain stored without reassignment or merging. Normal fixtures, evaluation fixtures and BigQuery retain separate histories; returning to an identical profile restores its state. Existing images require rebuilding to adopt this layout, and legacy top-level data is not migrated automatically. Direct server/Compose launches must configure the profile explicitly to isolate same-backend source changes. This storage boundary does not freeze live data: each conversation separately fixes its business cutoff and optional warehouse snapshot.
 
 Every user prompt has a fresh budget shared with its reviews and delegated work. Child grants are reserved before dispatch, reported usage settles them once, and unknown usage retains its reservation. Delegations are bounded to two concurrent children. Transport propagates OpenTelemetry context to the `retail-multi-agent` Phoenix project. A2A streaming reports task events; it does not promise token-by-token answer streaming.
 
@@ -63,7 +63,7 @@ flowchart TD
     A -->|Limit reached| X
 ```
 
-[`Analyst.ask`](../src/retail_insight/runtime/analyst.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context contains trusted brand scope, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
+[`Analyst.ask`](../src/retail_insight/runtime/analyst.py) creates an ADK `LlmAgent`, `Runner`, and in-memory session for each prompt. The initial context records all-brand access, the UTC instant and date, bounded approved conversation history, result handles, and skill summaries. The reviewer receives the same trusted clock source to validate as-of reporting independently of source timestamps. Follow-ups reuse application context with a new ADK session and budget; conversation state does not survive CLI restarts.
 
 The analyst executes an iterative tool loop and submits Markdown through `finish_answer`, referencing supporting evidence. It selects prose, lists, or tables according to the request.
 
@@ -122,7 +122,7 @@ The query gateway exposes three logical relations:
 | `transactions` | Purchases across all statuses for explicit alternative definitions |
 | `products` | Product catalog, including unsold products |
 
-Brand scope is applied before joins, customer histories, and aggregations. The gateway accepts supported read-only SQL and rejects raw source access, writes, and prohibited columns. BigQuery execution requires a dry run and byte limit. Local result calculations use a bounded DuckDB subprocess with external access disabled.
+Production agent gateways cover all brands. A requested brand is an explicit SQL filter and must be preserved through joins, customer histories, follow-ups and specialist delegation. Low-level optional reference filters remain available for independent evaluation calculations; they do not assign user permissions. The gateway accepts supported read-only SQL and rejects raw source access, writes, and prohibited columns. BigQuery execution requires a dry run and byte limit. Local result calculations use a bounded DuckDB subprocess with external access disabled.
 
 Metric contracts:
 
@@ -132,11 +132,11 @@ Metric contracts:
 - Customer names, contact details, and individual geography are excluded; internal customer IDs are permitted.
 - `query_state_summary` exposes state aggregates only for groups with at least five distinct customers. The synthetic fixture contains no geography.
 
-Managers are restricted to assigned brands; the CEO has cross-brand analytical access. Identities are simulated. Application scope enforcement over public TheLook data is not production authentication or BigQuery IAM isolation.
+The former demo users and assigned-brand permissions have been removed. New sessions use one local workspace with full dataset brand access. This does not grant write operations, expose prohibited customer fields, enable unconfigured Maps access or change the specialist tool sets. The coordinator obtains warehouse evidence through delegation. Service authentication remains in place; production deployment still requires appropriate identity management and BigQuery IAM.
 
 ## Report lifecycle
 
-Reports are saved only on explicit request. `stage_report_save` records intent; `finish_answer` persists approved content to local SQLite after review and save authorization, then returns an operation receipt. Ownership remains private to the creator, including against CEO access.
+Reports are saved only on explicit request. `stage_report_save` records intent; `finish_answer` persists approved content to local SQLite after review and save authorization, then returns an operation receipt. Storage remains isolated by report owner. New CLI and GUI sessions use `workspace`; existing reports under earlier owners remain intact and are not reassigned or merged.
 
 Deletion requires an exact preview and the user's `/confirm TOKEN`, handled outside the model loop. Validation checks ownership, expiry, report versions, and token reuse. Stale or cancelled previews cannot delete data. Deletion removes selected stored content and clears the current conversation's in-memory context; other CLI sessions and external exports are outside its scope.
 

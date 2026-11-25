@@ -1,5 +1,7 @@
 # Live conversation review: 20 scenarios
 
+> Historical configuration note (2026-11-25): demo users and assigned-brand permissions described below are superseded by [full dataset access](FULL_DATASET_ACCESS.md). Current commands have no `--user` option. Historical findings and captures retain their original scope.
+
 ## Scope and method
 
 On 22 November 2026, we ran the same 20 authored retail conversations, each with one fixed

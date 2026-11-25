@@ -1,10 +1,11 @@
 {
   "schema_version": 1,
-  "id": "alice-mixedbrand",
+  "id": "requested-brand-mixed-order",
   "family": "scope-boundary",
   "split": "dev",
   "purpose": "diagnostic",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "retail_v1",
   "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -14,7 +15,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "For Calvin Klein in Q1 2026, show qualifying revenue and distinct orders. If an order also has another brand, count that order once but include only Calvin Klein item revenue.",
+      "message": "For Calvin Klein: For Calvin Klein in Q1 2026, show qualifying revenue and distinct orders. If an order also has another brand, count that order once but include only Calvin Klein item revenue.",
       "when_previous_outcome": []
     }
   ],

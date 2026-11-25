@@ -26,7 +26,7 @@ async def test_real_runtime_capture_and_frozen_regrade(settings, tmp_path):
                     (
                         "query_data",
                         {
-                            "sql": "SELECT SUM(sale_price) AS revenue FROM sales WHERE purchased_at >= TIMESTAMP '2026-01-01' AND purchased_at < TIMESTAMP '2026-04-01'",
+                            "sql": "SELECT SUM(sale_price) AS revenue FROM sales WHERE brand = 'Calvin Klein' AND purchased_at >= TIMESTAMP '2026-01-01' AND purchased_at < TIMESTAMP '2026-04-01'",
                             "purpose": "Measure revenue",
                         },
                     )

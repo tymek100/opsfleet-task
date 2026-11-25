@@ -17,7 +17,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from retail_insight.config import Settings
-from retail_insight.contracts import Answer, Identity, TurnResult
+from retail_insight.contracts import WORKSPACE_IDENTITY, Answer, Identity, TurnResult
 from retail_insight.integrations.phoenix.tracing import (
     CaptureMode,
     Observer,
@@ -60,7 +60,7 @@ class Analyst:
     def __init__(
         self,
         settings: Settings,
-        identity: Identity,
+        identity: Identity = WORKSPACE_IDENTITY,
         *,
         model: BaseLlm | None = None,
         reviewer_model: BaseLlm | None = None,
@@ -72,7 +72,9 @@ class Analyst:
         observation_mode: CaptureMode = "metadata",
         screener: Callable[[str], str] = screen,
     ):
-        self.settings, self.identity = settings, identity
+        self.settings = settings
+        # Identity remains a storage namespace, never a brand-access policy.
+        self.identity = Identity(identity.user_id, None)
         self.screen = screener
         if observation_mode not in ("metadata", "synthetic"):
             raise ValueError("Capture mode must be metadata or synthetic")

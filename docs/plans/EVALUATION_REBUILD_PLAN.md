@@ -1,5 +1,7 @@
 # Evaluation rebuild: local Phoenix and independent reference data
 
+> Historical configuration note (2026-11-25): demo users and assigned-brand permissions described below are superseded by [full dataset access](FULL_DATASET_ACCESS.md). Current commands have no `--user` option. Historical findings and captures retain their original scope.
+
 **Status:** evaluation platform implemented; human review, human calibration, and a sealed holdout remain pending. Old evaluation code and test implementations have been removed.
 **Observed implementation:** [verification and pilot results](EVALUATION_IMPLEMENTATION_RESULTS.md).
 

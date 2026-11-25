@@ -97,7 +97,11 @@ ATOMIC_CRITERIA = (
 
 def independent_totals(raw, identity, as_of):
     """Additional optional-claim controls from frozen raw rows, never runtime SQL."""
-    brands = {"alice": {"Calvin Klein"}, "bob": {"Levi's"}, "ceo": None}[identity]
+    if identity != "workspace":
+        raise ValueError(
+            "Historical persona captures require their frozen references; new runs use workspace access"
+        )
+    brands = None
     products = {p["id"] for p in raw["products"] if brands is None or p["brand"] in brands}
     cutoff = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
     stock = {

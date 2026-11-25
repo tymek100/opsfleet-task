@@ -3,7 +3,7 @@
   "id": "period-swap-valid",
   "family": "period-swap",
   "split": "development",
-  "question": "Compare qualifying revenue in Q4 2025 and Q1 2026.",
+  "question": "For Calvin Klein: Compare qualifying revenue in Q4 2025 and Q1 2026.",
   "answer": "Revenue was 570 in Q4 2025 and 798 in Q1 2026.",
   "reference": {
     "facts": [

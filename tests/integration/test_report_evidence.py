@@ -22,8 +22,10 @@ async def test_preview_cancel_and_library_state_are_reviewable_without_queries(m
         ],
         [verdict(), verdict()],
     )
-    owned = app.reports.save("alice", "Review queue", "Owned report.", [], "A-owned")
-    private = app.reports.save("bob", "Private report", "Bob only.", [], "A-private")
+    owned = app.reports.save("workspace", "Review queue", "Owned report.", [], "A-owned")
+    private = app.reports.save(
+        "other-workspace", "Private report", "Other workspace only.", [], "A-private"
+    )
 
     preview = await app.ask("Preview deleting Review queue; do not delete it yet.")
     token = preview.deletion_preview["token"]
@@ -34,7 +36,7 @@ async def test_preview_cancel_and_library_state_are_reviewable_without_queries(m
     assert first[1]["observation"]["reports"] == [{"id": owned["id"], "title": "Review queue"}]
     assert set(first[1]["observation"]) == {"status", "message", "reports"}
     assert preview.deletion_preview["reports"][0]["version"] == owned["version"]
-    assert app.reports.read("alice", owned["id"]) is not None
+    assert app.reports.read("workspace", owned["id"]) is not None
 
     cancelled = await app.ask("Cancel that deletion and show the remaining report titles.")
     second = review_payload(app, 1)["evidence"]
@@ -47,16 +49,16 @@ async def test_preview_cancel_and_library_state_are_reviewable_without_queries(m
         app.model.requests + app.reviewer_model.requests + list(app.results.values())
     )
     assert token not in captured
-    assert private["id"] not in captured and "Bob only." not in captured
-    assert app.reports.read("alice", owned["id"]) is not None
-    assert app.reports.read("bob", private["id"]) is not None
+    assert private["id"] not in captured and "Other workspace only." not in captured
+    assert app.reports.read("workspace", owned["id"]) is not None
+    assert app.reports.read("other-workspace", private["id"]) is not None
     assert app.confirm_delete(token)["status"] == "invalid_confirmation"
 
 
 async def test_saved_text_and_original_ids_survive_historical_evidence_readback(make_agent):
     app = make_agent(reviews=[verdict()])
     saved = app.reports.save(
-        "alice",
+        "workspace",
         "Prior quarter",
         "Exact saved **historical** text: 12.50.",
         [{"id": "old-evidence", "columns": ["revenue"], "rows": [{"revenue": 12.5}]}],
@@ -110,7 +112,9 @@ async def test_exact_prior_answer_is_reviewable_with_original_answer_id(make_age
 
 async def test_unowned_report_absence_is_supported_without_exposing_its_content(make_agent):
     app = make_agent(reviews=[verdict()])
-    private = app.reports.save("bob", "Private title", "Private content.", [], "A-private")
+    private = app.reports.save(
+        "other-workspace", "Private title", "Private content.", [], "A-private"
+    )
     app.model.script.extend(
         [
             calls(("read_report", {"report_id": private["id"]})),

@@ -3,7 +3,7 @@
   "id": "scalar-revenue-mutated",
   "family": "scalar-revenue",
   "split": "development",
-  "question": "What was Calvin Klein qualifying revenue in Q1 2026?",
+  "question": "For Calvin Klein: What was Calvin Klein qualifying revenue in Q1 2026?",
   "answer": "Calvin Klein qualifying revenue in Q1 2026 was 978.",
   "reference": {
     "facts": [

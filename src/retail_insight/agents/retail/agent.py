@@ -30,13 +30,13 @@ class RetailAnalyst(ServiceAnalyst):
     def build_knowledge(self):
         return GoldenStore(
             self.settings.golden_path,
-            self.identity.brands,
+            None,
             bootstrap=self.settings.golden_bootstrap,
         )
 
     def build_gateway(self, clock):
         return QueryGateway(
-            brands=self.identity.brands,
+            brands=None,
             project=self.settings.google_cloud_project,
             backend=self.settings.backend,
             fixture_path=self.settings.fixture_path,

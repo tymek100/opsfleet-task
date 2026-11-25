@@ -62,11 +62,11 @@ def test_configuration_profiles_do_not_share_unneeded_credentials(launcher):
 def test_restarting_stack_preserves_identity_keys(launcher):
     launcher.prepare("fixture")
     signing = (launcher.STATE / "secrets/a2a_signing_key").read_text()
-    demo = (launcher.STATE / "secrets/a2a_demo_token").read_text()
+    demo = (launcher.STATE / "secrets/a2a_access_token").read_text()
     assert signing != demo
     launcher.prepare("fixture")
     assert (launcher.STATE / "secrets/a2a_signing_key").read_text() == signing
-    assert (launcher.STATE / "secrets/a2a_demo_token").read_text() == demo
+    assert (launcher.STATE / "secrets/a2a_access_token").read_text() == demo
 
 
 def test_evaluation_mount_profile_requires_explicit_fixture_selection(launcher):
@@ -101,3 +101,13 @@ def test_changed_source_rows_get_an_isolated_persistent_profile(launcher):
     launcher.prepare("fixture")
     second = dotenv_values(launcher.STATE / "compose.env")["RETAIL_STACK_DATA_PROFILE"]
     assert first != second
+
+
+def test_upgrade_preserves_existing_access_token(launcher):
+    directory = launcher.STATE / "secrets"
+    directory.mkdir(parents=True)
+    old = directory / "a2a_demo_token"
+    old.write_text("existing-local-credential\n")
+    launcher.prepare("fixture")
+    assert (directory / "a2a_access_token").read_text() == "existing-local-credential\n"
+    assert not old.exists()

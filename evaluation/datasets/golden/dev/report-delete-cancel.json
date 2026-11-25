@@ -4,7 +4,8 @@
   "family": "report-deletion",
   "split": "dev",
   "purpose": "diagnostic",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "retail_v1",
   "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -58,7 +59,7 @@
   },
   "initial_reports": [
     {
-      "owner": "alice",
+      "owner": "workspace",
       "title": "Old Quarter Draft",
       "markdown": "Archived synthetic report, not current warehouse evidence."
     }
@@ -66,7 +67,7 @@
   "expected_report_count": 1,
   "expected_final_reports": [
     {
-      "owner": "alice",
+      "owner": "workspace",
       "title": "Old Quarter Draft",
       "markdown": "Archived synthetic report, not current warehouse evidence."
     }

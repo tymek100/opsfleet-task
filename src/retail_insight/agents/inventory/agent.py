@@ -22,7 +22,7 @@ class InventoryAnalyst(ServiceAnalyst):
     def build_gateway(self, clock):
         return DomainGateway(
             role=self.role,
-            brands=self.identity.brands,
+            brands=None,
             project=self.settings.google_cloud_project,
             backend=self.settings.backend,
             fixture_path=Path(os.environ["DOMAIN_FIXTURE_PATH"])

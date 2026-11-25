@@ -96,14 +96,29 @@ async def test_new_command_cancels_pending_delete_and_preserves_saved_reports(
     make_agent, output, monkeypatch
 ):
     app = make_agent()
-    report = app.reports.save("alice", "Quarterly", "Historical report.", [], "A1")
+    report = app.reports.save("workspace", "Quarterly", "Historical report.", [], "A1")
     previous_conversation = app.conversation_id
-    token = app.reports.preview_delete("alice", previous_conversation, "")["token"]
+    token = app.reports.preview_delete("workspace", previous_conversation, "")["token"]
     monkeypatch.setattr("sys.stdin", StringIO("/new\n/exit\n"))
     await cli.conversation(app)
     assert app.history == [] and app.results == {} and app.answers == {}
     assert (
-        app.reports.confirm_delete("alice", previous_conversation, token)["status"]
+        app.reports.confirm_delete("workspace", previous_conversation, token)["status"]
         == "invalid_confirmation"
     )
-    assert app.reports.read("alice", report["id"]) is not None
+    assert app.reports.read("workspace", report["id"]) is not None
+
+
+@pytest.mark.parametrize("command", ["chat", "ask", "import-legacy"])
+def test_commands_no_longer_offer_demo_user_selection(command):
+    result = CliRunner().invoke(cli.app, [command, "--help"])
+    assert result.exit_code == 0
+    assert "--user" not in result.stdout
+
+
+def test_stack_chat_has_no_demo_user_option():
+    from retail_insight.interfaces.stack_cli import app
+
+    result = CliRunner().invoke(app, ["chat", "--help"])
+    assert result.exit_code == 0
+    assert "--user" not in result.stdout

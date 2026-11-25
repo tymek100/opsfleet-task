@@ -20,9 +20,9 @@ PERIODS = {
     "jan": ("2026-01-01", "2026-02-01"),
 }
 SCOPES: dict[str, tuple[str, ...] | None] = {
-    "alice": ("Calvin Klein",),
-    "bob": ("Levi's",),
-    "ceo": None,
+    "Calvin Klein": ("Calvin Klein",),
+    "Levi's": ("Levi's",),
+    "all brands": None,
 }
 
 
@@ -92,7 +92,7 @@ def validate_rows(raw: dict[str, Any]) -> None:
     seen: set[int] = set()
     for item in raw["items"]:
         if item["item_id"] in seen or item["product_id"] not in products:
-            raise ValueError("Invalid item/product identity")
+            raise ValueError("Invalid item/product reference_scope")
         seen.add(item["item_id"])
         if item["order_id"] not in orders or orders[item["order_id"]]["user_id"] != item["user_id"]:
             raise ValueError("Item owner differs from order owner")
@@ -152,11 +152,11 @@ def render_sql(raw: dict[str, Any]) -> str:
 
 
 def transactions(
-    raw: dict[str, Any], identity: str, *, qualifying: bool = True
+    raw: dict[str, Any], reference_scope: str, *, qualifying: bool = True
 ) -> list[dict[str, Any]]:
     products = {p["product_id"]: p for p in raw["products"]}
     orders = {o["order_id"]: o for o in raw["orders"]}
-    brands = SCOPES[identity]
+    brands = SCOPES[reference_scope]
     selected = []
     for item in raw["items"]:
         product, order = products[item["product_id"]], orders[item["order_id"]]
@@ -217,10 +217,10 @@ def metric_value(rows: list[dict[str, Any]], metric: str) -> Decimal:
     return Decimal(value)
 
 
-def snapshot(name: str, identity: str = "alice") -> dict[str, str | None]:
+def snapshot(name: str, reference_scope: str = "Calvin Klein") -> dict[str, str | None]:
     """Flat, keyed references used by persisted facts and independent validation."""
     raw = load_fixture(name)
-    rows = transactions(raw, identity)
+    rows = transactions(raw, reference_scope)
     q1, q4 = period_rows(rows, "q1"), period_rows(rows, "q4")
     result: dict[str, Any] = {}
     result["q1.null_price_revenue"] = sql_sum([row["price"] for row in q1 if row["price"] is None])
@@ -232,7 +232,7 @@ def snapshot(name: str, identity: str = "alice") -> dict[str, str | None]:
         {
             f"q1_all_status.{key}": value
             for key, value in totals(
-                period_rows(transactions(raw, identity, qualifying=False), "q1")
+                period_rows(transactions(raw, reference_scope, qualifying=False), "q1")
             ).items()
         }
     )
@@ -289,7 +289,7 @@ def snapshot(name: str, identity: str = "alice") -> dict[str, str | None]:
         (changes[c] for c in ordered_cats[2:]), Decimal(0)
     )
     result["category.total.change"] = sum(changes.values(), Decimal(0))
-    brands = SCOPES[identity]
+    brands = SCOPES[reference_scope]
     unsold = [
         p
         for p in raw["products"]

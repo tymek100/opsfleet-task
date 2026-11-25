@@ -6,7 +6,7 @@ import json
 import time
 from dataclasses import dataclass
 
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 
 
 @dataclass(frozen=True)
@@ -30,15 +30,15 @@ def signed_headers(secret: str, body: bytes, identity: str, audience: str) -> di
 
 
 def authenticate(
-    headers: dict, body: bytes, secret: str, demo_token: str, audience: str
+    headers: dict, body: bytes, secret: str, access_token: str, audience: str
 ) -> Principal:
     authorization = headers.get("authorization", "")
-    if demo_token and hmac.compare_digest(authorization, f"Bearer {demo_token}"):
-        return Principal("alice")
+    if access_token and hmac.compare_digest(authorization, f"Bearer {access_token}"):
+        return Principal(WORKSPACE_IDENTITY.user_id)
     identity = headers.get("x-retail-identity", "")
     timestamp = headers.get("x-retail-time", "")
     if (
-        identity not in DEMO_USERS
+        identity != WORKSPACE_IDENTITY.user_id
         or headers.get("x-retail-audience") != audience
         or not timestamp.isdigit()
         or abs(time.time() - int(timestamp)) > 300

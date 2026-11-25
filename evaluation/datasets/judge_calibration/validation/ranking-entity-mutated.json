@@ -3,7 +3,7 @@
   "id": "ranking-entity-mutated",
   "family": "ranking-entity",
   "split": "validation",
-  "question": "Name the leading Q1 product by revenue, with its ID and revenue.",
+  "question": "For Calvin Klein: Name the leading Q1 product by revenue, with its ID and revenue.",
   "answer": "The Q1 revenue leader was Cedar Tailored Suit (1002), with revenue 420.",
   "reference": {
     "facts": [

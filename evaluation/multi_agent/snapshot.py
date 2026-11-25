@@ -7,6 +7,8 @@ from google.cloud import bigquery
 
 from .oracle import Snapshot
 
+MAX_REFERENCE_ROWS = 1_000_000
+
 
 def capture(settings, as_of):
     source = settings.warehouse_source_dataset
@@ -22,13 +24,12 @@ def capture(settings, as_of):
     def table(name, alias):
         return f"`{source}.{name}` AS {alias} FOR SYSTEM_TIME AS OF @snapshot"
 
-    scope = "p.brand IN ('Calvin Klein', 'Levi\\'s')"
     queries = {
-        "products": f"SELECT p.id,p.name,p.brand,p.category,p.distribution_center_id FROM {table('products', 'p')} WHERE {scope}",
-        "inventory_items": f"SELECT i.id,i.product_id,i.created_at,i.sold_at,i.cost,i.product_distribution_center_id FROM {table('inventory_items', 'i')} JOIN {table('products', 'p')} ON p.id=i.product_id WHERE {scope}",
+        "products": f"SELECT p.id,p.name,p.brand,p.category,p.distribution_center_id FROM {table('products', 'p')}",
+        "inventory_items": f"SELECT i.id,i.product_id,i.created_at,i.sold_at,i.cost,i.product_distribution_center_id FROM {table('inventory_items', 'i')} JOIN {table('products', 'p')} ON p.id=i.product_id",
         "distribution_centers": f"SELECT d.id,d.name,d.latitude,d.longitude FROM {table('distribution_centers', 'd')}",
-        "order_items": f"SELECT i.id,i.order_id,i.user_id,i.product_id,i.sale_price,i.created_at,i.status FROM {table('order_items', 'i')} JOIN {table('products', 'p')} ON p.id=i.product_id WHERE {scope}",
-        "orders": f"SELECT DISTINCT o.order_id,o.user_id,o.status FROM {table('orders', 'o')} JOIN {table('order_items', 'i')} ON i.order_id=o.order_id JOIN {table('products', 'p')} ON p.id=i.product_id WHERE {scope}",
+        "order_items": f"SELECT i.id,i.order_id,i.user_id,i.product_id,i.sale_price,i.created_at,i.status FROM {table('order_items', 'i')} JOIN {table('products', 'p')} ON p.id=i.product_id",
+        "orders": f"SELECT o.order_id,o.user_id,o.status FROM {table('orders', 'o')}",
     }
     raw = {}
     billed_bytes = 0
@@ -51,9 +52,9 @@ def capture(settings, as_of):
         billed_bytes += billed
         if result.total_rows is None:
             raise ValueError(f"Reference table {name} has unknown row count; capture refused")
-        if result.total_rows > 100_000:
+        if result.total_rows > MAX_REFERENCE_ROWS:
             raise ValueError(
-                f"Reference table {name} exceeded 100000 rows; no truncation permitted"
+                f"Reference table {name} exceeded {MAX_REFERENCE_ROWS} rows; no truncation permitted"
             )
         raw[name] = [
             {

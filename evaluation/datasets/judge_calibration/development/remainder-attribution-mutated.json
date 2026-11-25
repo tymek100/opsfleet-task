@@ -3,7 +3,7 @@
   "id": "remainder-attribution-mutated",
   "family": "remainder-attribution",
   "split": "development",
-  "question": "State Outerwear and Suits contributions and group every remaining category together.",
+  "question": "For Calvin Klein: State Outerwear and Suits contributions and group every remaining category together.",
   "answer": "Outerwear contributed +240, Suits -140, and all remaining categories together +68.",
   "reference": {
     "facts": [

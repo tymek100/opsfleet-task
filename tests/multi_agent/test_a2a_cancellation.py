@@ -33,7 +33,7 @@ async def test_cancel_streaming_client_stops_remote_execution(settings, monkeypa
         "inventory",
         settings,
         secret=SECRET,
-        demo_token="local-only",
+        access_token="local-only",
         public_url=f"http://127.0.0.1:{port}",
     )
     server = uvicorn.Server(uvicorn.Config(app, log_level="error"))

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from retail_insight.agents.registry import create_agent
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from retail_insight.integrations.bigquery.domains import DEFAULT_FIXTURE, DomainGateway
 from retail_insight.runtime.domain_privacy import facility_coordinates, screen_role_text
 from retail_insight.runtime.privacy import screen
@@ -42,7 +42,7 @@ def evidence(sql=FACILITIES):
         "sql": sql,
         "rows": [{"center_id": 1, "center_latitude": 35.1174, "center_longitude": -89.9711}],
         "metric_version": "scoped-inventory-v1",
-        "scope": "Calvin Klein",
+        "scope": "all brands",
         "backend": "fixture",
         "as_of": AS_OF.isoformat(),
         "snapshot_at": None,
@@ -55,7 +55,7 @@ def runtime_context(role="coordinator", artifact=None):
     return SimpleNamespace(
         role=role,
         results={"E1": evidence() if artifact is None else artifact},
-        identity=DEMO_USERS["alice"],
+        identity=WORKSPACE_IDENTITY,
         as_of=AS_OF.isoformat(),
         snapshot_at=None,
         settings=SimpleNamespace(backend="fixture"),
@@ -161,7 +161,7 @@ async def test_facility_query_survives_analyst_history_reviewer_revision_and_fol
     app = create_agent(
         "distribution",
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         gateway=gateway,
         model=analyst,
         reviewer_model=reviewer,
@@ -192,7 +192,7 @@ async def test_coordinator_imported_facility_evidence_allows_reviewed_prose(
         async def ask(self, *args, **kwargs):
             return {
                 "status": "approved",
-                "scope": "Calvin Klein",
+                "scope": "all brands",
                 "as_of": AS_OF.isoformat(),
                 "snapshot_at": None,
                 "task_id": "distribution-task",
@@ -224,7 +224,7 @@ async def test_coordinator_imported_facility_evidence_allows_reviewed_prose(
     app = create_agent(
         "coordinator",
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         gateway=object(),
         client=Specialist(),
         model=analyst,

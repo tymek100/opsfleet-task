@@ -3,7 +3,7 @@
   "id": "omitted-required-fact-valid",
   "family": "omitted-required-fact",
   "split": "validation",
-  "question": "Show revenue and distinct orders for Q1 2026.",
+  "question": "For Calvin Klein: Show revenue and distinct orders for Q1 2026.",
   "answer": "Q1 2026 revenue was 798 and distinct orders were 20.",
   "reference": {
     "facts": [

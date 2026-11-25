@@ -11,10 +11,17 @@ retesting runtime prompt or skill corrections; record every attempt rather than 
 successful answers. Checks describe acceptable behavior and remain outside the agent context.
 They allow equivalent correct methods and explicitly supported limitations.
 
-Nineteen conversations use Alice's Calvin Klein scope; one uses Bob's Levi's scope. Each starts
-with isolated conversation and report state. Only `scenario-18` seeds reports, using two clearly
-authored records to verify owner isolation and deletion cancellation. Those records must never
-be added to an ordinary user's report library.
+All conversations run in the full-access workspace. Retail numerical cases explicitly request
+Calvin Klein or Levi's as analytical filters in the first prompt; `requested_brand` records the
+reference cohort and grants no permissions. Scenario 19 instead tests geography across every
+brand. Its references directly count distinct customers/orders across all brands, rather than
+adding per-brand counts. Each conversation starts with isolated report state. Scenario 18 seeds
+a workspace report and a separate archived-workspace record to verify deletion cancellation and
+storage isolation; these authored records never enter the ordinary report library.
+
+The workspace revision changes prompts and scope expectations. Earlier experiment scores refer
+to their frozen definitions and are not validation of this revision. New runs require fresh
+reference captures with `geography_scope: all brands`; old captures are rejected for scenario 19.
 
 Topics cover ranking and overlap, period comparison, category reconciliation, metric grain,
 repeat-order and acquisition cohorts, distinct-count unions, status overrides, catalog products

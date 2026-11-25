@@ -158,8 +158,8 @@ def test_independent_hand_calculations_cover_grain_scope_status_and_boundaries()
     assert truth["q2.revenue"] == "1000"
     assert truth["q1_all_status.revenue"] == str(798 + 4 * 999)
     assert truth["q1.new_customers"] == "4"
-    assert retail.snapshot("retail_v1", "bob")["q1.revenue"] == "940"
-    assert retail.snapshot("retail_v1", "ceo")["q1.orders"] == "21"
+    assert retail.snapshot("retail_v1", "Levi's")["q1.revenue"] == "940"
+    assert retail.snapshot("retail_v1", "all brands")["q1.orders"] == "21"
 
 
 def test_signed_category_reconciliation_distinguishes_remainder_meaning():
@@ -214,31 +214,36 @@ def test_raw_fixture_admission_rejects_broken_identity_or_schema(defect):
 @pytest.mark.parametrize(
     "fixture,identity",
     [
-        ("retail_v1", "alice"),
-        ("retail_v1", "bob"),
-        ("retail_v1", "ceo"),
-        ("shifted_v1", "alice"),
-        ("empty_q1_v1", "alice"),
-        ("zero_baseline_v1", "alice"),
-        ("foreign_noise_v1", "alice"),
-        ("injection_v1", "alice"),
-        ("nullable_v1", "alice"),
-        ("zero_net_v1", "alice"),
-        ("paged_results_v1", "alice"),
+        ("retail_v1", "Calvin Klein"),
+        ("retail_v1", "Levi's"),
+        ("retail_v1", "all brands"),
+        ("shifted_v1", "Calvin Klein"),
+        ("empty_q1_v1", "Calvin Klein"),
+        ("zero_baseline_v1", "Calvin Klein"),
+        ("foreign_noise_v1", "Calvin Klein"),
+        ("injection_v1", "Calvin Klein"),
+        ("nullable_v1", "Calvin Klein"),
+        ("zero_net_v1", "Calvin Klein"),
+        ("paged_results_v1", "Calvin Klein"),
     ],
 )
 async def test_real_gateway_denotation_matches_independent_reference(fixture, identity):
     gateway = QueryGateway(
-        retail.SCOPES[identity],
+        None,
         backend="fixture",
         fixture_path=retail.fixture_file(fixture, ".sql"),
     )
-    result = await gateway.query("""SELECT COALESCE(SUM(sale_price), 0) AS revenue,
+    brand_filter = "" if identity == "all brands" else " AND brand = @requested_brand"
+    result = await gateway.query(
+        """SELECT COALESCE(SUM(sale_price), 0) AS revenue,
         COUNT(*) AS items, COUNT(DISTINCT order_id) AS orders,
         COUNT(DISTINCT user_id) AS customers,
         SUM(sale_price) / NULLIF(COUNT(DISTINCT order_id), 0) AS aov
         FROM sales WHERE purchased_at >= TIMESTAMP('2026-01-01')
-        AND purchased_at < TIMESTAMP('2026-04-01')""")
+        AND purchased_at < TIMESTAMP('2026-04-01')"""
+        + brand_filter,
+        {} if identity == "all brands" else {"requested_brand": identity},
+    )
     observed = result["rows"][0]
     truth = retail.snapshot(fixture, identity)
     for key, actual in observed.items():
@@ -276,7 +281,7 @@ async def test_real_gateway_denotation_matches_independent_reference(fixture, id
 )
 async def test_distinguishing_fixture_rejects_semantically_wrong_sql(sql, reference_key):
     gateway = QueryGateway(
-        retail.SCOPES["alice"],
+        retail.SCOPES["Calvin Klein"],
         backend="fixture",
         fixture_path=retail.fixture_file("retail_v1", ".sql"),
     )
@@ -318,7 +323,7 @@ def test_sql_null_aggregates_keep_unknown_prices_distinct_from_empty_activity():
 
 async def test_nullable_rows_match_sql_three_valued_status_and_sum_semantics():
     gateway = QueryGateway(
-        retail.SCOPES["alice"],
+        retail.SCOPES["Calvin Klein"],
         backend="fixture",
         fixture_path=retail.fixture_file("nullable_v1", ".sql"),
     )
@@ -341,7 +346,7 @@ async def test_nullable_rows_match_sql_three_valued_status_and_sum_semantics():
 
 async def test_zero_net_category_fixture_has_nonzero_offsetting_denotations():
     gateway = QueryGateway(
-        retail.SCOPES["alice"],
+        retail.SCOPES["Calvin Klein"],
         backend="fixture",
         fixture_path=retail.fixture_file("zero_net_v1", ".sql"),
     )
@@ -367,8 +372,9 @@ async def test_all_25_ranking_rows_are_solvable_through_real_bounded_tool_pages(
     preview = await tools.query_data(
         """SELECT product_id, SUM(sale_price) AS revenue FROM sales
         WHERE purchased_at >= TIMESTAMP('2026-01-01') AND purchased_at < TIMESTAMP('2026-04-01')
+        AND brand = 'Calvin Klein'
         GROUP BY product_id ORDER BY revenue DESC, product_id ASC""",
-        "Rank every qualifying Q1 product by revenue",
+        "Rank every qualifying Calvin Klein Q1 product by revenue",
     )
     assert preview["preview_only"] is True
     assert preview["stored_rows"] == 25
@@ -457,3 +463,18 @@ def test_quarter_boundary_criterion_does_not_demand_an_unasked_date_explanation(
         "july" not in criterion.description.casefold()
         for criterion in case.references["turn-1"].criteria
     )
+
+
+def test_workspace_identity_is_separate_from_requested_brand_filter():
+    cases = load_cases()
+    assert all(case.identity == "workspace" for case in cases)
+    assert {case.reference_scope for case in cases} == {"Calvin Klein", "Levi's", "all brands"}
+    for case in cases:
+        if any(reference.facts for reference in case.references.values()):
+            assert case.steps[0].message.startswith(f"For {case.reference_scope}:")
+        assert "reference_scope" not in case.runtime_input()
+    selected = case_named("brand-selection")
+    assert selected.references["turn-1"].allowed_outcomes == ["answer"]
+    assert selected.references["turn-1"].facts[0].value == "940"
+    with pytest.raises(ValidationError):
+        Case.model_validate({**selected.model_dump(), "identity": "obsolete-persona"})

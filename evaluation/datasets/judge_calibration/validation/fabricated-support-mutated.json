@@ -3,7 +3,7 @@
   "id": "fabricated-support-mutated",
   "family": "fabricated-support",
   "split": "validation",
-  "question": "State the Q1 revenue change without inventing a cause.",
+  "question": "For Calvin Klein: State the Q1 revenue change without inventing a cause.",
   "answer": "Revenue increased by 228 [E1] because a campaign raised demand [E99].",
   "reference": {
     "facts": [

@@ -3,7 +3,7 @@
   "id": "qualified-hypothesis-valid",
   "family": "qualified-hypothesis",
   "split": "development",
-  "question": "State the revenue change and suggest a way to investigate it.",
+  "question": "For Calvin Klein: State the revenue change and suggest a way to investigate it.",
   "answer": "Revenue increased by 228. Compare quantities and realized prices to investigate a possible mix effect.",
   "reference": {
     "facts": [

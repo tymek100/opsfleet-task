@@ -8,13 +8,13 @@ With Docker running and `GEMINI_API_KEY` configured in `.env`:
 
 ```bash
 uv run --locked retail-stack up --backend fixture
-uv run --locked retail-stack chat --user alice
+uv run --locked retail-stack chat
 ```
 
 This builds four separate agent images, starts the official A2A Inspector GUI and reuses local
 Phoenix. Inspector exposes all four Agent Cards; the coordinator delegates to specialists through
 A2A. Open [localhost:8080](http://localhost:8080): the coordinator opens automatically and all
-four agents are ready to chat as Alice (Calvin Klein), without copying tokens or configuring
+four agents can analyze all brands, without selecting a user or configuring browser
 authentication. Phoenix is at [localhost:6006](http://127.0.0.1:6006).
 
 Fixture mode still calls Gemini. Use `--backend bigquery` with Google Cloud application credentials
@@ -32,8 +32,7 @@ uv run --locked --group evaluation retail-eval run-multi-agent \
 
 The three suites contain 60 conversations and 120 answers. Phoenix receives separate inventory,
 distribution and coordinator datasets and a shared `retail-multi-agent` trace project. References
-come from independent raw-row calculations and never enter agent context. Live Maps validation,
-human reference review and judge calibration remain separate outstanding checks.
+come from independent raw-row calculations and never enter agent context. The suites now use full-dataset access; they have not yet been rerun live in this mode. Live Maps validation, human reference review and judge calibration remain separate outstanding checks.
 
 See [evaluation instructions](docs/evaluation.md) and the [validation report](evaluation/multi_agent/RESULTS.md) for live BigQuery runs, observed failures, fixes and the limits of automatic grading. Maps is intentionally inactive in the current local deployment.
 
@@ -41,15 +40,15 @@ See [evaluation instructions](docs/evaluation.md) and the [validation report](ev
 
 ```bash
 uv sync --locked --python 3.12
-uv run --locked retail-agent chat --user alice --golden-bootstrap
+uv run --locked retail-agent chat --golden-bootstrap
 ```
 
-Configure your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). `--golden-bootstrap` enables the repository's 11 synthetic reference methods. Current answers require fresh evidence. Without this flag, only eligible approved examples from the configured corpus are available.
+New questions cover all brands unless you request a brand filter, for example, "Show Calvin Klein revenue in Q1 2026." Configure your Gemini key and Google Cloud application credentials first; see [Quick Start](QUICK_START.md). `--golden-bootstrap` enables the repository's 11 synthetic reference methods. Current answers require fresh evidence. Without this flag, only eligible approved examples from the configured corpus are available.
 
 For real Gemini calls against a frozen synthetic dataset, without BigQuery credentials:
 
 ```bash
-uv run --locked retail-agent chat --user alice --backend fixture --golden-bootstrap
+uv run --locked retail-agent chat --backend fixture --golden-bootstrap
 ```
 
 The application provides schema discovery, a Golden example catalog, warehouse queries, local result analysis, prior-answer access and private report management. The analyst selects examples from eligible summaries. Application services enforce permissions, privacy, budgets and deletion confirmation. Answers contain the model's reviewed Markdown; `/details` displays supporting SQL and evidence.
@@ -69,17 +68,17 @@ uv run --locked ruff check .
 uv run --locked --group evaluation pyright
 ```
 
-Saving requires an explicit request. Deletion requires an exact preview and confirmation in the same interactive chat. Report libraries are owner-private, including against CEO access. Existing user data is preserved; explicit legacy import copies owned reports without modifying the source.
+Saving requires an explicit request. Deletion requires an exact preview and confirmation in the same interactive chat. New sessions use the local `workspace` report owner. Stored ownership remains isolated: earlier owners' reports are retained without being merged into the workspace. Legacy import copies only records already owned by `workspace`, leaving the source unchanged.
 
-The standalone CLI uses simulated identities, in-memory conversation context and SQLite report storage. A2A services persist owned tasks and conversation context in separate volumes. Nontechnical persona administration, inferred preference learning and production authentication remain unimplemented. Evaluator approval does not guarantee correctness.
+The standalone CLI uses in-memory conversation context and SQLite report storage. A2A services persist owned tasks and conversation context in separate volumes. User selection and demo brand permissions have been removed. Read-only queries, privacy checks, service authentication and execution limits still apply. Evaluator approval does not guarantee correctness.
 
 ## Evaluation and Phoenix
 
 The existing **Retail agent — 20 conversations** dataset and `retail-conversations-20` trace
 project remain separate from the new multi-agent suites. Each scenario has an initial question
-and a fixed follow-up. The latest recorded retail baseline produced 37 PASS and three ERROR
+and a fixed follow-up. The historical baseline, recorded before demo users were removed, produced 37 PASS and three ERROR
 answer grades, plus two unresolved trajectory checks; see the [evaluation guide](docs/evaluation.md)
-for its capture and diagnosis. Historical local captures remain preserved.
+for its capture and diagnosis. Historical local captures remain preserved. Current retail scenarios state requested brand filters explicitly; the migrated scenarios have not yet been rerun live.
 
 Run new conversations with Gemini and BigQuery credentials configured and Docker running:
 

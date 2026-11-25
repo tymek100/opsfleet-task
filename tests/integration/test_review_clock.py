@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime, timedelta, timezone
 
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
-from retail_insight.contracts import DEMO_USERS
+from retail_insight.contracts import WORKSPACE_IDENTITY
 from tests.support.models import ScriptedModel, calls, finish, verdict
 
 
@@ -33,7 +33,7 @@ async def test_injected_clock_reaches_analyst_and_reviewer_despite_future_eviden
     reviewer = ScriptedModel(script=[verdict()])
     app = Analyst(
         settings,
-        DEMO_USERS["alice"],
+        WORKSPACE_IDENTITY,
         clock=lambda: fixed,
         observer=records.append,
         observation_mode="synthetic",

@@ -16,11 +16,8 @@ class Identity:
         return ", ".join(self.brands) if self.brands is not None else "all brands"
 
 
-DEMO_USERS = {
-    "alice": Identity("alice", ("Calvin Klein",)),
-    "bob": Identity("bob", ("Levi's",)),
-    "ceo": Identity("ceo", None),
-}
+# A single local workspace owns conversations and reports. It has no brand restriction.
+WORKSPACE_IDENTITY = Identity("workspace", None)
 
 
 class ReviewIssue(BaseModel):

@@ -46,12 +46,12 @@ class PassingJudge:
 async def test_wrong_report_deleted_cannot_pass_by_matching_only_remaining_count():
     case = load_cases("report-delete-confirm")[0]
     before = [
-        {"id": "delete-me", "owner": "alice", "title": seed.title, "markdown": seed.markdown}
+        {"id": "delete-me", "owner": "workspace", "title": seed.title, "markdown": seed.markdown}
         for seed in case.initial_reports[:1]
     ] + [
         {
             "id": "keep-me",
-            "owner": "alice",
+            "owner": "workspace",
             "title": case.initial_reports[1].title,
             "markdown": case.initial_reports[1].markdown,
         }

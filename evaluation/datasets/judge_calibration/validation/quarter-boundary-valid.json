@@ -3,7 +3,7 @@
   "id": "quarter-boundary-valid",
   "family": "quarter-boundary",
   "split": "validation",
-  "question": "Show Q1 and Q2 qualifying revenue with UTC quarter boundaries.",
+  "question": "For Calvin Klein: Show Q1 and Q2 qualifying revenue with UTC quarter boundaries.",
   "answer": "Q1 qualifying revenue was 798 and Q2 was 1000; April 1 at 00:00 UTC belongs to Q2.",
   "reference": {
     "facts": [

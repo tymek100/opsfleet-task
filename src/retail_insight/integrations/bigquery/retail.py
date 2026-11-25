@@ -31,8 +31,8 @@ from sqlglot.optimizer.scope import traverse_scope
 DEFINITIONS = (
     "scoped-retail-v1; sales contains qualifying item purchases, excluding Cancelled/Returned "
     "at both item and order level. transactions contains all current statuses. Revenue uses "
-    "sale_price; orders and customers require distinct IDs. Brand scope applies before joins "
-    "and history. purchased_at is the item's created_at. Use UTC half-open periods. Current "
+    "sale_price; orders and customers require distinct IDs. Runtime access includes all brands; use explicit SQL filters for a requested brand. "
+    "Optional reference filters apply before joins and history. purchased_at is the item's created_at. Use UTC half-open periods. Current "
     "statuses cannot reconstruct historical status changes, delivery or refund events. "
     "Qualifying sales may include Processing/Shipped; sale_price is not a refunded amount "
     "or evidence of cash collection. Currency is not specified. "

@@ -3,7 +3,7 @@
   "id": "false-premise-mutated",
   "family": "false-premise",
   "split": "validation",
-  "question": "Check whether inactivity increased between January 1 and April 1.",
+  "question": "For Calvin Klein: Check whether inactivity increased between January 1 and April 1.",
   "answer": "The inactivity rate spiked from 0% on January 1 to 12.5% on April 1.",
   "reference": {
     "facts": [

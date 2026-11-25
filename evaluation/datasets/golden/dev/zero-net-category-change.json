@@ -4,7 +4,8 @@
   "family": "zero-net-contribution",
   "split": "dev",
   "purpose": "challenge",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "zero_net_v1",
   "fixture_sha256": "6cd0ee7dcafa9c2e377339f2db6bee61a1577a575d2ddc80e85d61501463d265",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -16,7 +17,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "Compare Q1 2026 with Q4 2025 qualifying revenue and percentage revenue change. Show the three categories with the largest absolute revenue changes, preserving signs, plus Other so they reconcile. If total change is zero, distinguish zero percentage revenue growth from undefined shares of the net change.",
+      "message": "For Calvin Klein: Compare Q1 2026 with Q4 2025 qualifying revenue and percentage revenue change. Show the three categories with the largest absolute revenue changes, preserving signs, plus Other so they reconcile. If total change is zero, distinguish zero percentage revenue growth from undefined shares of the net change.",
       "when_previous_outcome": []
     }
   ],

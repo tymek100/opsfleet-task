@@ -16,7 +16,7 @@ from evaluation.multi_agent.runner import RunBudget, cost_of, validate_deploymen
 from evaluation.multi_agent.scenarios import load_suites
 
 
-def values(snapshot, topic, identity="alice"):
+def values(snapshot, topic, identity="workspace"):
     return {f.metric: f.value for f in snapshot.calculate(topic, identity)}
 
 
@@ -31,9 +31,9 @@ def test_fixture_is_frozen_and_runtime_knowledge_is_independent():
 def test_stock_boundary_and_null_cost_truth():
     snapshot = Snapshot(build())
     assert values(snapshot, "stock_totals") == {
-        "modeled unsold units": "32",
-        "recorded cost of units with non-null cost": "565.25",
-        "distinct stocked products": "6",
+        "modeled unsold units": "45",
+        "recorded cost of units with non-null cost": "729.00",
+        "distinct stocked products": "8",
     }
     assert (
         values(snapshot, "future_created")[
@@ -44,8 +44,8 @@ def test_stock_boundary_and_null_cost_truth():
     assert (
         values(snapshot, "sold_boundary")["rows sold exactly at cutoff, excluded from stock"] == "1"
     )
-    assert values(snapshot, "sold_later")["stocked units with recorded sale after cutoff"] == "6"
-    assert values(snapshot, "missing_cost")["stocked units with missing recorded cost"] == "5"
+    assert values(snapshot, "sold_later")["stocked units with recorded sale after cutoff"] == "8"
+    assert values(snapshot, "missing_cost")["stocked units with missing recorded cost"] == "7"
 
 
 def test_complete_day_aging_excludes_fractional_ninetieth_day():
@@ -63,9 +63,9 @@ def test_complete_day_aging_excludes_fractional_ninetieth_day():
             }
         )
     changed = Snapshot(raw)
-    assert values(baseline, "aged")["modeled unsold units"] == "12"
-    assert values(changed, "aged")["modeled unsold units"] == "13"
-    assert values(changed, "aged")["recorded cost of units with non-null cost"] == "255.00"
+    assert values(baseline, "aged")["modeled unsold units"] == "17"
+    assert values(changed, "aged")["modeled unsold units"] == "18"
+    assert values(changed, "aged")["recorded cost of units with non-null cost"] == "329.25"
     before = {f.entity: Decimal(f.value) for f in baseline.calculate("center_age")}
     after = {f.entity: Decimal(f.value) for f in changed.calculate("center_age")}
     assert sum(after.values()) == sum(before.values()) + 1
@@ -74,22 +74,23 @@ def test_complete_day_aging_excludes_fractional_ninetieth_day():
 
 def test_sales_exclude_both_statuses_and_use_all_calendar_days():
     snapshot = Snapshot(build())
-    assert values(snapshot, "sales_total")["qualifying units over 30 complete days"] == "15"
-    assert len(snapshot.sales("bob")) == 2
+    assert values(snapshot, "sales_total")["qualifying units over 30 complete days"] == "26"
+    assert len(snapshot.sales("workspace")) == 26
     coverage = snapshot.calculate("coverage")
-    assert Decimal(coverage[0].value) == Decimal(10) * 30 / 7
+    shirt = next(f for f in coverage if f.entity.startswith("product 710 "))
+    assert Decimal(shirt.value) == Decimal(10) * 30 / 7
 
 
-def test_foreign_brand_noise_does_not_change_authorized_oracle():
+def test_all_brand_oracle_includes_rows_from_every_brand():
     source = build()
     baseline = Snapshot(source).calculate("stock_totals")
     changed = copy.deepcopy(source)
     foreign = next(r for r in changed["inventory_items"] if r["product_id"] == 718)
     for i in range(20):
         changed["inventory_items"].append({**foreign, "id": 80000 + i, "cost": "999999.99"})
-    assert Snapshot(changed).calculate("stock_totals") == baseline
-    assert Snapshot(changed).calculate("stock_totals", "ceo") != Snapshot(source).calculate(
-        "stock_totals", "ceo"
+    assert Snapshot(changed).calculate("stock_totals") != baseline
+    assert Snapshot(changed).calculate("stock_totals", "workspace") != Snapshot(source).calculate(
+        "stock_totals", "workspace"
     )
 
 
@@ -97,7 +98,7 @@ def test_unit_grain_and_unknown_centers_reconcile():
     source = build()
     source["inventory_items"].append(copy.deepcopy(source["inventory_items"][0]))
     snapshot = Snapshot(source)
-    assert values(snapshot, "stock_totals")["modeled unsold units"] == "32"
+    assert values(snapshot, "stock_totals")["modeled unsold units"] == "45"
     facts = snapshot.calculate("center_all")
     assert sum(Decimal(f.value) for f in facts[:-1]) == Decimal(facts[-1].value)
     assert any(f.entity == "Unknown" and Decimal(f.value) > 0 for f in facts)
@@ -202,10 +203,10 @@ def test_multiagent_trajectory_contract_supports_judge_trace_rendering():
 
 def test_optional_claim_truth_includes_nonranked_entities_without_required_output():
     snapshot = Snapshot(build())
-    truth = background(snapshot, "alice")
+    truth = background(snapshot, "workspace")
     product = next(p for p in truth["products"] if p["product_id"] == 714)
     assert product["modeled_unsold_units"] == 3
-    assert not any(p["product_id"] == 718 for p in truth["products"])
+    assert any(p["product_id"] == 718 for p in truth["products"])
     follow = reference(snapshot, load_suites()["coordinator"][0], 2)
     assert not follow.facts
     assert any(
@@ -219,7 +220,7 @@ def test_cached_background_preserves_exact_truth_and_isolates_consumers(monkeypa
 
     raw = build()
     snapshot = Snapshot(raw)
-    expected = oracle._calculate_background(snapshot, "alice")
+    expected = oracle._calculate_background(snapshot, "workspace")
     calls = []
     calculate = oracle._calculate_background
 
@@ -228,14 +229,14 @@ def test_cached_background_preserves_exact_truth_and_isolates_consumers(monkeypa
         return calculate(source, identity)
 
     monkeypatch.setattr(oracle, "_calculate_background", tracked)
-    first = background(snapshot, "alice")
+    first = background(snapshot, "workspace")
     assert first == expected
     first["products"].clear()
     raw["inventory_items"].clear()
-    assert background(snapshot, "alice") == expected
-    assert calls == ["alice"]
-    assert background(snapshot, "bob")["total"]["modeled_unsold_units"] == 5
-    assert calls == ["alice", "bob"]
+    assert background(snapshot, "workspace") == expected
+    assert calls == ["workspace"]
+    assert background(snapshot, "workspace")["total"]["modeled_unsold_units"] == 45
+    assert calls == ["workspace"]
 
 
 def test_trajectory_judge_event_choices_are_limited_to_captured_occurrences():

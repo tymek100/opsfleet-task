@@ -22,10 +22,10 @@ CLI login alone does not establish Python ADC. The configured billing project mu
 ## Start a conversation
 
 ```bash
-uv run --locked retail-agent chat --user alice --golden-bootstrap
+uv run --locked retail-agent chat --golden-bootstrap
 ```
 
-Demo identities: `alice` can analyze Calvin Klein; `bob` can analyze Levi's; `ceo` can analyze all brands. These are local simulations, not production authentication. Report libraries remain owner-private.
+The CLI has no user selection. Every new question can analyze all brands; request a brand explicitly when needed, for example, "Show Calvin Klein revenue in Q1 2026." Follow-ups preserve that requested filter. Read-only SQL and privacy checks still apply.
 
 `--golden-bootstrap` explicitly enables the synthetic, unapproved reference methods. The analyst selects examples from eligible summaries and may use none. Current numerical answers require fresh authorized queries. Without the flag, the supplied synthetic corpus is ineligible. Configure `GOLDEN_PATH` for a separately approved compatible corpus.
 
@@ -53,17 +53,17 @@ The model generates the complete answer, including optional tables, and the eval
 This mode uses the real Gemini model with analytical queries against a frozen local fixture:
 
 ```bash
-uv run --locked retail-agent chat --user alice --backend fixture --golden-bootstrap
+uv run --locked retail-agent chat --backend fixture --golden-bootstrap
 ```
 
-The fixture has two sold Calvin Klein products, one unsold product and invented transactions. A request for five products should explain that fewer qualify. Its Q1 revenue is 375, across six orders and five customers. It contains no geography. These are demonstration figures, not live company results.
+The fixture has three products sold in Q1 across Calvin Klein and Levi's, one unsold product and invented transactions. A request for five products should explain that fewer qualify. All-brand qualifying Q1 revenue is 1,275, across six orders and five customers; an explicit Calvin Klein filter gives 375. It contains no geography. These are demonstration figures, not live company results.
 
 One-shot example:
 
 ```bash
 uv run --locked retail-agent ask \
   "What was our average order value in Q1 2026? No table." \
-  --user alice --backend fixture --golden-bootstrap
+  --backend fixture --golden-bootstrap
 ```
 
 ## Reports and evidence
@@ -88,10 +88,10 @@ tokens explicitly. Piped input remains plain text.
 
 Deletion confirmation is bound to the interactive chat that displayed the preview; one-shot commands cannot accept a later confirmation. Cancelled, expired, replayed or stale previews authorize no additional deletion. Successful deletion clears the current conversation's in-memory context; audit records contain no report text.
 
-The report library uses `.retail-agent/reports-v2.sqlite3`. Earlier files are preserved. Explicit migration copies only the named owner's records:
+The report library uses `.retail-agent/reports-v2.sqlite3`. Earlier files and their ownership are preserved. New sessions use the `workspace` owner; no reports are automatically reassigned or merged. Explicit legacy import copies only records already owned by `workspace`:
 
 ```bash
-uv run --locked retail-agent import-legacy .retail-agent/reports.db --user alice
+uv run --locked retail-agent import-legacy .retail-agent/reports.db
 ```
 
 Supply the actual existing legacy SQLite/JSON path; the filename above is an example. The source remains unchanged. Deleting an imported report deletes the new library's copy, not the separately retained legacy source.

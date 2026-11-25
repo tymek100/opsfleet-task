@@ -1,4 +1,4 @@
-"""Loopback-only Inspector gateway with automatic Alice demo authentication."""
+"""Loopback-only Inspector gateway with automatic workspace authentication."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def create_app(
     allowed_hosts = {
         f"{host}:{p}" for host in ("localhost", "127.0.0.1", "[::1]") for p in (port, 8080)
     }
-    local_cookie = f"retail_gui_session_{port}"
+    local_cookie = f"retail_gui_workspace_session_{port}"
 
     @asynccontextmanager
     async def lifespan(app):
@@ -95,7 +95,7 @@ def create_app(
                 response.raise_for_status()
             except httpx.HTTPError:
                 return JSONResponse({"status": "unavailable"}, status_code=503)
-            return JSONResponse({"status": "ok", "identity": "alice", "scope": "Calvin Klein"})
+            return JSONResponse({"status": "ok", "scope": "all brands"})
 
         body = await request.body()
         if path == "/api/connections" and request.method == "POST":
@@ -190,7 +190,7 @@ def main() -> None:
     import uvicorn
 
     catalog = json.loads(Path(os.environ["A2A_CATALOG_PATH"]).read_text())
-    token = Path(os.environ["A2A_DEMO_TOKEN_FILE"]).read_text().strip()
+    token = Path(os.environ["A2A_ACCESS_TOKEN_FILE"]).read_text().strip()
     app = create_app(catalog, token, port=int(os.environ.get("GUI_PUBLIC_PORT", "8080")))
     uvicorn.run(app, host="0.0.0.0", port=8080, access_log=False)
 

@@ -57,14 +57,14 @@ def frozen_reference():
 
 
 def test_totals_preserve_scope_population_unknown_and_cutoff():
-    totals = independent_totals(source(), "alice", CUTOFF)
-    assert totals["global_modeled_units_including_unknown"] == 3
-    assert totals["known_center_modeled_units"] == 1
+    totals = independent_totals(source(), "workspace", CUTOFF)
+    assert totals["global_modeled_units_including_unknown"] == 4
+    assert totals["known_center_modeled_units"] == 2
     assert totals["unknown_center_modeled_units"] == 2
-    assert totals["known_recorded_stock_cost"] == "5.00"
+    assert totals["known_recorded_stock_cost"] == "104.00"
     assert totals["units_with_missing_cost"] == 1
-    assert totals["distinct_stocked_products"] == 1
-    assert totals["distinct_catalog_products"] == 2
+    assert totals["distinct_stocked_products"] == 2
+    assert totals["distinct_catalog_products"] == 3
     assert totals["recognized_center_directory_count"] == 2
     assert totals["recognized_centers_with_scoped_stock"] == 1
     assert totals["distinct_recorded_nonnull_item_center_ids"] == 2
@@ -74,7 +74,7 @@ def test_totals_preserve_scope_population_unknown_and_cutoff():
 def test_candidate_reference_does_not_change_frozen_reference_or_require_extra_facts():
     frozen = frozen_reference()
     before = copy.deepcopy(frozen)
-    candidate = candidate_reference(frozen, independent_totals(source(), "alice", CUTOFF))
+    candidate = candidate_reference(frozen, independent_totals(source(), "workspace", CUTOFF))
     assert frozen == before
     assert candidate.facts == []
     assert len(candidate.criteria) == len(ATOMIC_CRITERIA)
@@ -93,7 +93,7 @@ def test_pairs_change_only_answer_and_leave_baseline_files_untouched(tmp_path):
             scenarios[role].append(
                 {
                     "id": scenario,
-                    "identity": "alice",
+                    "identity": "workspace",
                     "question": "Initial?",
                     "follow_up": "Follow-up?",
                 }

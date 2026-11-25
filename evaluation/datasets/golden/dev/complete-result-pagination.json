@@ -4,7 +4,8 @@
   "family": "bounded-evidence-reading",
   "split": "dev",
   "purpose": "challenge",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "paged_results_v1",
   "fixture_sha256": "dd758284d420ec4f404b2a6a464f85297071af67cbf74690071ffa4643ab9e3a",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -16,7 +17,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "List every product with qualifying sales in Q1 2026, ranked by revenue descending and product ID ascending for ties. Give the product count and one table with rank, product ID, and revenue for all products. Do not silently omit rows that are outside a tool's preview.",
+      "message": "For Calvin Klein: List every product with qualifying sales in Q1 2026, ranked by revenue descending and product ID ascending for ties. Give the product count and one table with rank, product ID, and revenue for all products. Do not silently omit rows that are outside a tool's preview.",
       "when_previous_outcome": []
     }
   ],

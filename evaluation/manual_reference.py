@@ -221,9 +221,13 @@ def summarize(
 ) -> dict:
     if len({row["item_id"] for row in transactions}) != len(transactions):
         raise ValueError("Duplicate joined item IDs make the reference grain ambiguous")
-    if any(row["brand"] not in brands for row in [*transactions, *products, *states]):
+    if any(row["brand"] not in brands for row in [*transactions, *products]) or any(
+        row["brand"] not in {*brands, "all brands"} for row in states
+    ):
         raise ValueError("Reference capture contains an unauthorized brand")
-    result = {}
+    result: dict[str, Any] = {
+        "all_brand_states": [row for row in states if row["brand"] == "all brands"]
+    }
     for brand in brands:
         history = [row for row in transactions if row["brand"] == brand and qualifying(row)]
         all_statuses = [row for row in transactions if row["brand"] == brand]
@@ -322,7 +326,15 @@ WHERE p.brand IN UNNEST(@brands)
 AND i.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')
 AND i.created_at >= TIMESTAMP '2026-01-01' AND i.created_at < TIMESTAMP '2026-04-01'
 GROUP BY p.brand, u.state HAVING COUNT(DISTINCT i.user_id) >= 5
-ORDER BY p.brand, revenue DESC, u.state""",
+UNION ALL
+SELECT 'all brands' AS brand, u.state, COUNT(DISTINCT i.user_id) AS customers,
+COUNT(DISTINCT i.order_id) AS orders, SUM(i.sale_price) AS revenue
+{joins}
+JOIN `{dataset}.users` AS u{version} ON u.id = i.user_id
+WHERE i.status NOT IN ('Cancelled', 'Returned') AND o.status NOT IN ('Cancelled', 'Returned')
+AND i.created_at >= TIMESTAMP '2026-01-01' AND i.created_at < TIMESTAMP '2026-04-01'
+GROUP BY u.state HAVING COUNT(DISTINCT i.user_id) >= 5
+ORDER BY brand, revenue DESC, state""",
     }
 
 
@@ -364,6 +376,7 @@ def capture(
         "source": "configured BigQuery sample data; not authored fixture rows",
         "source_dataset": settings.warehouse_source_dataset,
         "brands": list(brands),
+        "geography_scope": "all brands",
         "query_byte_limit": max_query_bytes,
         "reference_implementation_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "point_in_time_consistent": snapshot_at is not None,

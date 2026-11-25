@@ -3,7 +3,7 @@
   "id": "contribution-sign-mutated",
   "family": "contribution-sign",
   "split": "development",
-  "question": "Show the signed contribution of Outerwear and Suits to Q1 versus Q4 revenue change.",
+  "question": "For Calvin Klein: Show the signed contribution of Outerwear and Suits to Q1 versus Q4 revenue change.",
   "answer": "Outerwear contributed +240; Suits contributed +140.",
   "reference": {
     "facts": [

@@ -3,7 +3,7 @@
   "id": "status-override-mutated",
   "family": "status-override",
   "split": "development",
-  "question": "Compare qualifying and all-status revenue in Q1 2026.",
+  "question": "For Calvin Klein: Compare qualifying and all-status revenue in Q1 2026.",
   "answer": "Qualifying revenue was 4794; including all item and order statuses gives 798.",
   "reference": {
     "facts": [

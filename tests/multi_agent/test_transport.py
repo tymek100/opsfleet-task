@@ -15,7 +15,7 @@ from retail_insight.contracts import Answer, TurnResult
 from retail_insight.runtime.service import PersistentBudget
 
 SECRET = "a-local-contract-signing-key-with-48-characters-minimum"
-DEMO_TOKEN = "local-alice-demo-token"
+ACCESS_TOKEN = "local-workspace-test-token"
 AS_OF = "2026-04-01T00:00:00+00:00"
 
 
@@ -77,7 +77,7 @@ def app(settings, monkeypatch):
         "inventory",
         settings,
         secret=SECRET,
-        demo_token=DEMO_TOKEN,
+        access_token=ACCESS_TOKEN,
         public_url="http://inventory:8000",
     )
 
@@ -104,12 +104,12 @@ def request_payload(
     }
 
 
-async def call(client, payload, *, identity="alice", audience="inventory", demo=False):
+async def call(client, payload, *, identity="workspace", audience="inventory", bearer=False):
     body = canonical_json(payload)
     headers = {"content-type": "application/json"}
     headers.update(
-        {"authorization": f"Bearer {DEMO_TOKEN}"}
-        if demo
+        {"authorization": f"Bearer {ACCESS_TOKEN}"}
+        if bearer
         else signed_headers(SECRET, body, identity, audience)
     )
     return await client.post("/", content=body, headers=headers)
@@ -124,31 +124,31 @@ def task_result(response):
 
 def test_transport_signature_covers_identity_body_audience_and_expiry(monkeypatch):
     body = canonical_json({"message": "hello"})
-    headers = signed_headers(SECRET, body, "alice", "inventory")
-    assert authenticate(headers, body, SECRET, DEMO_TOKEN, "inventory").identity == "alice"
+    headers = signed_headers(SECRET, body, "workspace", "inventory")
+    assert authenticate(headers, body, SECRET, ACCESS_TOKEN, "inventory").identity == "workspace"
     for bad_headers, bad_body, audience in [
-        ({**headers, "x-retail-identity": "ceo"}, body, "inventory"),
+        ({**headers, "x-retail-identity": "forged-persona"}, body, "inventory"),
         (headers, body + b" ", "inventory"),
         (headers, body, "distribution"),
         ({**headers, "x-retail-signature": "0" * 64}, body, "inventory"),
     ]:
         with pytest.raises(ValueError):
-            authenticate(bad_headers, bad_body, SECRET, DEMO_TOKEN, audience)
+            authenticate(bad_headers, bad_body, SECRET, ACCESS_TOKEN, audience)
     now = time.time()
     monkeypatch.setattr("retail_insight.a2a.auth.time.time", lambda: now + 301)
     with pytest.raises(ValueError):
-        authenticate(headers, body, SECRET, DEMO_TOKEN, "inventory")
+        authenticate(headers, body, SECRET, ACCESS_TOKEN, "inventory")
 
 
-def test_demo_token_cannot_become_another_user():
+def test_workspace_token_ignores_forged_persona():
     principal = authenticate(
-        {"authorization": f"Bearer {DEMO_TOKEN}", "x-retail-identity": "ceo"},
+        {"authorization": f"Bearer {ACCESS_TOKEN}", "x-retail-identity": "forged-persona"},
         b"{}",
         SECRET,
-        DEMO_TOKEN,
+        ACCESS_TOKEN,
         "inventory",
     )
-    assert principal.identity == "alice"
+    assert principal.identity == "workspace"
     assert principal.service is False
 
 
@@ -168,7 +168,11 @@ async def test_public_card_and_authenticated_message(app):
         task = task_result(await call(client, request_payload()))
         assert task["status"]["state"] == "completed"
         assert ReviewedRuntime.calls == [
-            ("alice", "Count our stock", ReviewedRuntime.instances[0].settings.question_budget_usd)
+            (
+                "workspace",
+                "Count our stock",
+                ReviewedRuntime.instances[0].settings.question_budget_usd,
+            )
         ]
 
 
@@ -188,30 +192,30 @@ async def test_duplicate_completed_request_is_replayed_without_model_work(app):
 
 
 @pytest.mark.asyncio
-async def test_context_and_task_reads_are_owner_scoped(app):
+async def test_context_and_task_reads_require_workspace_authentication(app):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://inventory"
     ) as client:
-        alice_task = task_result(await call(client, request_payload()))
+        workspace_task = task_result(await call(client, request_payload()))
         query = {
             "jsonrpc": "2.0",
             "id": "get-task",
             "method": "tasks/get",
-            "params": {"id": alice_task["id"]},
+            "params": {"id": workspace_task["id"]},
         }
-        assert task_result(await call(client, query))["id"] == alice_task["id"]
-        bob_read = (await call(client, query, identity="bob")).json()
-        assert "error" in bob_read
-        assert "Reviewed Calvin Klein" not in str(bob_read)
-        bob_followup = (
+        assert task_result(await call(client, query))["id"] == workspace_task["id"]
+        unauthorized_read = (await call(client, query, identity="forged-persona")).json()
+        assert "error" in unauthorized_read
+        assert "Reviewed all brands" not in str(unauthorized_read)
+        unauthorized_followup = (
             await call(
                 client,
-                request_payload("bob-follow", "Continue", alice_task["contextId"]),
-                identity="bob",
+                request_payload("unauthorized-follow", "Continue", workspace_task["contextId"]),
+                identity="forged-persona",
             )
         ).json()
-        assert "error" in bob_followup
-        assert "Reviewed Calvin Klein" not in str(bob_followup)
+        assert "error" in unauthorized_followup
+        assert "Reviewed all brands" not in str(unauthorized_followup)
         assert len(ReviewedRuntime.calls) == 1
 
 
@@ -278,14 +282,17 @@ async def test_budget_ceiling_and_demo_identity_are_not_model_editable(app, sett
             await call(
                 client,
                 request_payload(
-                    max_cost_usd=1000, deadline_seconds=1000, identity="ceo", brands=["Levi's"]
+                    max_cost_usd=1000,
+                    deadline_seconds=1000,
+                    identity="forged-persona",
+                    brands=["Levi's"],
                 ),
-                demo=True,
+                bearer=True,
             )
         )
         assert task["status"]["state"] == "completed"
         runtime = ReviewedRuntime.instances[0]
-        assert runtime.identity.user_id == "alice"
+        assert runtime.identity.user_id == "workspace"
         assert runtime.settings.question_budget_usd == settings.question_budget_usd
         assert 0 < runtime.settings.turn_timeout_seconds <= settings.turn_timeout_seconds
 
@@ -305,8 +312,8 @@ async def test_cancellation_requires_task_ownership(app):
             "method": "tasks/cancel",
             "params": {"id": task["id"]},
         }
-        bob = (await call(client, cancel, identity="bob")).json()
-        assert "error" in bob
+        unauthorized = (await call(client, cancel, identity="forged-persona")).json()
+        assert "error" in unauthorized
         canceled = task_result(await call(client, cancel))
         assert canceled["status"]["state"] == "canceled"
         replay = task_result(await call(client, request_payload(question="Wait for cancellation")))
@@ -340,7 +347,7 @@ def test_failed_child_dispatch_keeps_reserved_allowance(settings):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("stream", [False, True])
-async def test_native_agent_client_decodes_scoped_artifact(app, monkeypatch, stream):
+async def test_native_agent_client_decodes_all_brand_artifact(app, monkeypatch, stream):
     original = httpx.AsyncClient
 
     def local_client(**kwargs):
@@ -349,10 +356,10 @@ async def test_native_agent_client_decodes_scoped_artifact(app, monkeypatch, str
     monkeypatch.setattr("retail_insight.a2a.client.httpx.AsyncClient", local_client)
     client = AgentClient({"inventory": "http://inventory:8000"}, SECRET)
     result = await client.ask(
-        "inventory", "Count our stock", identity="bob", as_of=AS_OF, stream=stream
+        "inventory", "Count our stock", identity="workspace", as_of=AS_OF, stream=stream
     )
     assert result["status"] == "approved"
-    assert result["scope"] == "Levi's"
+    assert result["scope"] == "all brands"
     assert result["context_id"] and result["task_id"]
     assert result["usage"]["accounted_usd"] == 0.01
 

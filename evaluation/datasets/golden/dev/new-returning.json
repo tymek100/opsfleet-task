@@ -4,7 +4,8 @@
   "family": "scoped-cohort",
   "split": "dev",
   "purpose": "diagnostic",
-  "identity": "alice",
+  "identity": "workspace",
+  "reference_scope": "Calvin Klein",
   "fixture": "retail_v1",
   "fixture_sha256": "22938742965fc59149ecba8568c46051daf4db944fc60602f103c45118b0270e",
   "clock_utc": "2026-04-02T12:00:00Z",
@@ -14,7 +15,7 @@
     {
       "id": "turn-1",
       "kind": "ask",
-      "message": "How many Q1 2026 qualifying customers were new to our brand versus returning? Show both counts and the total distinct customers. A customer is new if they had no earlier qualifying purchase from our brand, even if they previously bought another brand.",
+      "message": "For Calvin Klein: How many Q1 2026 qualifying customers were new to our brand versus returning? Show both counts and the total distinct customers. A customer is new if they had no earlier qualifying purchase from our brand, even if they previously bought another brand.",
       "when_previous_outcome": []
     }
   ],

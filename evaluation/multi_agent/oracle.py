@@ -49,7 +49,11 @@ class Snapshot:
         return cls(json.loads(path.read_text()), **kwargs)
 
     def scoped(self, identity):
-        brands = {"alice": {"Calvin Klein"}, "bob": {"Levi's"}, "ceo": None}[identity]
+        if identity != "workspace":
+            raise ValueError(
+                "Historical persona captures require their frozen references; new runs use workspace access"
+            )
+        brands = None
         products = {
             int(r["id"]): r for r in self.raw["products"] if brands is None or r["brand"] in brands
         }
@@ -82,17 +86,11 @@ class Snapshot:
             and start <= instant(r["created_at"]) < self.as_of
         ]
 
-    def calculate(self, topic, identity="alice"):
+    def calculate(self, topic, identity="workspace"):
         products, inventory = self.scoped(identity)
         stock = self.stock(identity)
         centers = {int(r["id"]): r for r in self.raw["distribution_centers"]}
-        scope = (
-            "all brands"
-            if identity == "ceo"
-            else "Calvin Klein"
-            if identity == "alice"
-            else "Levi's"
-        )
+        scope = "all brands"
         values = []
 
         def add(metric, value, entity=scope, unit="count", tolerance="0"):
@@ -345,7 +343,7 @@ def reference(snapshot, scenario, turn):
     topics = scenario["topics"][turn - 1]
     facts = []
     for topic in topics:
-        for item in snapshot.calculate(topic, scenario.get("identity", "alice")):
+        for item in snapshot.calculate(topic, scenario.get("identity", "workspace")):
             facts.append(item.model_copy(update={"id": f"f{len(facts) + 1}"}))
     criteria = [
         Criterion(id=f"criterion-{i + 1}", kind="semantic", description=text)
@@ -358,7 +356,9 @@ def reference(snapshot, scenario, turn):
                 kind="semantic",
                 description="Any additional numerical claims about stock, recorded cost or qualifying 30-day sales must agree with the independently computed background facts in options. These optional facts are NOT required to be mentioned. An observed tool result does not justify a numerical assertion that contradicts these raw-row references. Match entity, metric, scope and time; do not conflate quantities from different periods.",
                 options={
-                    "independent_facts": background(snapshot, scenario.get("identity", "alice")),
+                    "independent_facts": background(
+                        snapshot, scenario.get("identity", "workspace")
+                    ),
                     "policy": "Optional assertions only; absence is not a failure.",
                 },
             ),
@@ -372,7 +372,7 @@ def reference(snapshot, scenario, turn):
     criteria.extend(
         semantic_criteria(
             independent_totals(
-                snapshot.raw, scenario.get("identity", "alice"), snapshot.as_of.isoformat()
+                snapshot.raw, scenario.get("identity", "workspace"), snapshot.as_of.isoformat()
             )
         )
     )
@@ -390,7 +390,7 @@ def reference(snapshot, scenario, turn):
         allowed_outcomes=scenario.get("outcomes", [["answer"], ["answer"]])[turn - 1],
         reference_procedure="Independent Decimal/set aggregation over frozen raw table rows. Do not compare exact prose.",
     )
-    return with_partitions(snapshot, scenario.get("identity", "alice"), result)
+    return with_partitions(snapshot, scenario.get("identity", "workspace"), result)
 
 
 def background(snapshot, identity):
