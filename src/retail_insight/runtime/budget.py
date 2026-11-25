@@ -26,6 +26,7 @@ class Budget:
     output_tokens: int = 0
     thinking_tokens: int = 0
     last_model_at: float = 0
+    review_prompt_bytes: int = 0
     _reservations: dict[int, float] = field(default_factory=dict, init=False, repr=False)
     _model_reservations: set[int] = field(default_factory=set, init=False, repr=False)
     _next_reservation: int = field(default=0, init=False, repr=False)
@@ -43,10 +44,18 @@ class Budget:
         return seconds
 
     @property
+    def review_input_limit(self) -> int:
+        return min(
+            self.settings.max_context_bytes,
+            self.settings.max_review_bytes
+            + self.settings.review_overhead_bytes
+            + self.review_prompt_bytes,
+        )
+
+    @property
     def review_reserve(self) -> float:
         return (
-            (self.settings.max_review_bytes + self.settings.review_overhead_bytes)
-            * self.settings.input_usd_per_million
+            self.review_input_limit * self.settings.input_usd_per_million
             + self.settings.review_output_tokens * self.settings.output_usd_per_million
         ) / 1e6
 
@@ -68,7 +77,10 @@ class Budget:
         if not math.isfinite(amount) or amount < 0:
             raise ValueError("A reservation must be a finite nonnegative amount.")
         future = self.review_reserve if keep_review else 0
-        if self.accounted_usd + amount + future > self.settings.question_budget_usd:
+        # Compare against the same remainder used to choose a child grant. Adding
+        # the grant back can round a valid boundary reservation above the cap.
+        available = self.settings.question_budget_usd - self.accounted_usd - future
+        if amount > available:
             raise LimitReached("cost_budget")
         self._next_reservation += 1
         self._reservations[self._next_reservation] = amount
@@ -84,10 +96,7 @@ class Budget:
             raise LimitReached("model_calls")
         if input_bytes > self.settings.max_context_bytes:
             raise LimitReached("context_size")
-        if (
-            reviewer
-            and input_bytes > self.settings.max_review_bytes + self.settings.review_overhead_bytes
-        ):
+        if reviewer and input_bytes > self.review_input_limit:
             raise LimitReached("review_context_size")
         # UTF-8 bytes are a conservative token ceiling; rates are configurable admission rates.
         reservation = self.reserve(

@@ -67,3 +67,19 @@ def test_invalid_costs_never_change_ledger(settings, amount):
     with pytest.raises(ValueError):
         ledger.reserve(amount)
     assert ledger.reserved_usd == ledger.spent_usd == 0
+
+
+@pytest.mark.parametrize("cap", [0.85, 0.88, 1, 2])
+@pytest.mark.parametrize("prompt_bytes", [24_273, 27_826, 30_001])
+def test_grant_can_reserve_exact_work_remainder_without_float_boundary_failure(
+    settings, cap, prompt_bytes
+):
+    ledger = Budget(
+        settings.model_copy(update={"question_budget_usd": cap}),
+        review_prompt_bytes=prompt_bytes,
+    )
+    ledger.spent_usd = 0.029848
+    ledger.reserve(ledger.work_available_usd)
+    assert ledger.remaining_usd == pytest.approx(ledger.review_reserve)
+    with pytest.raises(LimitReached, match="cost_budget"):
+        ledger.reserve(0.000001)

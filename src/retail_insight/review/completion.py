@@ -85,6 +85,10 @@ class CompletionTools:
             "candidate": {"markdown": markdown, "outcome": outcome},
             "evidence": evidence,
             "other_results_manifest": self.turn.app.result_manifest(),
+            "delegation_execution": [
+                event for event in self.turn.trace if event["event"].startswith("delegation_")
+            ],
+            "available_work_usd": self.turn.budget.work_available_usd,
             "loaded_skills": list(self.turn.loaded_skills.values()),
             "pending_save": self.turn.pending_save,
             "save_target": {"id": target.id, "markdown": target.markdown} if target else None,

@@ -3,12 +3,18 @@ name: cross-domain-analysis
 description: Delegate and reconcile sales, inventory and distribution evidence.
 metadata:
   audience: analyst
-  version: "1.3"
+  version: "1.5"
 ---
 
 Choose specialists according to needed capabilities and observed gaps. Preserve identity, scope, snapshot and business cutoff. Forward evidence only when relevant; narratives are not substitutes for underlying rows. Ask a focused follow-up if evidence definitions or grain differ.
 
 For sales/stock comparisons join product identifiers and compatible time definitions. Revenue is not demand units. Divide units by all calendar days in the stated demand window. Report zero-demand coverage as undefined and forecasts as conditional. Avoid summing distinct customer/product counts across overlapping groups.
+
+At category grain, compare independently aggregated sales and modeled stock using consistent category definitions, preserving categories present on only one side. State the sales window and inventory cutoff separately. Historical sales are a benchmark, not measured current demand; seasonality and changes since that period remain unmeasured unless investigated. A request for categories deserving attention normally calls for a short evidence-based shortlist with both sales and stock, rather than every category. Explain the observed criterion for the shortlist and identify follow-up checks as proposals, not established shortages or surplus.
+
+Use a few selected categories and useful metrics once, normally in a compact table or short prose. An extended category catalogue plus repeated numerical bullets obscures prioritization. Ratios calculated across a historical sales period and a later inventory snapshot do not measure current inventory turnover. Prefer "highest modeled-stock-to-Q1-sales ratio; check recent sales and product mix" to "very low commercial velocity". Recorded inventory cost supports cost concentration, not a claim about actual cash, working capital tied up or physical holdings. Even "physical unit concentrations" incorrectly changes modeled stock into observed physical inventory. A correct caveat later in the answer does not repair that wording.
+
+Without inventory observations, sales ranks cannot establish stockout exposure, excess inventory, holding-cost risk or which categories are at greatest operational risk. Low sales units are not inventory turnover or demand velocity. Conditional phrases such as "if stock is high" do not validate ranking a category's risk. If either side of a requested comparison is unavailable, return a concise partial result with the missing input and no unsupported diagnosis.
 
 Never UNION or sum a product total with that same product's center detail, missing-center detail or another overlapping subtotal. A total already includes its qualifying detail rows. Use one authoritative table at the required grain, or aggregate disjoint detail rows and reconcile to the independent total. A plausible query result is not sufficient evidence if the query duplicated its input population. Do not relabel modeled unsold inventory as stock physically available to promise.
 

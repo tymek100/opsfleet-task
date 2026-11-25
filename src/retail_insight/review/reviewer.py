@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from retail_insight.config import Settings
 from retail_insight.contracts import REVIEW_CATEGORIES, Review, ReviewIssue
-from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.budget import Budget, LimitReached
 from retail_insight.runtime.privacy import screen
 from retail_insight.runtime.prompts import reviewer_prompt
 from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable
@@ -48,6 +48,7 @@ async def evaluate(
         **{key: guidance[key] for key in ("name", "version", "sha256")},
     )
     prompt_spec = reviewer_prompt(settings, guidance=guidance, model=model.model)
+    budget.review_prompt_bytes = max(budget.review_prompt_bytes, prompt_spec.request_overhead_bytes)
     reviewer = LlmAgent(
         name="completion_reviewer",
         model=AccountedModel(model=model.model, delegate=model).bind(
@@ -114,5 +115,17 @@ async def evaluate(
                     "Approve only if every check passed and no unresolved issue remains; otherwise revise or stop."
                 )
         raise ProviderUnavailable("The evaluator did not return a valid review.")
+    except LimitReached as exc:
+        if exc.code not in {"review_context_size", "context_size"}:
+            raise
+        return Review(
+            decision="revise",
+            issues=[
+                ReviewIssue(
+                    category="evidence_bundle_too_large",
+                    message="The complete review request is too large. Submit smaller supported aggregates or narrow the answer; do not omit material evidence silently.",
+                )
+            ],
+        )
     finally:
         await runner.close()

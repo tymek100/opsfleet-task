@@ -3,7 +3,7 @@ name: analytical-review
 description: Review analytical answers for requested coverage, supported interpretations, metric validity, useful presentation and authorized operations. Supplied to the evaluator on every review.
 metadata:
   audience: reviewer
-  version: "6"
+  version: "8"
 ---
 
 # Analytical review
@@ -13,6 +13,8 @@ Apply this rubric to the supplied candidate, actual query evidence, relevant con
 ## Coverage
 
 Check every requested part, the selected population, authorized scope and period, and explicit format/length constraints. Clarification, refusal or a clearly scoped partial answer may be appropriate. Do not demand a template or extra investigation when existing evidence answers the question.
+
+A requested comparison needs evidence for both sides. A full sales report cannot satisfy a sales-versus-inventory request when stock observations are absent. Check supplied delegation_execution for attempted, completed or limited specialist work; a delegation failure does not establish that source data is unavailable. When a required input is still missing, accept only an explicitly partial outcome with a concise account of what is known and what cannot be compared, or request the missing investigation when feasible. Inspect candidate.outcome: if it is answer while the requested comparison remains incomplete, mark coverage failed and require partial or completion of the missing investigation. A limitation paragraph does not change that structured outcome.
 
 An empty cohort, fewer than N eligible rows or unavailable cost data is not a defect to fill with a different analysis. Reject substantial unrequested substitutions or additions such as lifetime cohorts for a within-quarter cohort, all-status results to fill a short qualifying list, or a large revenue report after an unavailable profitability request. A brief offer of an alternative is sufficient; preserve the user's chosen population and metric.
 
@@ -35,6 +37,10 @@ Brand-wide concentration needs a matching total and measured share, not just a t
 Check the population of the conclusion independently of numerical correctness. A selected-products query may establish every stated unit price and customer count yet still fail to support "brand revenue was driven primarily by high prices rather than broad volume". That is a whole-brand driver claim requiring whole-brand evidence and an appropriate contribution analysis; it is not merely a description of selected leaders. Reject the extrapolation or ask the analyst to restrict the conclusion to the measured subset. Correct paired measurements and a tie caveat do not repair a separate scope error.
 
 An increase in active customers does not establish acquisition: new-to-brand status requires first qualifying purchases across available authorized history, and still does not prove an acquisition cause. Zero sales do not establish absent demand, availability, seasonality or replenishment patterns. Later sales show later activity, not inventory state or a counterfactual outcome of discontinuing a product. Reject such explanations when presented as findings or general factual justifications without supporting evidence.
+
+Sales alone cannot rank stockout exposure, surplus or holding-cost risk. Low sales counts do not measure turnover or demand velocity without the relevant inventory and time evidence. Reject claims such as "greatest risk of surplus holding costs if stock is high": the conditional clause does not support the risk ranking. Historical sales are not current demand, and a stock-to-historical-sales ratio is a comparison benchmark, not proof of shortage, excess or future coverage. Check headings and recommendation rationales as factual claims too; a later caveat does not repair an unsupported diagnosis. A shortlist for further investigation may pass when its criterion is measured and the proposed checks are distinguished from findings.
+
+For any sales/stock comparison, the grounding finding must explicitly assess stock semantics and temporal interpretation, not merely state that numbers match. Modeled unsold counts do not establish physical holdings; recorded cost does not establish actual cash or working capital tied up. A stock snapshot divided by sales from a different period cannot establish current turnover or "very low commercial velocity". Reject those claims wherever they appear, even if a footer correctly says physical availability or current demand is unknown. Highest/lowest claims must specify the measured metric and match its actual ranking; the largest cost subtotal need not be the largest unit count.
 
 "Sales gaps often reflect stockouts" asserts unmeasured prevalence; it is not merely a proposed check. "Check stock availability before deciding" is a proposed investigation and may pass. Likewise, a cancelled transaction alone does not measure shopper interest or motivation. Apply this distinction to the actual wording rather than approving a causal story because another sentence mentions missing evidence.
 

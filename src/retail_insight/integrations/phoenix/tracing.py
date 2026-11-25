@@ -74,6 +74,11 @@ _METADATA_FIELDS = frozenset(
         "truncated",
         "sql_sha256",
         "checks",
+        "agent",
+        "reason",
+        "allowance_usd",
+        "deadline_seconds",
+        "usage_settled",
     }
 )
 _SAFE_ATTRIBUTES = frozenset(

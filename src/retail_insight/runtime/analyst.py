@@ -29,6 +29,7 @@ from retail_insight.integrations.reports import ReportStore
 from retail_insight.runtime.budget import Budget, LimitReached
 from retail_insight.runtime.context import DelegationContext
 from retail_insight.runtime.privacy import screen
+from retail_insight.runtime.prompts import reviewer_prompt
 from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable, make_gemini
 from retail_insight.runtime.turn import Turn
 from retail_insight.tools.context import ContextTools
@@ -51,7 +52,15 @@ class Analyst:
         raise ValueError("This agent requires an explicitly configured data gateway")
 
     def new_budget(self):
-        return Budget(self.settings)
+        return Budget(self.settings, review_prompt_bytes=self.review_prompt_bytes())
+
+    def review_prompt_bytes(self) -> int:
+        model = self.reviewer_model or self.model
+        return reviewer_prompt(
+            self.settings,
+            guidance=self.skills.review_skill(),
+            model=model.model if model is not None else None,
+        ).request_overhead_bytes
 
     def extra_context(self) -> dict:
         return {}

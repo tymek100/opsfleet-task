@@ -24,6 +24,13 @@ class PromptSpec:
     description: str
 
     @property
+    def request_overhead_bytes(self) -> int:
+        """Serialized instructions/configuration, excluding the candidate and evidence."""
+        config = self.config.model_dump(mode="json", exclude_none=True)
+        config["system_instruction"] = self.instruction
+        return len(json.dumps({"model": self.model, "config": config}).encode())
+
+    @property
     def sha256(self) -> str:
         payload = {
             "name": self.name,

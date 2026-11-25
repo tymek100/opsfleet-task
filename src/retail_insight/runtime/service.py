@@ -12,8 +12,8 @@ from retail_insight.runtime.skills.catalog import AgentSkills
 
 
 class PersistentBudget(Budget):
-    def __init__(self, settings, persist):
-        super().__init__(settings)
+    def __init__(self, settings, persist, *, review_prompt_bytes=0):
+        super().__init__(settings, review_prompt_bytes=review_prompt_bytes)
         self.persist = persist
 
     def reserve(self, amount, *, keep_review=True):
@@ -65,7 +65,9 @@ class ServiceAnalyst(Analyst):
         super().__init__(*args, **kwargs)
 
     def new_budget(self):
-        self.current_budget = PersistentBudget(self.settings, self.persist_budget)
+        self.current_budget = PersistentBudget(
+            self.settings, self.persist_budget, review_prompt_bytes=self.review_prompt_bytes()
+        )
         return self.current_budget
 
     def extra_context(self):
