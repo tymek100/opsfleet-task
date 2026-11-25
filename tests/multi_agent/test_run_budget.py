@@ -35,19 +35,20 @@ async def test_expired_budget_refuses_even_a_small_affordable_operation():
     assert budget.reserved == 0
 
 
-@pytest.mark.parametrize("cap", [2.01, 40, float("nan"), float("inf"), 0])
+@pytest.mark.parametrize("cap", [5.01, 40, float("nan"), float("inf"), 0])
 async def test_direct_runner_rejects_invalid_budget_before_setup(monkeypatch, cap):
     def forbidden():
         raise AssertionError("No configuration or provider work before budget validation")
 
     monkeypatch.setattr(Settings, "load", forbidden)
-    with pytest.raises(ValueError, match="at most \\$2"):
+    with pytest.raises(ValueError, match="at most \\$5"):
         await runner.run(max_cost_usd=cap)
 
 
 @pytest.mark.parametrize("unknown_usage", [False, True])
-async def test_two_dollar_run_counts_snapshot_agents_and_both_judges(
-    settings, monkeypatch, tmp_path, unknown_usage
+@pytest.mark.parametrize("cap", [2, 5])
+async def test_run_counts_snapshot_agents_and_both_judges(
+    settings, monkeypatch, tmp_path, unknown_usage, cap
 ):
     snapshot = Snapshot.load(runner.HERE / "fixture.json")
     snapshot.capture_cost_usd = 0.1
@@ -75,7 +76,7 @@ async def test_two_dollar_run_counts_snapshot_agents_and_both_judges(
     class Judge:
         def __init__(self, *args, **kwargs):
             assert not unknown_usage, "Unknown agent usage exhausts the cap; no judge may run"
-            assert kwargs["max_cost_usd"] <= 2
+            assert kwargs["max_cost_usd"] <= cap
             self.accounted_usd = 0.0
             self.calls = []
 
@@ -110,15 +111,20 @@ async def test_two_dollar_run_counts_snapshot_agents_and_both_judges(
     )
 
     directory, code = await runner.run(
-        suite="coordinator", only="scenario-01", backend="bigquery", token="offline-token"
+        suite="coordinator",
+        only="scenario-01",
+        backend="bigquery",
+        token="offline-token",
+        max_cost_usd=cap,
+        agent_budget_usd=cap,
     )
     manifest = json.loads((directory / "manifest.json").read_text())
     assert code == (2 if unknown_usage else 0)
-    assert capture_limits == [2]
-    assert grants == pytest.approx([1.9] if unknown_usage else [1.9, 1.6])
-    assert manifest["max_cost_usd"] == 2
+    assert capture_limits == [cap]
+    assert grants == pytest.approx([cap - 0.1] if unknown_usage else [cap - 0.1, cap - 0.4])
+    assert manifest["max_cost_usd"] == cap
     assert manifest["reference_capture_cost_usd"] == 0.1
-    assert manifest["accounted_usd"] == pytest.approx(2 if unknown_usage else 0.8)
+    assert manifest["accounted_usd"] == pytest.approx(cap if unknown_usage else 0.8)
     assert manifest["planned_turns"] == 2
     if unknown_usage:
         assert manifest["turn_counts"] == {"ERROR": 2}

@@ -7,8 +7,8 @@ tests use a separate instance. Run commands from the repository root.
 
 ## Spending limit
 
-`run`, `run-conversations`, `run-multi-agent`, `grade`, and `calibrate` default to a **$2 shared run budget**. `--max-cost-usd`
-can lower it; values above $2 are rejected before execution, including standalone Python
+`run`, `run-conversations`, `run-multi-agent`, `grade`, and `calibrate` default to a **$5 shared run budget**. `--max-cost-usd`
+can lower it; values above $5 are rejected before execution, including standalone Python
 entry points. The project policy is `MAX_EVALUATION_COST_USD` in `evaluation/settings.py`.
 
 Agent calls, runtime reviews, delegated specialists, independent answer/trajectory judges,
@@ -42,15 +42,15 @@ credentials and does not require a Maps key for its missing-data and unavailable
 ```bash
 uv run retail-stack up --backend fixture --evaluation-fixtures
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite smoke --max-cost-usd 2 --deadline-seconds 1200
+  --suite smoke --max-cost-usd 5 --deadline-seconds 1200
 ```
 
 `smoke` runs scenarios 01 and 02 in each new suite: six conversations and twelve answers. To request
-all 60 conversations and 120 answers within the same $2 cap (completion is not guaranteed):
+all 60 conversations and 120 answers within the same $5 cap (completion is not guaranteed):
 
 ```bash
 uv run --group evaluation retail-eval run-multi-agent \
-  --suite all --max-cost-usd 2 --deadline-seconds 7200
+  --suite all --max-cost-usd 5 --deadline-seconds 7200
 ```
 
 Choose `--suite inventory`, `distribution` or `coordinator` for one agent. Add
@@ -63,7 +63,7 @@ To evaluate the public synthetic TheLook source instead of the fixture:
 ```bash
 RETAIL_STACK_TRACE_MODE=synthetic uv run retail-stack up --backend bigquery
 uv run --group evaluation retail-eval run-multi-agent \
-  --backend bigquery --only scenario-01 --max-cost-usd 2 --deadline-seconds 1200
+  --backend bigquery --only scenario-01 --max-cost-usd 5 --deadline-seconds 1200
 ```
 
 This runs three two-turn conversations against one independently captured BigQuery snapshot.
@@ -214,7 +214,7 @@ Configure `GEMINI_API_KEY` and Google Cloud application credentials as described
 ```bash
 uv sync --python 3.12 --group evaluation
 uv run --group evaluation retail-eval run-conversations \
-  --max-cost-usd 2 --deadline-seconds 3600
+  --max-cost-usd 5 --deadline-seconds 3600
 ```
 
 The command executes and grades conversations until the run limit is reached:
@@ -244,7 +244,7 @@ For a targeted retest, keep the questions fixed and select IDs:
 ```bash
 uv run --group evaluation retail-eval run-conversations \
   --only scenario-01,scenario-03 --phase recheck \
-  --max-cost-usd 2 --deadline-seconds 600
+  --max-cost-usd 5 --deadline-seconds 600
 ```
 
 Use `--reference <capture-directory>` to reuse a verified, timestamp-pinned capture within
@@ -348,7 +348,7 @@ port 6006 to protect the main workspace:
 ```bash
 uv run --group evaluation retail-eval run \
   --suite smoke --repetitions 1 --phoenix-url http://127.0.0.1:6007 \
-  --max-cost-usd 2 --deadline-seconds 900 --allow-unreviewed
+  --max-cost-usd 5 --deadline-seconds 900 --allow-unreviewed
 ```
 
 This workflow uses local synthetic databases, needs no BigQuery credentials, and automatically
@@ -366,12 +366,12 @@ diagnostic results, not release gates.
 ```bash
 EVAL_RUN=.artifacts/evaluation/run-REPLACE-WITH-PRINTED-ID
 uv run --group evaluation retail-eval grade --run "$EVAL_RUN" \
-  --max-cost-usd 2 --deadline-seconds 900
+  --max-cost-usd 5 --deadline-seconds 900
 uv run --group evaluation retail-eval publish --run "$EVAL_RUN" \
   --grade "$EVAL_RUN/grades/grade-REPLACE-WITH-PRINTED-ID" \
   --phoenix-url http://127.0.0.1:6007
 uv run --group evaluation retail-eval calibrate \
-  --split validation --max-cost-usd 2 --deadline-seconds 900
+  --split validation --max-cost-usd 5 --deadline-seconds 900
 ```
 
 Regrading never reruns the analyst. `grade --phoenix` also requires the separate endpoint.

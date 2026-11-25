@@ -38,7 +38,7 @@ cannot exercise the live geographic aggregate capability equivalently.
 
 ## Phoenix publication
 
-`retail-eval run-conversations --max-cost-usd 2 --deadline-seconds 3600` executes this set
+`retail-eval run-conversations --max-cost-usd 5 --deadline-seconds 3600` executes this set
 against BigQuery. It reuses the **Retail agent — 20 conversations** dataset and
 `retail-conversations-20` trace project. Each dataset row contains both questions; each experiment
 output contains both answers, automatic grades, and trace links. Dataset Output contains

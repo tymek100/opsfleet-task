@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-MAX_EVALUATION_COST_USD = 2.0
+MAX_EVALUATION_COST_USD = 5.0
 
 
 def validate_run_budget(value: float) -> float:

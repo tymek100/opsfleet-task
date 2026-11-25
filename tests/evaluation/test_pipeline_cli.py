@@ -9,7 +9,10 @@ from evaluation.cli import app as cli
 from retail_insight.config import Settings
 
 
-@pytest.mark.parametrize("budget_args, expected", [([], 2.0), (["--max-cost-usd", "0.5"], 0.5)])
+@pytest.mark.parametrize(
+    "budget_args, expected",
+    [([], 5.0), (["--max-cost-usd", "5"], 5.0), (["--max-cost-usd", "0.5"], 0.5)],
+)
 def test_cli_uses_default_grading_and_immediate_progress(
     settings, monkeypatch, budget_args, expected
 ):
@@ -72,7 +75,7 @@ def test_unknown_suite_reports_setup_error_before_credentials_lookup():
 @pytest.mark.parametrize(
     "command", ["run", "run-conversations", "run-multi-agent", "grade", "calibrate"]
 )
-@pytest.mark.parametrize("value", ["2.01", "40", "nan", "inf", "0"])
+@pytest.mark.parametrize("value", ["5.01", "40", "nan", "inf", "0"])
 def test_cli_rejects_invalid_budget_before_credentials_or_provider(
     command, value, monkeypatch, tmp_path
 ):
@@ -88,7 +91,7 @@ def test_cli_rejects_invalid_budget_before_credentials_or_provider(
     assert "--max-cost-usd" in result.output
 
 
-def test_multiagent_defaults_to_two_dollars_and_one_conversation(monkeypatch):
+def test_multiagent_defaults_to_five_dollars_and_one_conversation(monkeypatch):
     received = {}
 
     async def execute(**kwargs):
@@ -98,5 +101,5 @@ def test_multiagent_defaults_to_two_dollars_and_one_conversation(monkeypatch):
     monkeypatch.setattr("evaluation.multi_agent.runner.run", execute)
     result = CliRunner().invoke(cli, ["run-multi-agent"])
     assert result.exit_code == 0, result.output
-    assert received["max_cost_usd"] == 2
+    assert received["max_cost_usd"] == 5
     assert received["concurrency"] == 1

@@ -14,7 +14,7 @@ Keep Docker running and execute:
 
 ```bash
 uv run --group evaluation retail-eval run-conversations \
-  --max-cost-usd 6 --deadline-seconds 3600
+  --max-cost-usd 5 --deadline-seconds 3600
 ```
 
 The CLI connects to Phoenix or starts the pinned Compose service if the default endpoint is

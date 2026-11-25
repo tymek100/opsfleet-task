@@ -47,7 +47,7 @@ The running services already send traces to Phoenix under `retail-multi-agent`; 
 
 ## Web GUI and optional Inspector
 
-Open [localhost:8080](http://localhost:8080). The sidebar selects Coordinator, Retail, Inventory or Distribution; each has its own conversation history. Answers come from the existing reviewed runtime. Tables scroll horizontally and support copy/CSV download. The Thinking indicator shows elapsed seconds; Stop cancels the remote task. GUI requests have a $1 admission cap and 180-second deadline, within service limits. These are per-prompt limits, separate from the evaluation suite's $2 cap.
+Open [localhost:8080](http://localhost:8080). The sidebar selects Coordinator, Retail, Inventory or Distribution; each has its own conversation history. Answers come from the existing reviewed runtime. Tables scroll horizontally and support copy/CSV download. The Thinking indicator shows elapsed seconds; Stop cancels the remote task. GUI requests have a $1 admission cap and 180-second deadline, within service limits. These are per-prompt limits, separate from the evaluation suite's $5 cap.
 
 The `gui` service serves the React application and proxies native A2A 1.0 HTTP+JSON/SSE through fixed catalog targets. Its gateway injects the workspace bearer credential server-side and rewrites Agent Cards to same-origin URLs. Host/Origin checks protect the loopback interface. Browser sessions use an opaque HttpOnly, SameSite=Strict cookie; conversations are isolated by that cookie, selected agent, and source profile. Clearing cookies removes browser access to earlier GUI conversations. Maps-derived turns are redacted before persistence. This is a local workspace UI, not a public multi-user deployment.
 
