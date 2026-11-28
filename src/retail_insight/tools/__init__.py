@@ -1,1 +1,1 @@
-"""Shared model-callable tools. Each agent registers its own capabilities."""
+"""Explicit capabilities available to the retail agent."""

@@ -1,5 +1,0 @@
-{
-  "dependencies": ["."],
-  "graphs": {"retail_insight": "./src/retail_insight/runtime/workflow.py:create_graph"},
-  "env": ".env"
-}
