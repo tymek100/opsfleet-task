@@ -1,3 +1,5 @@
+> Historical plan or validation record. The current implementation is documented in [architecture.md](../architecture.md); ADK, A2A and Phoenix instructions below are superseded.
+
 # Authored conversation evaluation validation
 
 Status: implemented and integrated with the local Phoenix workspace on 2026-11-22.

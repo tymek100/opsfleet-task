@@ -7,11 +7,10 @@ import json
 import uuid
 from typing import TYPE_CHECKING
 
-from google.adk.tools import ToolContext
-
 from retail_insight.contracts import Answer
 from retail_insight.review.reviewer import evaluate
 from retail_insight.runtime.budget import LimitReached
+from retail_insight.runtime.graph import ToolContext
 from retail_insight.runtime.provider import ProviderUnavailable
 
 if TYPE_CHECKING:

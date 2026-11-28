@@ -1,3 +1,5 @@
+> Historical plan or validation record. The current implementation is documented in [architecture.md](../architecture.md); ADK, A2A and Phoenix instructions below are superseded.
+
 # Sales and inventory comparison regression
 
 Question: “Compare our Q1 2026 sales with current inventory. Which categories deserve a closer look?”

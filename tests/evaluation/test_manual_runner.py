@@ -1,4 +1,4 @@
-"""Real ADK capture, isolated reports, and shared limits for authored conversations."""
+"""Real LangGraph capture, isolated reports, and shared limits for authored conversations."""
 
 import asyncio
 import json

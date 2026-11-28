@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: retail-insight
+requiredVersions:
+  azd: '>=1.27.1'
+  extensions:
+    azure.ai.agents: '>=1.0.0-beta.9'
+services:
+  ai-project:
+    host: azure.ai.project
+  retail-insight:
+    host: azure.ai.agent
+    kind: hosted
+    project: .artifacts/foundry-source
+    language: python
+    uses: [ai-project]
+    name: retail-insight
+    displayName: Retail Insight
+    description: Reviewed retail, inventory and distribution analysis with a custom LangGraph workflow.
+    startupCommand: python -m retail_insight.integrations.foundry.host
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: '-m retail_insight.integrations.foundry.host'
+      dependencyResolution: remote_build
+    protocols:
+      - protocol: responses
+        version: 2.0.0
+    env:
+      PYTHONNOUSERSITE: '1'
+      BACKEND: fixture
+      DATA_DIR: /tmp/retail-insight
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL}
+      FOUNDRY_TRACING: true
+      FOUNDRY_PROJECT_ENDPOINT: ${FOUNDRY_PROJECT_ENDPOINT}
+      FOUNDRY_AGENT_ID: retail-insight
+      APPLICATIONINSIGHTS_CONNECTION_STRING: ${APPLICATIONINSIGHTS_CONNECTION_STRING}
+      AZURE_MONITOR_ENTRA_AUTH: true
+      AZURE_AUTH_MODE: managed_identity
+      TRACE_CONTENT_MODE: metadata
+    container:
+      resources:
+        cpu: '1'
+        memory: 2Gi
+infra:
+  provider: microsoft.foundry

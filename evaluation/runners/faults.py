@@ -3,14 +3,12 @@
 from collections.abc import AsyncGenerator
 
 import httpx
-from google.adk.models import BaseLlm
-from google.adk.models.llm_request import LlmRequest
-from google.adk.models.llm_response import LlmResponse
 from pydantic import PrivateAttr
 
 from evaluation.models import Fault
 from retail_insight.integrations.bigquery.retail import DataError, QueryGateway, compile_query
 from retail_insight.integrations.reports import ReportError, ReportStore
+from retail_insight.runtime.model import BaseLlm, LlmRequest, LlmResponse
 
 
 class Schedule:

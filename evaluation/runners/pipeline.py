@@ -12,16 +12,19 @@ from pathlib import Path
 from evaluation.data import validate_case
 from evaluation.graders.runner import grade_trial, prepare_grade, record_grade
 from evaluation.prompt_catalog import judge_prompt
-from evaluation.reporting.phoenix import PhoenixPublisher
-from evaluation.reporting.phoenix_service import PhoenixUnavailable, ensure_phoenix
+from evaluation.reporting.foundry import (
+    FoundryPublisher,
+    PublicationUnavailable,
+    ensure_service,
+)
 from evaluation.reporting.summary import write_summary
 from evaluation.results import RunManifest, Trial
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.conversation import run_cases
 from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
-from retail_insight.integrations.phoenix.prompts import sync_prompts
-from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.observability.prompts import sync_prompts
+from retail_insight.observability.tracing import configure_tracing
 from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
 
@@ -66,8 +69,8 @@ async def run_pipeline(
     judge,
     grade_candidates: bool = True,
     app_factory: Callable = Analyst,
-    publisher_factory=PhoenixPublisher,
-    service=ensure_phoenix,
+    publisher_factory=FoundryPublisher,
+    service=ensure_service,
     tracing_factory=configure_tracing,
     prompts_sync=sync_prompts,
     progress=print,
@@ -98,27 +101,25 @@ async def run_pipeline(
                     judge_prompt(config, "answer"),
                     judge_prompt(config, "trajectory"),
                 ],
-                config.phoenix_url,
+                None,
                 deadline=deadline,
             )
         except Exception as exc:
-            raise PhoenixUnavailable(
+            raise PublicationUnavailable(
                 f"Prompt synchronization failed ({type(exc).__name__}); no model calls were made."
             ) from None
         write_json(run / "prompts.json", prompts)
-        progress(f"Prompt library: {config.phoenix_url}/prompts")
+        progress(f"Prompt snapshots: {run / 'prompts.json'}")
         publisher = publisher_factory(run, config, deadline=deadline, project=manifest.id)
         state = await asyncio.to_thread(publisher.start)
-        progress(f"Phoenix experiment: {state['url']}")
-        progress(f"Phoenix traces: {state['traces_url']}")
+        progress(f"Foundry experiment: {state['url']}")
+        progress(f"Foundry traces: {state['traces_url']}")
         progress(f"Local results: {run}")
         progress(
             f"Shared agent + evaluation limit: ${max_cost_usd:g}; {deadline_seconds:g}s. "
             "Results and scores are published after each completed trial."
         )
-        tracing = tracing_factory(
-            config.phoenix_url + "/v1/traces", project=manifest.id, mode="synthetic"
-        )
+        tracing = tracing_factory(project=manifest.id, mode="synthetic")
         tracing.register_prompts(prompts)
         grade_directory = prepare_grade(
             run, judge, grade_candidates=grade_candidates, grade_trajectory=True
@@ -136,10 +137,10 @@ async def run_pipeline(
         assert publisher is not None and grade_directory is not None
         if trial.status != "NOT_EXECUTED":
             if tracing is not None:
-                await asyncio.to_thread(tracing.provider.force_flush, timeout_millis=1000)
+                await asyncio.to_thread(tracing.client.flush)
             state = await asyncio.to_thread(publisher.publish_trial, trial)
             if state["status"] == "publication_failed":
-                progress("Phoenix upload failed; continuing with preserved local results.")
+                progress("Foundry upload failed; continuing with preserved local results.")
         judge.ceiling = max(0, max_cost_usd - manifest.accounted_usd)
         case = next(case for case in cases if case.id == trial.case_id)
         progress(f"{trial.id}: evaluating answers and trajectory")
@@ -153,7 +154,9 @@ async def run_pipeline(
         if trial.status != "NOT_EXECUTED":
             state = await asyncio.to_thread(publisher.publish_grade, grade_directory, grade)
             if state["status"] == "publication_failed":
-                progress("Phoenix score upload is incomplete; saved grades can be published later.")
+                progress(
+                    "Foundry score upload is incomplete; saved grades can be published later."
+                )
         progress(
             f"{trial.id}: answer checks {grade.status}; "
             f"total accounted ${manifest.pipeline['accounted_total_usd']:.4f}"
@@ -189,13 +192,13 @@ async def run_pipeline(
         assert grade_directory is not None and publisher is not None
         record_grade(directory, grade_directory, None, judge, complete=True)
         summary = write_summary(directory, grade_directory)
-        publication = read_json(directory / "phoenix.json")
+        publication = await asyncio.to_thread(publisher.finalize)
         if tracing is not None:
             flushed = tracing.close()
             if not flushed or tracing.failed_exports:
                 publication.update(status="publication_failed", trace_status="incomplete")
-                write_json(directory / "phoenix.json", publication)
-                progress("Phoenix trace export was incomplete; local captures are preserved.")
+                write_json(directory / "foundry.json", publication)
+                progress("Foundry trace export was incomplete; local captures are preserved.")
             tracing = None
         exit_code = outcome_code(summary, publication)
         manifest = read_json(directory / "manifest.json")
@@ -233,7 +236,7 @@ async def run_pipeline(
         raise
     finally:
         if tracing and not tracing.close():
-            progress("Phoenix trace flush was incomplete; local captures remain available.")
+            progress("Foundry trace flush was incomplete; local captures remain available.")
         try:
             await judge.close()
         except Exception:

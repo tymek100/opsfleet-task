@@ -1,29 +1,21 @@
 ---
 name: business-report-writing
-description: Write concise business reports or executive summaries from analytical evidence, choosing useful presentation and measurable proposed actions without a fixed template.
+description: Select findings for a business report or summary, with useful comparisons, concise presentation and clearly proposed actions.
 metadata:
   audience: analyst
-  version: "4"
+  version: "6"
 ---
 
 # Business report writing
 
-Adapt the report to the decision, requested depth and intended audience. Lead with the requested result. Choose useful sections, prose or compact tables yourself; there is no mandatory report template or requirement to display every returned column.
+Use the shared answer-style guidance and examples already in the system instructions. This skill adds report-specific choices; it does not prescribe a template.
 
-Synthesize verified findings and explain their relevance. Include only material scope, period and metric caveats, normally once. Use plain language and sensible precision, and omit IDs or secondary metrics unless they help the reader. Use terminal-friendly Markdown and plain-text arithmetic rather than LaTeX. Never infer a currency from the business name or geography.
+For a summary, identify the business question the source answered, then preserve that answer and its material limitation. The source's opening paragraph or largest totals are not automatically its main finding. Leave secondary figures in the source while retaining explicitly requested numbers, units and scope. Do not turn a descriptive report into an action plan unless requested.
 
-Unknown currency requires bare amounts; an "unspecified" caveat cannot justify dollar signs or a currency code. Explicit user-provided currency/conversion assumptions are allowed when clearly labelled hypothetical. Write arithmetic as plain text, such as "60 + 47 + 55 = 162", without dollar delimiters.
+For a comparison, choose useful columns and display each result once. Keep identifiers in evidence for grouping and follow-ups; print them only when requested or needed to distinguish items. Include material exclusions or tie rules in one short note rather than a methods appendix.
 
-Separate measured findings from unverified hypotheses and proposed actions. An action can propose a measurable success criterion, owner or target, but label those as proposals; do not present invented operational facts, campaigns or decisions as observed. Revenue losses or category changes do not by themselves establish fulfillment, fit or marketing causes.
+For a recommendation, connect the proposed check to an observed finding. Suggested owners, targets and actions are proposals, not decisions that have occurred. Missing inputs can be the main finding; do not fill the gap with a different analysis.
 
-Match every percentage to its actual denominator and scope. Avoid extrapolating a subset or a top-products list into a claim about the entire brand. Previous approved prose is not current evidence; refresh measurements when the question calls for current facts.
+Match percentages to their actual populations and denominators. Historical reports can support a summary of their contents, but do not become measurements of current conditions. Use bare amounts when currency is unknown; an explicit hypothetical currency/conversion assumption must remain labelled.
 
-Honor explicit constraints such as one paragraph, no table or a short report. A brief answer does not need an audit trail, raw SQL, repeated caveats or orchestration details. Keep internal evidence labels such as [E1] out of visible prose, tables and report bodies. Supply supporting IDs in finish_answer's evidence_ids argument; claims still require actual evidence. Use meaningful source names or actual links when attribution helps, and preserve required external attribution and legitimate business identifiers.
-
-A short explanation or recommendation normally means two to four direct sentences, about 80 words or fewer, unless the user's requested content needs more. A brief report requesting revenue and orders should contain those figures rather than an unsolicited monthly dashboard with AOV, units and extra cohorts. Empty results and missing inputs are valid findings; do not fill the space with an alternative analysis the user has not requested.
-
-For a short explanation or recommendation, answer directly in a short paragraph or the user's requested format. Avoid an introductory recap, numbered mini-report and concluding recap of the same point. A small comparison table usually needs only the material interpretation; do not repeat each row in "Key observations". If the requested metric is unavailable, explain the missing input concisely and offer a feasible alternative instead of generating a large unsolicited substitute analysis.
-
-Creating a report does not save it. Stage a save only on an explicit current user request and select the intended current or prior answer. The application's receipt confirms persistence. Saving needs no second user confirmation after that request; permanent deletion uses the separate trusted confirmation control. Do not describe staging, internal answer IDs or reviewer mechanics in a simple save acknowledgment.
-
-Keep a requested report's body about the business findings. Do not embed "staged to be saved", "will be saved" or other transient operation status in the text that will be persisted; the application's separate receipt communicates the save result.
+Keep a report body about business findings. The application handles saving and operation receipts separately.

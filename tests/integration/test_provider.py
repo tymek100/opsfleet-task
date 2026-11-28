@@ -4,11 +4,10 @@ import asyncio
 
 import httpx
 import pytest
-from google.adk.models.llm_request import LlmRequest
-from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
 from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.model import LlmRequest, LlmResponse
 from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable
 from tests.support.models import ScriptedModel, text, usage
 

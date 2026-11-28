@@ -1,4 +1,4 @@
-"""One bounded run of authored conversations, independent grading and Phoenix reporting."""
+"""One bounded run of authored conversations, independent grading and Foundry reporting."""
 
 from __future__ import annotations
 
@@ -17,8 +17,7 @@ from evaluation.manual_reference import capture
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.reporting.conversation_experiment import ConversationExperiment
 from evaluation.reporting.conversations import PROJECT_NAME
-from evaluation.reporting.phoenix import client_for
-from evaluation.reporting.phoenix_service import ensure_phoenix
+from evaluation.reporting.foundry import client_for, ensure_service
 from evaluation.results import TurnRecord
 from evaluation.runners.artifacts import digest, identifier, read_json, write_json
 from evaluation.runners.manual import load_scenarios, run_manual
@@ -26,8 +25,8 @@ from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import repository_root
 from retail_insight.integrations.bigquery.retail import QueryGateway
-from retail_insight.integrations.phoenix.prompts import sync_prompts
-from retail_insight.integrations.phoenix.tracing import configure_tracing, trace_context
+from retail_insight.observability.prompts import sync_prompts
+from retail_insight.observability.tracing import configure_tracing, trace_context
 from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
 
@@ -86,7 +85,7 @@ async def run_authored(
         or any(known.get(s.id) != s for s in scenarios)
     ):
         raise ValueError("Select unchanged canonical conversations and a baseline/recheck phase")
-    await asyncio.to_thread(ensure_phoenix, config, deadline=deadline, progress=progress)
+    await asyncio.to_thread(ensure_service, config, deadline=deadline, progress=progress)
     reference_cost = 0.0
     if reference_directory is None:
         reference_directory = reference_root / identifier("reference")
@@ -158,7 +157,7 @@ async def run_authored(
                 judge_prompt(config, "answer"),
                 judge_prompt(config, "trajectory"),
             ],
-            config.phoenix_url,
+            None,
             deadline=deadline,
         )
         write_json(run / "prompts.json", prompts)
@@ -171,12 +170,11 @@ async def run_authored(
             f"Automatic {phase} - {datetime.now(UTC):%Y-%m-%d %H:%M:%S} UTC ({len(scenarios)} of 20)",
             references,
         )
-        tracing = configure_tracing(
-            config.phoenix_url + "/v1/traces", project=PROJECT_NAME, mode="synthetic"
-        )
+        publisher.experiment.deadline = deadline
+        tracing = configure_tracing(project=PROJECT_NAME, mode="synthetic")
         tracing.register_prompts(prompts)
-        progress(f"Phoenix experiment: {publisher.state['url']}")
-        progress(f"Phoenix traces: {publisher.state['traces_url']}")
+        progress(f"Foundry experiment: {publisher.state['url']}")
+        progress(f"Foundry traces: {publisher.state['traces_url']}")
         progress(
             "Each conversation is independently graded and published; runtime approval is not a quality score."
         )
@@ -211,7 +209,7 @@ async def run_authored(
         )
         write_json(run / "summary.json", summary)
         if tracing is not None:
-            await asyncio.to_thread(tracing.provider.force_flush, timeout_millis=1000)
+            await asyncio.to_thread(tracing.client.flush)
         if publisher is not None:
             try:
                 await asyncio.to_thread(publisher.record, scenario, turns, grade)
@@ -221,7 +219,7 @@ async def run_authored(
                     {"case": scenario.id, "error_type": type(exc).__name__},
                 )
                 progress(
-                    f"Phoenix publication failed for {scenario.id}; complete results remain in {run}."
+                    f"Foundry publication failed for {scenario.id}; complete results remain in {run}."
                 )
         progress(
             f"{scenario.id}: {grade['status']}; answers {[t['status'] for t in grade['turns']]}"
@@ -265,6 +263,15 @@ async def run_authored(
                 write_json(
                     directory / "publication-error.json", {"error_type": "TraceExportFailed"}
                 )
+    if publisher is not None:
+        try:
+            published = await asyncio.to_thread(publisher.finalize)
+            progress(f"Foundry evaluation results: {published['url']}")
+            if published.get("status", "published") != "published":
+                write_json(run / "publication-error.json", {"status": published["status"]})
+        except Exception as exc:
+            write_json(run / "publication-error.json", {"error_type": type(exc).__name__})
+    client.close()
     summary = final_summary(grades, len(scenarios))
     summary["accounted_total_usd"] = (
         read_json(run / "progress.json")["accounted_usd"] + judge.accounted_usd + reference_cost

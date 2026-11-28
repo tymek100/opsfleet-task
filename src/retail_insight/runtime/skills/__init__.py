@@ -1,4 +1,4 @@
-"""Versioned runtime analytical guidance loaded by the ADK agent."""
+"""Versioned runtime analytical guidance loaded by the LangGraph agent."""
 
 from retail_insight.runtime.skills.catalog import SkillCatalog, SkillError
 

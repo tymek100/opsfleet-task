@@ -1,3 +1,5 @@
+> Historical plan or validation record. The current implementation is documented in [architecture.md](../architecture.md); ADK, A2A and Phoenix instructions below are superseded.
+
 # Evaluation plan review
 
 **Reviewed:** 2026-11-22. **Baseline:** 37dfe2e, before this review's plan amendments.

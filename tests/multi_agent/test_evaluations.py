@@ -12,7 +12,7 @@ from evaluation.multi_agent.build_fixture import build, retail_sql
 from evaluation.multi_agent.grading import evidence_ids, turn_record
 from evaluation.multi_agent.oracle import Snapshot, background, reference
 from evaluation.multi_agent.publication import dataset_rows
-from evaluation.multi_agent.runner import RunBudget, cost_of, validate_deployment
+from evaluation.multi_agent.runner import RunBudget, cost_of
 from evaluation.multi_agent.scenarios import load_suites
 
 
@@ -246,23 +246,6 @@ def test_trajectory_judge_event_choices_are_limited_to_captured_occurrences():
     choices = schema["$defs"]["Finding"]["properties"]["event_ids"]["items"]["enum"]
     assert choices == ["turn-1:event-2", "turn-1:outcome"]
     assert response_schema([])["$defs"]["Finding"]["properties"]["event_ids"]["maxItems"] == 0
-
-
-def test_wrong_fixture_or_backend_is_rejected_before_agent_execution():
-    health = {
-        "inventory": {
-            "role": "inventory",
-            "status": "ok",
-            "backend": "fixture",
-            "fixture_sha256": "wrong",
-        }
-    }
-    with pytest.raises(ValueError, match="source differs"):
-        validate_deployment(health, "fixture", {"inventory": "expected"})
-    health["inventory"]["fixture_sha256"] = "expected"
-    validate_deployment(health, "fixture", {"inventory": "expected"})
-    with pytest.raises(ValueError, match="backend"):
-        validate_deployment(health, "bigquery", {})
 
 
 def test_inventory_scope_follow_up_requires_only_requested_metrics():

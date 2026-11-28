@@ -8,13 +8,13 @@ import json
 from typing import cast
 
 import pytest
-from google.adk.tools import ToolContext
 from pydantic import ValidationError
 
 from retail_insight.agents.registry import create_agent
 from retail_insight.contracts import WORKSPACE_IDENTITY, Answer
 from retail_insight.review.completion import CompletionTools
 from retail_insight.runtime.context import DelegationContext
+from retail_insight.runtime.graph import ToolContext
 from retail_insight.runtime.prompts import TRUST_POLICY
 from retail_insight.runtime.turn import Turn
 from tests.support.models import ScriptedModel, calls, finish, verdict

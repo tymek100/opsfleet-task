@@ -25,9 +25,12 @@ class InventoryAnalyst(ServiceAnalyst):
             brands=None,
             project=self.settings.google_cloud_project,
             backend=self.settings.backend,
-            fixture_path=Path(os.environ["DOMAIN_FIXTURE_PATH"])
-            if os.getenv("DOMAIN_FIXTURE_PATH")
-            else None,
+            fixture_path=self.settings.domain_fixture_path
+            or (
+                Path(os.environ["DOMAIN_FIXTURE_PATH"])
+                if os.getenv("DOMAIN_FIXTURE_PATH")
+                else None
+            ),
             max_bytes=self.settings.max_query_bytes,
             source_dataset=self.settings.warehouse_source_dataset,
             clock=self.gateway_clock or clock,

@@ -4,19 +4,19 @@ import time
 from functools import partial
 
 import pytest
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from evaluation.data import load_cases
 from evaluation.graders.judge import JudgeUnavailable
 from evaluation.graders.trajectory import CRITERIA, TrajectoryJudgment, event_catalog
-from evaluation.reporting.phoenix_service import PhoenixUnavailable
+from evaluation.reporting.foundry import PublicationUnavailable
 from evaluation.results import Claim, CriterionFinding, Judgment
 from evaluation.runners.artifacts import read_json, write_json
 from evaluation.runners.pipeline import outcome_code, run_pipeline
 from evaluation.settings import EvaluationSettings
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
-from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.observability.tracing import configure_tracing
 from tests.support.models import ScriptedModel, finish, verdict
+from tests.support.tracing import MemoryClient
 
 
 class ControlledJudge:
@@ -102,12 +102,15 @@ def harness(settings, tmp_path, *, fail_upload=False, trajectory_fails=False):
                 "url": "http://localhost:6006/experiment",
                 "traces_url": "http://localhost:6006/traces",
             }
-            write_json(self.run / "phoenix.json", state)
+            write_json(self.run / "foundry.json", state)
             return state
 
         def start(self):
             events.append("experiment")
             return self.save("ready")
+
+        def finalize(self):
+            return self.save("publication_failed" if fail_upload else "published")
 
         def publish_trial(self, trial):
             assert (self.run / "trials" / f"{trial.id}.json").exists()
@@ -147,9 +150,9 @@ def harness(settings, tmp_path, *, fail_upload=False, trajectory_fails=False):
         "app_factory": factory,
         "publisher_factory": Publisher,
         "service": lambda *args, **kwargs: events.append("service"),
-        "tracing_factory": partial(configure_tracing, exporter=InMemorySpanExporter()),
+        "tracing_factory": partial(configure_tracing, client=MemoryClient()),
         "prompts_sync": lambda *args, **kwargs: [],
-        "progress": lambda text: events.append("link") if "Phoenix " in text else None,
+        "progress": lambda text: events.append("link") if "Foundry " in text else None,
     }
     return arguments, events, allowances, judge
 
@@ -217,14 +220,14 @@ async def test_deadline_spent_on_setup_prevents_inference(settings, tmp_path, mo
     assert result.summary["not_executed"] == 2
 
 
-async def test_unavailable_phoenix_stops_before_inference(settings, tmp_path):
+async def test_unavailable_foundry_stops_before_inference(settings, tmp_path):
     arguments, events, _, judge = harness(settings, tmp_path)
 
     def unavailable(*args, **kwargs):
-        raise PhoenixUnavailable("Controlled startup failure")
+        raise PublicationUnavailable("Controlled startup failure")
 
     arguments["service"] = unavailable
-    with pytest.raises(PhoenixUnavailable):
+    with pytest.raises(PublicationUnavailable):
         await run_pipeline(**arguments)
     assert events == [] and judge.closed
 
@@ -236,7 +239,7 @@ async def test_prompt_sync_failure_stops_before_inference_and_preserves_run(sett
         raise ConnectionError("Controlled prompt registry outage")
 
     arguments["prompts_sync"] = unavailable
-    with pytest.raises(PhoenixUnavailable, match="Prompt synchronization failed"):
+    with pytest.raises(PublicationUnavailable, match="Prompt synchronization failed"):
         await run_pipeline(**arguments)
     assert "agent" not in events and judge.calls == [] and judge.closed
     manifest = next((tmp_path / "runs").glob("*/manifest.json"))

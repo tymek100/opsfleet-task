@@ -81,6 +81,7 @@ class Turn:
             if llm_response.content
             else []
         )
+        self.delegation_batch_size = sum(c.name == "delegate" for c in calls)
         for call in calls:
             self.app.observe("tool_call", name=call.name, args=call.args or {}, call_id=call.id)
         self.finish_conflict = len(calls) > 1 and any(c.name == "finish_answer" for c in calls)

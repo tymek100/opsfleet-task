@@ -82,7 +82,7 @@ async def evaluate(role, case, turns, judge):
         step_id=case["id"],
         parse=parse,
         kind="trajectory",
-        excerpt_policy="a2a-observable-events-v1",
+        excerpt_policy="langgraph-observable-events-v1",
     )
     scores = [
         Score(

@@ -20,7 +20,7 @@ def test_cli_uses_default_grading_and_immediate_progress(
 
     async def execute(*args, **kwargs):
         received.update(kwargs)
-        kwargs["progress"]("Phoenix experiment: http://localhost:6006/test")
+        kwargs["progress"]("Foundry experiment: https://ai.azure.com/test")
         return SimpleNamespace(exit_code=0)
 
     monkeypatch.setattr(Settings, "load", lambda: settings)
@@ -34,34 +34,12 @@ def test_cli_uses_default_grading_and_immediate_progress(
             "--deadline-seconds",
             "30",
             "--allow-unreviewed",
-            "--phoenix-url",
-            "http://127.0.0.1:6007",
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "Phoenix experiment:" in result.output
+    assert "Foundry experiment:" in result.output
     assert received["grade_candidates"] and received["repetitions"] == 1
     assert received["max_cost_usd"] == expected
-
-
-def test_invalid_configuration_is_incomplete_without_exposing_inputs(settings, monkeypatch):
-    monkeypatch.setattr(Settings, "load", lambda: settings)
-    result = CliRunner().invoke(
-        cli,
-        [
-            "run",
-            "--max-cost-usd",
-            "1",
-            "--deadline-seconds",
-            "30",
-            "--allow-unreviewed",
-            "--phoenix-url",
-            "http://user:secret-canary@localhost:6006",
-        ],
-    )
-    assert result.exit_code == 2
-    assert "Invalid evaluation configuration" in result.output
-    assert "secret-canary" not in result.output
 
 
 def test_unknown_suite_reports_setup_error_before_credentials_lookup():

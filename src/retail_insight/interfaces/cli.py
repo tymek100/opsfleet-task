@@ -18,9 +18,9 @@ from rich.table import Table
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY, TurnResult
-from retail_insight.integrations.phoenix.tracing import TracingSession, configure_tracing
 from retail_insight.interfaces.progress import ThinkingStatus
 from retail_insight.interfaces.terminal import command_help, create_prompt_session
+from retail_insight.observability.tracing import TracingSession, configure_tracing
 from retail_insight.runtime.privacy import screen
 
 app = typer.Typer(help="Autonomous retail analysis with reviewed answers.", no_args_is_help=True)
@@ -33,17 +33,17 @@ def _start_tracing(enabled: bool, settings: Settings) -> TracingSession | None:
     try:
         session = configure_tracing(mode="metadata")
     except Exception:
-        console.print("Phoenix tracing is unavailable; continuing without tracing.")
+        console.print("Foundry tracing is unavailable; continuing without tracing.")
         return None
     try:
-        from retail_insight.integrations.phoenix.prompts import sync_prompts
+        from retail_insight.observability.prompts import sync_prompts
         from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
 
         session.register_prompts(
             sync_prompts([analyst_prompt(settings), reviewer_prompt(settings)])
         )
     except Exception:
-        console.print("Phoenix prompt synchronization failed; using repository instructions.")
+        console.print("Foundry prompt synchronization failed; using repository instructions.")
     return session
 
 
@@ -53,9 +53,9 @@ def _close_tracing(session: TracingSession | None) -> None:
     try:
         complete = session.close(timeout_seconds=2)
         if not complete or session.failed_exports:
-            console.print("Some Phoenix traces could not be exported; the answer is unaffected.")
+            console.print("Some Foundry traces could not be exported; the answer is unaffected.")
     except Exception:
-        console.print("Phoenix tracing could not finish; the answer is unaffected.")
+        console.print("Foundry tracing could not finish; the answer is unaffected.")
 
 
 def build(backend: str | None) -> Analyst:
@@ -65,7 +65,7 @@ def build(backend: str | None) -> Analyst:
             raise typer.BadParameter("Backend must be bigquery or fixture.")
         settings.backend = backend
     # SDK logs can contain arbitrary generated arguments; the app records metadata itself.
-    for name in ("google.adk", "google_genai", "httpx", "httpcore"):
+    for name in ("google_genai", "httpx", "httpcore"):
         logging.getLogger(name).setLevel(logging.CRITICAL)
     warnings.filterwarnings("ignore", message=r".*FeatureName.JSON_SCHEMA_FOR_FUNC_DECL.*")
     return Analyst(settings, WORKSPACE_IDENTITY)
@@ -118,11 +118,11 @@ def ask(
     prompt: Annotated[str, typer.Argument(help="Question in English.")],
     backend: str | None = None,
     output_json: Path | None = None,
-    phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
+    foundry: Annotated[bool, typer.Option(help="Send metadata traces to Foundry.")] = False,
 ) -> None:
     """Answer one question; optionally capture its answer, evidence and metadata."""
     analyst = build(backend)
-    tracing = _start_tracing(phoenix, analyst.settings)
+    tracing = _start_tracing(foundry, analyst.settings)
     try:
         result = asyncio.run(run_question(analyst, prompt))
         display(result)
@@ -220,11 +220,11 @@ async def conversation(analyst: Analyst) -> None:
 @app.command()
 def chat(
     backend: str | None = None,
-    phoenix: Annotated[bool, typer.Option(help="Send metadata traces to local Phoenix.")] = False,
+    foundry: Annotated[bool, typer.Option(help="Send metadata traces to Foundry.")] = False,
 ) -> None:
     """Start an interactive conversation with ephemeral history and persistent reports."""
     analyst = build(backend)
-    tracing = _start_tracing(phoenix, analyst.settings)
+    tracing = _start_tracing(foundry, analyst.settings)
     try:
         asyncio.run(conversation(analyst))
     finally:

@@ -1,4 +1,4 @@
-"""Shared service state around the ADK loop; capabilities belong to agent modules."""
+"""Shared service state around the LangGraph loop; capabilities belong to agent modules."""
 
 import asyncio
 from pathlib import Path

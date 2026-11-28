@@ -4,15 +4,14 @@ import json
 
 import pytest
 from google.genai import errors, types
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-from opentelemetry.trace import StatusCode
 
 from evaluation.graders.judge import PROMPT_PATH, GeminiJudge, JudgeUnavailable
 from evaluation.settings import EvaluationSettings
-from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.observability.tracing import StatusCode, configure_tracing
 from tests.evaluation.test_judge_budget import Client, records
 from tests.evaluation.test_trajectory import assessment, captured_trial
 from tests.evaluation.test_trajectory import response as trajectory_response
+from tests.support.tracing import MemoryClient
 
 
 def response(*, span="s1"):
@@ -61,8 +60,8 @@ def observed_events(item):
 
 @pytest.mark.parametrize("mode", ["synthetic", "metadata"])
 async def test_judge_summary_usage_and_capture_mode_preserve_privacy(mode):
-    exporter = InMemorySpanExporter()
-    tracing = configure_tracing(exporter=exporter, mode=mode)
+    exporter = MemoryClient()
+    tracing = configure_tracing(client=exporter, mode=mode)
     provider = Client(response())
     judge = GeminiJudge(
         "provider-key",
@@ -81,7 +80,7 @@ async def test_judge_summary_usage_and_capture_mode_preserve_privacy(mode):
     try:
         result = await judge.evaluate(turn, reference, [])
         assert result.claims[0].label == "UNSUPPORTED"
-        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert tracing.client.flush()
     finally:
         tracing.close()
     captured = next(item for item in exporter.get_finished_spans() if item.name == "retail.judge")
@@ -94,7 +93,7 @@ async def test_judge_summary_usage_and_capture_mode_preserve_privacy(mode):
         assert events["judge_input"]["step_id"] == turn.step_id
         assert "1 UNSUPPORTED" in events["judge_result"]["summary"]
         request = provider.requests[0]
-        shown = json.loads(str(captured.attributes["input.value"]))
+        shown = captured.inputs
         assert shown["messages"] == [
             {"role": "system", "content": PROMPT_PATH.read_text()},
             {"role": "user", "content": request["contents"]},
@@ -103,23 +102,10 @@ async def test_judge_summary_usage_and_capture_mode_preserve_privacy(mode):
             shown["generation_config"]["response_json_schema"]
             == request["config"].response_json_schema
         )
-        assert captured.attributes["llm.input_messages.0.message.role"] == "system"
-        assert captured.attributes["llm.input_messages.1.message.content"] == request["contents"]
-        template = str(captured.attributes["llm.prompt_template.template"])
-        assert template == f"System:\n{PROMPT_PATH.read_text()}\n\nUser:\n{{{{context}}}}"
-        variables = json.loads(str(captured.attributes["llm.prompt_template.variables"]))
-        assert variables == {"context": request["contents"]}
-        assert template.replace("{{context}}", variables["context"]) == (
-            f"System:\n{request['config'].system_instruction}\n\nUser:\n{request['contents']}"
-        )
-        returned = json.loads(str(captured.attributes["output.value"]))
+        assert captured.inputs["messages"][0]["content"] == PROMPT_PATH.read_text()
+        returned = json.loads(captured.outputs["response"])
         assert returned["claims"][0]["span"] == "s1"  # Actual output, before ID resolution.
         assert returned["claims"][0]["reason"] == "[REDACTED] evidence-content-canary"
-        assert captured.attributes["output.mime_type"] == "application/json"
-        assert (
-            captured.attributes["llm.output_messages.0.message.content"]
-            == captured.attributes["output.value"]
-        )
         assert judge.calls[0]["request"] == shown
         assert captured.context is not None
         assert judge.calls[0]["span_id"] == f"{captured.context.span_id:016x}"
@@ -150,8 +136,8 @@ async def test_judge_summary_usage_and_capture_mode_preserve_privacy(mode):
 
 
 async def test_invalid_judge_attribution_marks_span_error_after_provider_success():
-    exporter = InMemorySpanExporter()
-    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    exporter = MemoryClient()
+    tracing = configure_tracing(client=exporter, mode="synthetic")
     judge = GeminiJudge(
         "provider-key",
         EvaluationSettings(),
@@ -163,7 +149,7 @@ async def test_invalid_judge_attribution_marks_span_error_after_provider_success
     try:
         with pytest.raises(JudgeUnavailable, match="unknown source"):
             await judge.evaluate(turn, reference, [])
-        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert tracing.client.flush()
     finally:
         tracing.close()
     captured = next(item for item in exporter.get_finished_spans() if item.name == "retail.judge")
@@ -173,16 +159,13 @@ async def test_invalid_judge_attribution_marks_span_error_after_provider_success
     assert event["error_stage"] == "attribution"
     assert "No judgment produced" in event["summary"]
     assert captured.attributes["llm.token_count.total"] == 170
-    assert (
-        json.loads(str(captured.attributes["output.value"]))["claims"][0]["span"]
-        == "invented-source"
-    )
-    assert "unknown source" in json.loads(str(captured.attributes["metadata"]))["validation_error"]
+    assert json.loads(captured.outputs["response"])["claims"][0]["span"] == "invented-source"
+    assert "unknown source" in captured.outputs["validation_error"]
 
 
 async def test_judge_provider_error_exposes_http_code_but_not_message_or_reserved_cost():
-    exporter = InMemorySpanExporter()
-    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    exporter = MemoryClient()
+    tracing = configure_tracing(client=exporter, mode="synthetic")
     judge = GeminiJudge(
         "provider-key",
         EvaluationSettings(),
@@ -196,7 +179,7 @@ async def test_judge_provider_error_exposes_http_code_but_not_message_or_reserve
     try:
         with pytest.raises(JudgeUnavailable, match="402"):
             await judge.evaluate(turn, reference, [])
-        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert tracing.client.flush()
     finally:
         tracing.close()
     captured = next(item for item in exporter.get_finished_spans() if item.name == "retail.judge")
@@ -208,12 +191,12 @@ async def test_judge_provider_error_exposes_http_code_but_not_message_or_reserve
     assert judge.accounted_usd > 0
     assert "billing-canary" not in captured.to_json()
     assert "llm.output_messages.0.message.content" not in captured.attributes
-    assert "No judgment produced" in str(captured.attributes["output.value"])
+    assert "No judgment produced" in str(captured.outputs)
 
 
 async def test_trajectory_preview_identifies_the_conversation_and_diagnostic_findings():
-    exporter = InMemorySpanExporter()
-    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    exporter = MemoryClient()
+    tracing = configure_tracing(client=exporter, mode="synthetic")
     trial = captured_trial()
     judge = GeminiJudge(
         "provider-key",
@@ -224,7 +207,7 @@ async def test_trajectory_preview_identifies_the_conversation_and_diagnostic_fin
     )
     try:
         await judge.evaluate_trajectory(trial)
-        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert tracing.client.flush()
     finally:
         tracing.close()
     captured = next(item for item in exporter.get_finished_spans() if item.name == "retail.judge")
@@ -234,21 +217,16 @@ async def test_trajectory_preview_identifies_the_conversation_and_diagnostic_fin
     assert trial.turns[0].prompt in events["judge_input"]["question"]
     assert "progress: FAIL" in events["judge_result"]["summary"]
     assert captured.attributes is not None
-    shown = json.loads(str(captured.attributes["input.value"]))
+    shown = captured.inputs
     assert "untrusted_execution" in json.loads(shown["messages"][1]["content"])
-    assert str(captured.attributes["llm.prompt_template.template"]).startswith(
-        "System:\n# Agent trajectory evaluation"
-    )
-    assert json.loads(str(captured.attributes["llm.prompt_template.variables"])) == {
-        "context": shown["messages"][1]["content"]
-    }
-    assert json.loads(str(captured.attributes["output.value"]))["coverage_complete"] is True
+    assert shown["messages"][0]["content"].startswith("# Agent trajectory evaluation")
+    assert json.loads(captured.outputs["response"])["coverage_complete"] is True
     assert "HIDDEN_" not in captured.to_json()
 
 
 async def test_judge_large_evidence_and_response_are_not_preview_truncated():
-    exporter = InMemorySpanExporter()
-    tracing = configure_tracing(exporter=exporter, mode="synthetic")
+    exporter = MemoryClient()
+    tracing = configure_tracing(client=exporter, mode="synthetic")
     model_response = response()
     assert model_response.candidates
     content = model_response.candidates[0].content
@@ -268,12 +246,12 @@ async def test_judge_large_evidence_and_response_are_not_preview_truncated():
     turn.context = {"evidence": "界" * 25_000}
     try:
         await judge.evaluate(turn, reference, [])
-        assert tracing.provider.force_flush(timeout_millis=2000)
+        assert tracing.client.flush()
     finally:
         tracing.close()
     captured = next(item for item in exporter.get_finished_spans() if item.name == "retail.judge")
     assert captured.attributes is not None
-    shown = json.loads(str(captured.attributes["input.value"]))
+    shown = captured.inputs
     assert shown["messages"][1]["content"] == provider.requests[0]["contents"]
-    assert json.loads(str(captured.attributes["output.value"])) == decoded
+    assert json.loads(captured.outputs["response"]) == decoded
     assert judge.calls[0]["visible_response_truncated"] is False

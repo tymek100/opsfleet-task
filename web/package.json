@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@assistant-ui/react": "0.15.38",
-    "@assistant-ui/react-a2a": "0.2.55",
     "@assistant-ui/react-markdown": "0.14.26",
     "lucide-react": "1.80.0",
     "react": "19.3.1",

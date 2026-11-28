@@ -1,4 +1,4 @@
-"""Explicit agent selection routes follow-ups to the intended A2A service."""
+"""Explicit agent selection routes follow-ups to the selected local graph."""
 
 from io import StringIO
 
@@ -10,19 +10,20 @@ from retail_insight.interfaces import agent_cli, stack_cli
 
 
 @pytest.mark.parametrize("agent", ["coordinator", "retail", "inventory", "distribution"])
-def test_named_agent_chat_routes_followups_and_new_conversations(agent, tmp_path, monkeypatch):
-    key = tmp_path / ".artifacts/agents/secrets/a2a_signing_key"
-    key.parent.mkdir(parents=True)
-    key.write_text("test-signing-key")
-    monkeypatch.setattr(agent_cli, "repository_root", lambda: tmp_path)
+def test_named_agent_chat_routes_followups_and_new_conversations(
+    agent, tmp_path, monkeypatch, settings
+):
+    monkeypatch.setattr(agent_cli.Settings, "load", lambda: settings)
     output = StringIO()
     monkeypatch.setattr(agent_cli, "console", Console(file=output, color_system=None))
     calls = []
 
     class Client:
-        def __init__(self, urls, token, *, signed):
-            assert urls[agent] == f"http://127.0.0.1:{agent_cli.HOST_PORTS[agent]}"
-            assert token == "test-signing-key" and signed
+        def __init__(self, settings):
+            pass
+
+        def close(self):
+            pass
 
         async def ask(self, role, question, identity, context_id, **options):
             calls.append((role, question, identity, context_id, options))
@@ -32,7 +33,7 @@ def test_named_agent_chat_routes_followups_and_new_conversations(agent, tmp_path
                 "markdown": "Done.",
             }
 
-    monkeypatch.setattr(agent_cli, "AgentClient", Client)
+    monkeypatch.setattr(agent_cli, "AgentTeam", Client)
     result = CliRunner().invoke(
         agent_cli.app,
         [agent, "--context-id", "previous", "--max-cost-usd", "0.5", "--deadline-seconds", "60"],
@@ -57,12 +58,12 @@ def test_agent_name_is_required_and_validated_before_connecting(monkeypatch):
     def forbidden(*args, **kwargs):
         pytest.fail("Invalid command must not connect to a service")
 
-    monkeypatch.setattr(agent_cli, "AgentClient", forbidden)
+    monkeypatch.setattr(agent_cli, "AgentTeam", forbidden)
     runner = CliRunner()
     assert runner.invoke(agent_cli.app, ["unknown-agent"]).exit_code == 2
     help_text = runner.invoke(agent_cli.app, ["--help"])
     assert help_text.exit_code == 0
-    for role in agent_cli.HOST_PORTS:
+    for role in agent_cli.AGENT_LABELS:
         assert role in help_text.stdout
 
 
@@ -78,11 +79,8 @@ def test_legacy_stack_chat_uses_the_same_client(monkeypatch, arguments, role):
 
 
 @pytest.mark.parametrize("agent", ["coordinator", "retail", "inventory", "distribution"])
-def test_interactive_agent_chat_uses_shared_prompt_session(agent, tmp_path, monkeypatch):
-    key = tmp_path / ".artifacts/agents/secrets/a2a_signing_key"
-    key.parent.mkdir(parents=True)
-    key.write_text("test-signing-key")
-    monkeypatch.setattr(agent_cli, "repository_root", lambda: tmp_path)
+def test_interactive_agent_chat_uses_shared_prompt_session(agent, tmp_path, monkeypatch, settings):
+    monkeypatch.setattr(agent_cli.Settings, "load", lambda: settings)
     monkeypatch.setattr(agent_cli.sys.stdin, "isatty", lambda: True)
     monkeypatch.setenv("TERM", "xterm-256color")
     output = StringIO()
@@ -99,6 +97,9 @@ def test_interactive_agent_chat_uses_shared_prompt_session(agent, tmp_path, monk
         return Session()
 
     class Client:
+        def close(self):
+            pass
+
         def __init__(self, *args, **kwargs):
             pass
 
@@ -106,7 +107,7 @@ def test_interactive_agent_chat_uses_shared_prompt_session(agent, tmp_path, monk
             pytest.fail("Local slash commands must never call a paid agent")
 
     monkeypatch.setattr(agent_cli, "create_prompt_session", create_session)
-    monkeypatch.setattr(agent_cli, "AgentClient", Client)
+    monkeypatch.setattr(agent_cli, "AgentTeam", Client)
     agent_cli.run_chat(agent)
     assert len(sessions) == 1
     assert [c.name for c in sessions[0]] == ["/help", "/new", "/exit", "/quit"]

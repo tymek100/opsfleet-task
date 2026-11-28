@@ -27,7 +27,6 @@ def judge_prompt(
         else (Path(__file__).parent / "prompts" / filename).read_text(),
         model=settings.judge_model,
         config=types.GenerateContentConfig(
-            temperature=0,
             max_output_tokens=settings.judge_max_output_tokens,
             response_mime_type="application/json",
             response_json_schema=schema.model_json_schema(),

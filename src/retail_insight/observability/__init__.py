@@ -1,0 +1,1 @@
+"""Explicit sanitized application telemetry."""

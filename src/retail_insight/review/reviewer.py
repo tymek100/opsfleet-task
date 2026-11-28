@@ -3,17 +3,13 @@
 import json
 from collections.abc import Callable
 
-from google.adk.agents import LlmAgent
-from google.adk.agents.run_config import RunConfig
-from google.adk.models import BaseLlm
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from pydantic import ValidationError
 
 from retail_insight.config import Settings
 from retail_insight.contracts import REVIEW_CATEGORIES, Review, ReviewIssue
 from retail_insight.runtime.budget import Budget, LimitReached
+from retail_insight.runtime.model import BaseLlm, LlmRequest
 from retail_insight.runtime.privacy import screen
 from retail_insight.runtime.prompts import reviewer_prompt
 from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable
@@ -49,28 +45,21 @@ async def evaluate(
     )
     prompt_spec = reviewer_prompt(settings, guidance=guidance, model=model.model)
     budget.review_prompt_bytes = max(budget.review_prompt_bytes, prompt_spec.request_overhead_bytes)
-    reviewer = LlmAgent(
-        name="completion_reviewer",
-        model=AccountedModel(model=model.model, delegate=model).bind(
-            budget, emit, reviewer=True, prompt=prompt_spec, screener=screener
-        ),
-        instruction=prompt_spec.instruction,
-        tools=[],
-        generate_content_config=prompt_spec.config,
+    reviewer = AccountedModel(model=model.model, delegate=model).bind(
+        budget, emit, reviewer=True, prompt=prompt_spec, screener=screener
     )
-    sessions = InMemorySessionService()
-    session = await sessions.create_session(app_name="retail_review", user_id="review")
-    runner = Runner(app_name="retail_review", agent=reviewer, session_service=sessions)
+    config = prompt_spec.config.model_copy(deep=True)
+    config.system_instruction = prompt_spec.instruction
+    messages = []
     try:
         for attempt in range(2):
             text = ""
-            async for event in runner.run_async(
-                user_id="review",
-                session_id=session.id,
-                new_message=types.Content(role="user", parts=[types.Part(text=content)]),
-                run_config=RunConfig(max_llm_calls=1),
+            messages.append(types.Content(role="user", parts=[types.Part(text=content)]))
+            async for event in reviewer.generate_content_async(
+                LlmRequest(model=model.model, config=config, contents=list(messages))
             ):
-                if event.is_final_response() and event.content:
+                if event.content:
+                    messages.append(event.content)
                     text = "".join(p.text or "" for p in event.content.parts or [] if not p.thought)
             try:
                 review = Review.model_validate_json(text)
@@ -127,5 +116,3 @@ async def evaluate(
                 )
             ],
         )
-    finally:
-        await runner.close()

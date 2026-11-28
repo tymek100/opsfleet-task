@@ -1,4 +1,4 @@
-"""Frozen inputs and append-only grading versions, independent of Phoenix."""
+"""Frozen inputs and append-only grading versions, independent of the tracing service."""
 
 import hashlib
 import json

@@ -1,23 +1,30 @@
-"""Local assistant-ui gateway: static assets, owned history and allowlisted A2A REST."""
+"""Local LangGraph API with signed browser sessions and owned conversation history."""
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Protocol
 
 import httpx
 from starlette.applications import Starlette
-from starlette.background import BackgroundTask
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 
-from retail_insight.a2a.client import AgentClient
+from retail_insight.config import Settings
 from retail_insight.interfaces.gui_store import ConversationStore
+from retail_insight.observability.tracing import configure_from_env
+from retail_insight.runtime.card import agent_card
+from retail_insight.runtime.team import AgentTeam
 
 AGENTS = {
     "coordinator": ("Coordinator", "Connect sales, stock and distribution in one investigation."),
@@ -29,36 +36,66 @@ COOKIE = "retail_assistant_session"
 TASK_PATH = re.compile(r"tasks/([A-Za-z0-9_-]{1,128})(:cancel)?")
 
 
+class TeamAPI(Protocol):
+    async def ask(
+        self,
+        role,
+        question,
+        owner,
+        context_id,
+        /,
+        *,
+        max_cost_usd=None,
+        deadline_seconds=None,
+        progress=None,
+    ) -> dict: ...
+    def forget(self, role, owner, context_id, /) -> None: ...
+    def close(self) -> None: ...
+
+
 def create_app(
-    catalog: dict,
-    token: str,
+    settings: Settings | None = None,
+    team: TeamAPI | None = None,
     *,
     data_dir: Path = Path(".artifacts/gui"),
     static_dir: Path = Path("web/dist"),
     profile: str = "default",
     backend: str = "fixture",
     port: int = 8080,
-    transport: httpx.AsyncBaseTransport | None = None,
+    session_key: str | None = None,
 ) -> Starlette:
-    if not token.strip() or set(catalog) != set(AGENTS):
-        raise ValueError("A workspace credential and the four-agent catalog are required")
-    urls = {role: item["url"].rstrip("/") for role, item in catalog.items()}
-    AgentClient(urls, token, signed=False)  # Apply the same fixed-target validation as CLI callers.
+    settings = settings or Settings.load()
+    team = team or AgentTeam(settings)
+    backend = settings.backend
+    data_dir.mkdir(parents=True, exist_ok=True)
+    key_path = data_dir / "session.key"
+    if session_key is None:
+        if not key_path.exists():
+            fd = os.open(key_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            with os.fdopen(fd, "w") as file:
+                file.write(secrets.token_hex(32))
+        session_key = key_path.read_text().strip()
+    if len(session_key) < 32:
+        raise ValueError("A strong workspace session key is required")
+
+    def sign(owner):
+        return hmac.new(session_key.encode(), owner.encode(), hashlib.sha256).hexdigest()
+
+    active = set()
     store = ConversationStore(data_dir / "conversations.sqlite3")
     profile = f"{backend}:{profile}"
     allowed_hosts = {f"{host}:{port}" for host in ("localhost", "127.0.0.1", "[::1]")}
 
     @asynccontextmanager
     async def lifespan(app):
-        async with httpx.AsyncClient(
-            transport=transport,
-            timeout=httpx.Timeout(10, read=300),
-            follow_redirects=False,
-            trust_env=False,
-        ) as client:
-            app.state.client = client
+        tracing = configure_from_env()
+        try:
             yield
-        store.db.close()
+        finally:
+            team.close()
+            store.db.close()
+            if tracing:
+                tracing.close()
 
     async def handle(request: Request) -> Response:
         host = request.headers.get("host", "").lower()
@@ -70,8 +107,11 @@ def create_app(
             return JSONResponse(
                 {"error": "Cross-origin requests are not allowed."}, status_code=403
             )
-        owner = request.cookies.get(COOKIE, "")
-        fresh = not re.fullmatch(r"[a-f0-9]{32}", owner)
+        cookie = request.cookies.get(COOKIE, "")
+        owner, _, signature = cookie.partition(".")
+        fresh = not re.fullmatch(r"[a-f0-9]{32}", owner) or not hmac.compare_digest(
+            signature, sign(owner)
+        )
         if fresh:
             owner = uuid.uuid4().hex
         try:
@@ -84,7 +124,13 @@ def create_app(
                 status_code=502,
             )
         if fresh:
-            response.set_cookie(COOKIE, owner, httponly=True, samesite="strict", max_age=31536000)
+            response.set_cookie(
+                COOKIE,
+                owner + "." + sign(owner),
+                httponly=True,
+                samesite="strict",
+                max_age=31536000,
+            )
         response.headers["x-content-type-options"] = "nosniff"
         response.headers["referrer-policy"] = "same-origin"
         response.headers["cache-control"] = "no-store"
@@ -106,6 +152,8 @@ def create_app(
 
     async def dispatch(request: Request, owner: str) -> Response:
         path, method = request.url.path, request.method
+        if path == "/agent-card.json" and method == "GET":
+            return JSONResponse(agent_card())
         if path == "/health" and method == "GET":
             return JSONResponse({"status": "ok", "ui": "assistant-ui", "profile": profile})
         if path == "/api/catalog" and method == "GET":
@@ -142,6 +190,13 @@ def create_app(
                 store.append(identifier, await body_json(request))
                 return JSONResponse({"saved": True})
             if method == "DELETE":
+                if identifier in active:
+                    return JSONResponse(
+                        {"error": "Stop the running investigation before deleting it."},
+                        status_code=409,
+                    )
+                role = next(c["role"] for c in store.list(owner, profile) if c["id"] == identifier)
+                team.forget(role, owner, identifier)
                 store.delete(identifier)
                 return Response(status_code=204)
         if path.startswith("/api/agents/"):
@@ -149,76 +204,87 @@ def create_app(
             if len(pieces) != 2 or pieces[0] not in AGENTS:
                 return Response(status_code=404)
             role, endpoint = pieces
-            client = request.app.state.client
-            headers = {
-                "authorization": f"Bearer {token}",
-                "a2a-version": "1.0",
-                "accept-encoding": "identity",
-            }
-            if endpoint == ".well-known/agent-card.json" and method == "GET":
-                result = await client.get(urls[role] + "/" + endpoint, headers=headers)
-                result.raise_for_status()
-                card = result.json()
-                card["supportedInterfaces"] = [
-                    {
-                        "url": f"http://{request.headers['host']}/api/agents/{role}",
-                        "protocolBinding": "HTTP+JSON",
-                        "protocolVersion": "1.0",
-                    }
-                ]
-                # This is a local gateway view; upstream signatures would no longer describe it.
-                for field in ("securitySchemes", "securityRequirements", "signatures"):
-                    card.pop(field, None)
-                return JSONResponse(card)
+            if endpoint == "agent-card.json" and method == "GET":
+                return JSONResponse(agent_card(role))
             identifier = request.headers.get("x-retail-conversation", "")
             if not store.owned(identifier, owner, profile, role):
                 return JSONResponse(
                     {"error": "Choose a conversation for this agent."}, status_code=403
                 )
-            payload = None
-            if endpoint in {"message:send", "message:stream"} and method == "POST":
-                payload = await body_json(request, 100_000)
-                message = payload.get("message", {})
-                if message.get("contextId") not in {None, identifier} or message.get("taskId"):
-                    raise ValueError("Conversation mismatch")
-                message["contextId"] = identifier
-                # Browser requests cannot create service handoffs or expand runtime limits.
-                payload = {
-                    "message": message,
-                    "configuration": payload.get("configuration", {}),
-                    "metadata": {"max_cost_usd": 1.0, "deadline_seconds": 180},
-                }
-            else:
-                match = TASK_PATH.fullmatch(endpoint)
-                if not match or method != ("POST" if match[2] else "GET"):
-                    return Response(status_code=404)
-                task = await client.get(urls[role] + "/tasks/" + match[1], headers=headers)
-                if task.status_code != 200 or task.json().get("contextId") != identifier:
-                    return JSONResponse(
-                        {"error": "Task not found in this conversation."}, status_code=404
-                    )
-                if method == "GET":
-                    return JSONResponse(task.json())
-                payload = {}
-            upstream = await client.send(
-                client.build_request(
-                    method, urls[role] + "/" + endpoint, json=payload, headers=headers
-                ),
-                stream=True,
-            )
-            if upstream.status_code >= 400:
-                await upstream.aclose()
+            if endpoint != "chat" or method != "POST":
+                return Response(status_code=404)
+            payload = await body_json(request, 100_000)
+            question = payload.get("question")
+            if not isinstance(question, str) or not 1 <= len(question.strip()) <= 6000:
+                raise ValueError("Invalid question")
+            if identifier in active:
                 return JSONResponse(
-                    {"error": "The agent could not accept this request."}, status_code=502
+                    {"error": "An investigation is already running in this conversation."},
+                    status_code=409,
                 )
+            active.add(identifier)
+
+            async def events():
+                queue = asyncio.Queue(maxsize=256)
+
+                def progress(event):
+                    if not queue.full():
+                        queue.put_nowait(
+                            {"type": "progress", "event": event.get("event", "working")}
+                        )
+
+                task = asyncio.create_task(
+                    team.ask(
+                        role,
+                        question,
+                        owner,
+                        identifier,
+                        max_cost_usd=1.0,
+                        deadline_seconds=180,
+                        progress=progress,
+                    )
+                )
+                try:
+                    yield json.dumps({"type": "started", "context_id": identifier}) + "\n"
+                    while not task.done():
+                        try:
+                            event = await asyncio.wait_for(queue.get(), timeout=1)
+                        except TimeoutError:
+                            event = {"type": "heartbeat"}
+                        yield json.dumps(event) + "\n"
+                    result = await task
+                    public = {
+                        k: result.get(k)
+                        for k in (
+                            "markdown",
+                            "status",
+                            "usage",
+                            "context_id",
+                            "trace_id",
+                            "contains_ephemeral_evidence",
+                        )
+                    }
+                    yield json.dumps({"type": "result", "result": public}) + "\n"
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    yield (
+                        json.dumps(
+                            {
+                                "type": "error",
+                                "message": "The investigation could not complete. No unreviewed answer was published.",
+                            }
+                        )
+                        + "\n"
+                    )
+                finally:
+                    if not task.done():
+                        task.cancel()
+                    active.discard(identifier)
+                    await asyncio.gather(task, return_exceptions=True)
+
             return StreamingResponse(
-                upstream.aiter_bytes(),
-                status_code=upstream.status_code,
-                headers={
-                    "content-type": upstream.headers.get("content-type", "application/json"),
-                    "x-accel-buffering": "no",
-                },
-                background=BackgroundTask(upstream.aclose),
+                events(), media_type="application/x-ndjson", headers={"x-accel-buffering": "no"}
             )
         if method in {"GET", "HEAD"} and not path.startswith("/api/"):
             target = (static_dir / path.lstrip("/")).resolve()
@@ -247,18 +313,15 @@ def create_app(
 def main() -> None:
     import uvicorn
 
-    catalog = json.loads(Path(os.environ["A2A_CATALOG_PATH"]).read_text())
-    token = Path(os.environ["A2A_ACCESS_TOKEN_FILE"]).read_text().strip()
+    settings = Settings.load()
     app = create_app(
-        catalog,
-        token,
-        data_dir=Path(os.getenv("GUI_DATA_DIR", "/data/gui")),
-        static_dir=Path(os.getenv("GUI_STATIC_DIR", "/app/web/dist")),
-        backend=os.getenv("BACKEND", "fixture"),
+        settings,
+        data_dir=settings.data_dir / "gui",
+        static_dir=Path(os.getenv("GUI_STATIC_DIR", "web/dist")),
         profile=os.getenv("RETAIL_DATA_PROFILE", "default"),
-        port=int(os.getenv("GUI_PUBLIC_PORT", "8080")),
+        port=int(os.getenv("PORT", "8080")),
     )
-    uvicorn.run(app, host="0.0.0.0", port=8080, access_log=False)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8080")), access_log=False)
 
 
 if __name__ == "__main__":

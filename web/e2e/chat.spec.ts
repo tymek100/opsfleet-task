@@ -1,98 +1,19 @@
 import { test, expect } from "@playwright/test";
 
-test("recovers an interrupted stream and saves the answer without repeating the question", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await expect(page.getByRole("textbox", { name: "Message" })).toBeEnabled();
+test("an interrupted stream is explicit and never resubmits the investigation", async ({ page }) => {
   let sends = 0;
-  let failedSaves = 0;
-  let taskReads = 0;
-  await page.route(
-    "**/api/agents/coordinator/message:stream",
-    async (route) => {
-      sends += 1;
-      const response = await route.fetch();
-      // The server completes normally, but the browser receives only the initial task.
-      const frames = (await response.text()).split(/\r?\n\r?\n/);
-      const firstTask = frames.find((frame) => frame.includes('"task":'));
-      expect(firstTask).toBeTruthy();
-      await route.fulfill({ response, body: firstTask + "\n\n" });
-    },
-    { times: 1 },
-  );
-  await page.route("**/api/agents/coordinator/tasks/*", async (route) => {
-    taskReads += 1;
-    if (taskReads === 1)
-      await route.fulfill({
-        status: 502,
-        json: { error: "Gateway restarting" },
-      });
-    else await route.continue();
+  await page.goto("/");
+  await page.route("**/api/agents/coordinator/chat", async route => {
+    sends++;
+    await route.fulfill({ contentType: "application/x-ndjson", body: '{"type":"started"}\n' });
   });
-  await page.route("**/api/conversations/*", async (route) => {
-    if (
-      route.request().method() === "POST" &&
-      route.request().postDataJSON().message?.role === "assistant" &&
-      failedSaves < 2
-    ) {
-      failedSaves += 1;
-      await route.fulfill({
-        status: 503,
-        json: { error: "Storage reconnecting" },
-      });
-    } else await route.continue();
-  });
-  // A failed sidebar refresh must not be reported as a failed message save.
-  await page.route(
-    "**/api/conversations",
-    (route) =>
-      route.fulfill({ status: 503, json: { error: "Refresh unavailable" } }),
-    { times: 1 },
-  );
-  await page
-    .getByRole("textbox", { name: "Message" })
-    .fill("Recover my comparison");
+  await page.getByRole("textbox", { name: "Message" }).fill("Compare sales and stock");
   await page.getByRole("button", { name: "Send message" }).click();
-  await expect(
-    page.getByText("Reviewed answer. Previous turns: 0."),
-  ).toBeVisible();
-  await expect(page.getByRole("table")).toHaveCount(2);
-  await expect(
-    page.getByRole("button", { name: "Stop generation" }),
-  ).not.toBeVisible();
-  await expect.poll(() => failedSaves).toBe(2);
-  await expect
-    .poll(async () => {
-      const conversations = await (
-        await page.request.get("/api/conversations")
-      ).json();
-      const repo = await (
-        await page.request.get(`/api/conversations/${conversations[0].id}`)
-      ).json();
-      return repo.messages.filter(
-        (entry: { message: { role: string } }) =>
-          entry.message.role === "assistant",
-      ).length;
-    })
-    .toBe(1);
-  await expect(
-    page.getByText("Conversation could not be saved. Keep this tab open."),
-  ).not.toBeVisible();
+  await expect(page.getByText("The connection ended before a reviewed result arrived. The request was not resent.")).toBeVisible();
   expect(sends).toBe(1);
-  expect(taskReads).toBe(2);
-  await page.reload();
-  await expect(page.getByRole("table")).toHaveCount(2);
-  await page
-    .getByRole("textbox", { name: "Message" })
-    .fill("And what about inventory?");
-  await page.getByRole("button", { name: "Send message" }).click();
-  await expect(
-    page.getByText("Reviewed answer. Previous turns: 1."),
-  ).toBeVisible();
 });
 
-test("native A2A tables, saved follow-up, agent isolation and mobile layout", async ({
+test("LangGraph tables, saved follow-up, agent isolation and mobile layout", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -141,7 +62,7 @@ test("native A2A tables, saved follow-up, agent isolation and mobile layout", as
   ).toBeVisible();
   await page.getByRole("button", { name: "Agent details" }).click();
   await expect(page.getByRole("region", { name: "Agent card" })).toContainText(
-    "A2A 1.0",
+    "LangGraph",
   );
   await page.getByRole("button", { name: "Close agent details" }).click();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -192,7 +113,7 @@ test("Stop cancels the server task, failure is safe, incomplete outcome is expli
   await page.getByRole("textbox", { name: "Message" }).fill("Fail safely");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(
-    page.getByText("Task could not complete (RuntimeError)."),
+    page.getByText("The investigation could not complete. No unreviewed answer was published."),
   ).toBeVisible();
   await expect(
     page.getByText("Never expose this internal detail"),

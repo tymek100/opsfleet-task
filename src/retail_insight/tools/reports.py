@@ -1,4 +1,4 @@
-"""ADK tools for private reports and prior conversational answers."""
+"""LangGraph tools for private reports and prior conversational answers."""
 
 from __future__ import annotations
 

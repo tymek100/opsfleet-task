@@ -1,4 +1,4 @@
-"""Shared evaluation admission across references, A2A calls and independent judges."""
+"""Shared evaluation admission across references, local graph calls and independent judges."""
 
 import asyncio
 import json
@@ -91,30 +91,33 @@ async def test_run_counts_snapshot_agents_and_both_judges(
         judge.accounted_usd = 0.1
         return {"status": "PASS", "scores": []}
 
-    publisher = SimpleNamespace(url="http://localhost:6006/offline", record=lambda *a, **kw: None)
+    publisher = SimpleNamespace(
+        url="https://ai.azure.com/offline",
+        record=lambda *a, **kw: None,
+        finalize=lambda: {"url": "https://ai.azure.com/offline"},
+    )
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(Settings, "load", lambda: settings)
-    monkeypatch.setattr(runner, "ensure_phoenix", lambda *a, **kw: None)
-    monkeypatch.setattr(runner, "client_for", lambda *a, **kw: None)
+    monkeypatch.setattr(runner, "ensure_service", lambda *a, **kw: None)
+    monkeypatch.setattr(runner, "client_for", lambda *a, **kw: SimpleNamespace(close=lambda: None))
     monkeypatch.setattr(
         runner, "configure_tracing", lambda *a, **kw: SimpleNamespace(close=lambda: None)
     )
     monkeypatch.setattr(runner, "provenance", lambda: {})
-    monkeypatch.setattr(runner, "preflight", preflight)
     monkeypatch.setattr(runner, "Publisher", lambda *a: publisher)
     monkeypatch.setattr(runner, "GeminiJudge", Judge)
     monkeypatch.setattr(runner, "grade", grade)
     monkeypatch.setattr("evaluation.multi_agent.snapshot.capture", capture)
     monkeypatch.setattr("evaluation.multi_agent.trajectory.evaluate", trajectory)
     monkeypatch.setattr(
-        "retail_insight.a2a.client.AgentClient", lambda **kw: SimpleNamespace(ask=ask)
+        "retail_insight.runtime.team.AgentTeam",
+        lambda *a, **kw: SimpleNamespace(ask=ask, close=lambda: None),
     )
 
     directory, code = await runner.run(
         suite="coordinator",
         only="scenario-01",
         backend="bigquery",
-        token="offline-token",
         max_cost_usd=cap,
         agent_budget_usd=cap,
     )

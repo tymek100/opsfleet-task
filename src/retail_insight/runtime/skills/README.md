@@ -1,55 +1,49 @@
-# Runtime skills
+# Runtime instructions and skills
 
-This library contains runtime guidance for the retail analyst and reviewer.
+Core instructions are loaded on every turn. Detailed analytical methods remain optional skills; the agent chooses when to read them.
 
-| Skill | Audience | Purpose |
-| --- | --- | --- |
-| [product-ranking-analysis](library/product-ranking-analysis/SKILL.md) | Analyst | Separate rankings, stable ties, selected populations and overlap |
-| [revenue-driver-analysis](library/revenue-driver-analysis/SKILL.md) | Analyst | Prices, quantities, revenue per customer and supported explanations |
-| [customer-retention](library/customer-retention/SKILL.md) | Analyst | Acquisition, repeat purchases, inactivity eligibility and denominators |
-| [period-comparison](library/period-comparison/SKILL.md) | Analyst | Comparable periods, changes, zero bases and nonadditive counts |
-| [sales-status-analysis](library/sales-status-analysis/SKILL.md) | Analyst | Status-value shares, exclusions, and limits of refund/fulfillment interpretations |
-| [business-report-writing](library/business-report-writing/SKILL.md) | Analyst | Proportionate synthesis, useful presentation and proposed actions |
-| [analytical-review](library/analytical-review/SKILL.md) | Reviewer | Coverage, grounding, metrics, presentation and operation checks |
+| Layer | Responsibility |
+| --- | --- |
+| [Trust policy](../trust_policy.md) | Instruction/data boundaries and operation authority |
+| [Runtime prompt](../prompt.md) | Evidence use, context, completion and report operations |
+| [Shared answer style](../answer_style.md) | Concise writing and three fictional examples; always supplied to analysts and reviewers |
+| Agent `prompt.md` | Role, capabilities and essential domain constraints |
+| Agent `skills/` | Analytical methods and edge cases, loaded on demand |
+| [Review prompt](../../review/prompt.md) and [rubric](../../review/skills/analytical-review/SKILL.md) | Mandatory completion checks; service reviewers also receive their domain skill |
 
-The analyst initially receives skill names, descriptions, versions and hashes. It selects instructions through `load_skill(name)` and listed Markdown references through `load_skill_resource(name, path)`. References require their parent skill to be loaded in the current turn. Both calls use the standard tool budget, privacy screening and tracing. Skill content is guidance, not query evidence or additional authorization.
+The retail CLI and service agents share the same runtime and writing guidance. A summary is assessed against the current follow-up: select the main findings and preserve material limitations without reproducing every source metric. Examples teach presentation, not business facts or a fixed answer template. Independent offline evaluation prompts and references remain separate.
 
-The application supplies `analytical-review` to every evaluator call, even when the analyst loads no skill. The reviewer remains tool-free. Its rubric is independent of the analyst's optional method choices.
+## Catalog
 
-## Add or edit a skill
+| Skill | Location |
+| --- | --- |
+| Product ranking, revenue drivers, customer retention, period comparison, sales status | [Retail skills](../../agents/retail/skills/) |
+| Inventory analysis | [Inventory skills](../../agents/inventory/skills/) |
+| Distribution analysis | [Distribution skills](../../agents/distribution/skills/) |
+| Cross-domain analysis | [Coordinator skills](../../agents/coordinator/skills/) |
+| Business report writing | [Shared library](library/business-report-writing/SKILL.md) |
+| Analytical review | [Reviewer skill](../../review/skills/analytical-review/SKILL.md) |
 
-Place a named directory directly under `library/` with a `SKILL.md` beginning with:
+`SkillCatalog()` combines retail methods, shared writing and reviewer guidance. `AgentSkills` adds the service role's methods and supplies those methods to its reviewer. Analyst context initially contains names, descriptions, versions and hashes; `load_skill(name)` reads a method, and `load_skill_resource(name, path)` reads a listed reference after its parent skill. Both use normal tool budgets, privacy screening and tracing. Skills grant no tools, access or permissions.
+
+## Editing
+
+Keep common rules in their shared source; do not repeat the writing policy inside each role or method. Keep essential domain constraints in the role prompt and detailed measurement guidance in skills. Increment a changed skill's version; exact content hashes provide provenance.
+
+Each skill directory contains a `SKILL.md` with YAML frontmatter:
 
 ```yaml
 ---
 name: your-skill-name
-description: Explain the analytical situation where this method helps.
+description: State when this analytical method helps.
 metadata:
   audience: analyst
   version: "1"
 ---
 ```
 
-The name must match the directory. Describe the skill's scope and analytical pitfalls without prescribing a fixed investigation. Reference supporting files explicitly. Essential grounding requirements belong in core instructions; authorization remains application-controlled. Evaluation fixtures belong outside this library.
+The name matches the directory; audience is `analyst` or `reviewer`. Resources are flat `references/*.md` files. Scripts, tool grants, symbolic links and arbitrary file access are rejected. Limits: 16 KB per skill, 8 KB per reference, eight references per skill, 32 skills and 120 KB per catalog.
 
-Supported resources are flat `references/*.md` files. Skills contain instructions only: scripts, tool grants, arbitrary file access and dynamic tool registration are unsupported. `../tools/registry.py` defines the model-facing tool surface; services implement the operations.
+Catalogs use a validated YAML parser and take immutable snapshots. Restart a CLI or agent service after edits; rebuild its image when running Docker. Prompt assembly records shared files and hashes for Foundry attribution. The wheel includes Markdown instructions and skills.
 
-The catalog uses ADK's native `load_skill_from_dir` parser after validating the local text tree. Limits are 16 KB per SKILL.md, 8 KB per reference, eight references per skill, 32 skills and 120 KB for the whole library. Only audience/version metadata is accepted. Symbolic links and non-Markdown resources are rejected.
-
-An `Analyst` instance loads an immutable snapshot of skill text and references. Restart the CLI after edits. Increment the version when changing a method; hashes identify exact content independently of version labels. The Python wheel includes all skill files, so discovery is independent of the working directory.
-
-See the [runtime architecture](../../../../docs/architecture.md#skills-and-evaluation-assets) for how skills fit into the agent loop and the [testing overview](../../../../docs/architecture.md#independent-evaluation) for validation. ADK documents the underlying [skills format and progressive disclosure](https://adk.dev/skills/).
-
-
-## Ownership
-
-Agent-specific instructions live beside their implementation in
-`agents/<role>/skills/`. Shared report-writing guidance lives in
-`runtime/skills/library/`; the mandatory reviewer guidance lives in
-`review/skills/`.
-
-`SkillCatalog()` composes the shared library, retail analytical methods and
-reviewer guidance. This preserves the original method catalog and content hashes.
-`AgentSkills` adds the inventory, distribution or coordinator catalog to that
-baseline and includes its domain guidance in reviewer input. Skills remain
-read-only method references; they do not grant tools or data access.
+See [architecture](../../../../docs/architecture.md#skills-and-evaluation-assets).

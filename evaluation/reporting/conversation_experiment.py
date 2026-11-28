@@ -1,16 +1,12 @@
-"""Incremental automatic grades on the same curated Phoenix conversation dataset."""
+"""Independent conversation grades published as Foundry experiments."""
 
-from __future__ import annotations
-
-import time
-from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import quote
 
 from evaluation.graders.checks import combined
-from evaluation.reporting.conversations import checksum, ensure_dataset, ensure_project
+from evaluation.reporting.conversations import DATASET_NAME, dataset_rows
+from evaluation.reporting.foundry import Experiment
 from evaluation.results import Score
-from evaluation.runners.artifacts import read_json, write_json
+from evaluation.runners.artifacts import write_json
 
 
 def summary_score(name, values):
@@ -64,141 +60,29 @@ def grade_annotations(grade):
 
 
 class ConversationExperiment:
-    def __init__(self, client, config, directory: Path, dataset, project, name, references):
-        self.client, self.config, self.directory = client, config, directory
-        self.dataset, self.project = dataset, project
-        self.references = references
-        self.path = directory / "phoenix-auto.json"
-        self.state = read_json(self.path) if self.path.exists() else {}
-        if self.state and (
-            self.state["dataset_version_id"] != dataset.version_id
-            or self.state["reference_sha256"] != checksum(references)
-        ):
-            raise ValueError("Publication state belongs to different reference data")
-        self.state.update(
-            dataset_id=dataset.id,
-            dataset_version_id=dataset.version_id,
-            project_id=project["id"],
-            reference_sha256=checksum(references),
-        )
-        if "experiment_id" not in self.state:
-            experiment = client.experiments.create(
-                dataset_id=dataset.id,
-                dataset_version_id=dataset.version_id,
-                experiment_name=name.replace("—", "-"),
-                experiment_description="Independent numeric checks, evidence grounding and task/operation checks. LLM judge is not human-calibrated. Historical assistant reviews remain separate.",
-                experiment_metadata={
-                    "source_run": directory.name,
-                    "reference_provenance": references["provenance"],
-                    "reference_sha256": checksum(references),
-                    "reviewer_kind": "automatic_independent_evaluation",
-                },
-            )
-            self.state["experiment_id"] = experiment["id"]
-        self.state.setdefault("runs", {})
-        self.state["url"] = client.experiments.get_experiment_url(
-            dataset.id, self.state["experiment_id"]
-        )
-        self.state["traces_url"] = config.phoenix_url + "/projects/" + quote(project["id"], safe="")
-        write_json(self.path, self.state)
+    directory: Path
+    experiment: Experiment
+    state: dict
 
     @classmethod
     def start(cls, client, config, directory, scenarios, name, references):
-        dataset = ensure_dataset(client, scenarios, references)
-        project = ensure_project(client)
-        return cls(client, config, directory, dataset, project, name, references)
+        obj = cls()
+        obj.directory = directory
+        obj.experiment = Experiment(
+            client, DATASET_NAME, dataset_rows(scenarios, references), directory.name
+        )
+        obj.state = {"url": obj.experiment.url, "traces_url": obj.experiment.url}
+        write_json(directory / "foundry.json", obj.state)
+        return obj
 
     def record(self, scenario, turns, grade):
-        output = {
-            "source_run": self.directory.name,
-            "reference_provenance": self.references["provenance"],
-            "evaluation": grade,
-        }
-        for number, turn in enumerate(turns, 1):
-            output["initial" if number == 1 else "follow_up"] = {
-                "question": turn.prompt,
-                "answer": turn.markdown,
-                "runtime_status": turn.status,
-                "trace_url": f"{self.state['traces_url']}/traces/{turn.trace_id}"
-                if turn.trace_id
-                else None,
-            }
-        if scenario.id not in self.state["runs"]:
-            identifiers = [t.trace_id for t in turns if t.trace_id]
-            spans = (
-                self.client.spans.get_spans(
-                    project_identifier=self.project["id"],
-                    trace_ids=identifiers,
-                    name="retail.prompt",
-                    limit=10,
-                )
-                if identifiers
-                else []
-            )
-            # Ingestion is asynchronous; never invent execution times for a missing trace.
-            for _ in range(10):
-                if {s["context"]["trace_id"] for s in spans} >= set(identifiers):
-                    break
-                time.sleep(0.2)
-                spans = self.client.spans.get_spans(
-                    project_identifier=self.project["id"],
-                    trace_ids=identifiers,
-                    name="retail.prompt",
-                    limit=10,
-                )
-            if {s["context"]["trace_id"] for s in spans} < set(identifiers):
-                raise ValueError("Original prompt traces have not reached Phoenix")
-            timestamps = [datetime.fromisoformat(s["start_time"]) for s in spans]
-            endings = [datetime.fromisoformat(s["end_time"]) for s in spans]
-            example = next(e for e in self.dataset.examples if e["input"]["case_id"] == scenario.id)
-            # No trace is invented for an unexecuted task. Timestamp is publication time in that case.
-            now = datetime.now(UTC)
-            run = self.client.experiments.log_run(
-                experiment_id=self.state["experiment_id"],
-                dataset_example_id=example["id"],
-                output=output,
-                start_time=min(timestamps) if timestamps else now,
-                end_time=max(endings) if endings else now,
-                trace_id=turns[0].trace_id if turns else None,
-                timeout=10,
-            )
-            self.state["runs"][scenario.id] = run["id"]
-            write_json(self.path, self.state)
-        for annotation in grade_annotations(grade):
-            self.client.experiments.log_evaluation(
-                experiment_run_id=self.state["runs"][scenario.id],
-                **annotation,
-                annotator_kind="CODE" if annotation["name"] == "Operations" else "LLM",
-                metadata={
-                    "reference_sha256": self.state["reference_sha256"],
-                    "judge": grade["judge"],
-                    "method": "Independent reference comparison after LLM extraction; separate evidence and behavioral judgments.",
-                    "human_calibrated": False,
-                },
-                timeout=10,
-            )
-        span_annotations = []
-        for turn, assessed in zip(turns, grade["turns"], strict=True):
-            if not turn.span_id:
-                continue
-            for name, label, kind in (
-                ("Scenario", scenario.id, "CODE"),
-                ("Automatic answer evaluation", assessed["status"], "LLM"),
-            ):
-                span_annotations.append(
-                    {
-                        "span_id": turn.span_id,
-                        "name": name,
-                        "annotator_kind": kind,
-                        "identifier": self.state["experiment_id"],
-                        "result": {"label": label},
-                        "metadata": {
-                            "reference_sha256": self.state["reference_sha256"],
-                            "step_id": turn.step_id,
-                        },
-                    }
-                )
-        if span_annotations:
-            self.client.spans.log_span_annotations(span_annotations=span_annotations, sync=True)
-        self.state["status"] = "published"
-        write_json(self.path, self.state)
+        self.experiment.record(
+            scenario.id,
+            {"turns": [t.model_dump(mode="json") for t in turns], "evaluation": grade},
+            grade_annotations(grade),
+        )
+
+    def finalize(self):
+        self.state.update(self.experiment.finalize())
+        write_json(self.directory / "foundry.json", self.state)
+        return self.state

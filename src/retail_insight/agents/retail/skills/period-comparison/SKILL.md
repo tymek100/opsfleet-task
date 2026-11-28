@@ -3,27 +3,21 @@ name: period-comparison
 description: Compare revenue or other metrics across months, quarters or other periods, including partial periods, percentage changes and zero baselines.
 metadata:
   audience: analyst
-  version: "3"
+  version: "4"
 ---
 
 # Period comparison
 
-Make the periods comparable before interpreting a difference. Use UTC half-open boundaries, with the start included and the end excluded, and resolve a materially missing year. Label calendar periods clearly; do not compare an incomplete current period with a full previous period without disclosing or adjusting the difference.
+Use comparable periods, populations, grain and metric definitions. Resolve materially missing years or reporting windows before a broad investigation. Disclose or adjust a partial-versus-full-period comparison.
 
-Distinguish SQL boundaries from readable calendar labels. A quarter can be displayed as "January 1 through March 31" while its SQL ends exclusively at April 1. Do not label the inclusive calendar end as the exclusive endpoint of a half-open interval. Prefer ordinary quarter/date wording in the answer unless exact query boundaries are requested.
+Use UTC [start, end) boundaries. Readable labels such as "January through March" can use inclusive calendar dates, but do not describe March 31 as an exclusive quarter endpoint.
 
-If the user gives no usable reporting period or comparison, ask one focused clarification before launching a broad performance investigation. Do not turn an ambiguous sales question into an unrequested multi-year report.
+Anchor now, MTD and YTD to trusted now_utc/today_utc. Source MAX(timestamp) is data coverage, not today. Exclude future rows from every current-period total and breakdown using the same cutoff. Explicit future-period requests are distinct from realized performance as of now.
 
-Anchor "now", "today", MTD and YTD to the trusted now_utc/today_utc context. Current-period queries need an upper bound at that instant, or a clearly labelled earlier complete-day cutoff. Source MAX(purchased_at) is data coverage, not the current time: future-dated rows may exist and must not enter an as-of result. Use the same boundary in every displayed total, category breakdown and narrative statement. Explicitly requested future calendar periods may still be queried as such; do not mislabel them as current realized performance.
+Qualifying sales exclude Cancelled/Returned at both order and item levels; they are not Complete-only. Define requested status overrides explicitly. Preserve selected cohorts on follow-ups.
 
-Keep the metric definition, status policy, entity grain, authorized scope and selected population consistent. Qualifying sales exclude Cancelled and Returned at both item and order levels; they are not necessarily Complete-only. User-requested status overrides need an explicit definition over the permitted relations.
+Absolute change = later - earlier. Percentage change = change / earlier; a zero baseline makes it undefined. Percentage-point change is the difference between proportions expressed as percentages. Compute from full precision, then round for display.
 
-Absolute change is later minus earlier. Percentage change divides that difference by the earlier value; a zero baseline makes this rate undefined. For proportions, percentage-point change is the difference between percentages, while percentage change measures the relative change in the proportion. Label the quantity actually calculated.
+Compute distinct customer/order unions across periods instead of summing overlapping counts. Keep empty results, zero and undefined distinct.
 
-Do not sum monthly distinct customers or orders to obtain a quarter total when IDs can occur in multiple months. Calculate the union-level distinct count, or omit an unrequested total. Distinguish an empty result from a measured zero, and do not invent activity where there is no eligible population.
-
-Verify that a claimed increase or decline exists before explaining it. A measured change alone does not establish its cause. Load revenue-driver-analysis when price, quantity or customer patterns are material to the requested interpretation; otherwise a concise supported observation may be enough.
-
-More active customers does not establish customer acquisition. New-to-brand counts require each customer's first qualifying purchase in all available authorized history; they do not establish company-wide acquisition. Even measured new-customer revenue is an arithmetic contribution, not proof of a marketing or acquisition cause.
-
-Choose a table only when it makes the comparison clearer or the user requests it. Use matching precision, concise units and plain arithmetic; do not invent a currency symbol or append unrequested totals.
+Verify a claimed increase or decline before explaining it. More active customers does not establish acquisition; first purchases across scoped history are needed. A measured contribution does not prove a marketing or other business cause. Use revenue-driver-analysis when price, quantity or customer contributions are relevant; otherwise report the supported comparison without extra metrics.

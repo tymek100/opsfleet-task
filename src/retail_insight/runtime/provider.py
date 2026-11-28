@@ -1,4 +1,4 @@
-"""ADK model adapter with shared accounting, bounded retries and safe errors."""
+"""Provider adapter for our custom LangGraph loop with shared accounting, bounded retries and safe errors."""
 
 import asyncio
 import base64
@@ -9,17 +9,20 @@ from contextlib import aclosing
 from typing import cast
 
 import httpx
-from google import genai
-from google.adk.models import BaseLlm, Gemini
-from google.adk.models.llm_request import LlmRequest
-from google.adk.models.llm_response import LlmResponse
 from google.genai import errors, types
-from opentelemetry.trace import Span, Status, StatusCode
 from pydantic import BaseModel, PrivateAttr
 
 from retail_insight.config import Settings
-from retail_insight.integrations.phoenix.tracing import detached_span, prompt_attributes
+from retail_insight.integrations.gcp.connector import GCPConnector
+from retail_insight.observability.tracing import (
+    Span,
+    Status,
+    StatusCode,
+    detached_span,
+    prompt_attributes,
+)
 from retail_insight.runtime.budget import Budget
+from retail_insight.runtime.model import BaseLlm, Gemini, LlmRequest, LlmResponse
 from retail_insight.runtime.privacy import screen
 from retail_insight.runtime.prompts import PromptSpec
 
@@ -113,14 +116,7 @@ def request_json(request: LlmRequest) -> str:
 def make_gemini(settings: Settings) -> Gemini:
     if not settings.gemini_api_key.get_secret_value():
         raise ProviderUnavailable("Configure GEMINI_API_KEY before running the analyst.")
-    client = genai.Client(
-        api_key=settings.gemini_api_key.get_secret_value(),
-        vertexai=False,
-        http_options=types.HttpOptions(
-            timeout=int(settings.turn_timeout_seconds * 1000),
-            retry_options=types.HttpRetryOptions(attempts=1),
-        ),
-    )
+    client = GCPConnector.model_client(settings.gemini_api_key.get_secret_value(), timeout_seconds=settings.turn_timeout_seconds)
     return Gemini(
         model=settings.gemini_model, client=client, retry_options=types.HttpRetryOptions(attempts=1)
     )
@@ -227,13 +223,14 @@ class AccountedModel(BaseLlm):
                     },
                 ) as provider_span:
                     _provider_event(provider_span, "provider_input", role=role)
+                    _provider_event(provider_span, "provider_request", request=json.loads(encoded))
                     try:
                         async with aclosing(
                             self.delegate.generate_content_async(llm_request, stream)
                         ) as responses:
                             while True:
                                 try:
-                                    # Time only provider IO. ADK runs tools, including
+                                    # Time only provider IO. The graph runs tools, including
                                     # the completion reviewer, while suspended at yield.
                                     # Their own budgets govern that work and must retain
                                     # the time explicitly reserved for review.
@@ -251,7 +248,7 @@ class AccountedModel(BaseLlm):
                                 if complete_response and (
                                     not stream or response.finish_reason or response.turn_complete
                                 ):
-                                    # ADK executes tools (including the reviewer) while
+                                    # The graph executes tools (including the reviewer) while
                                     # suspended at yield, so refund completed usage first.
                                     self._settle_usage(reservation, last_usage)
                                 counts = _usage_counts(last_usage)
@@ -266,14 +263,24 @@ class AccountedModel(BaseLlm):
                                     )
                                     and provider_span.is_recording()
                                 ):
-                                    # ADK can run tools while this generator is suspended.
+                                    # The graph can run tools while this generator is suspended.
                                     # Provider latency ends when its complete response arrives.
                                     _provider_result(
                                         provider_span,
                                         role,
                                         ProviderUnavailable() if response_failed else None,
                                     )
+                                    _provider_event(
+                                        provider_span,
+                                        "provider_response",
+                                        response=response.model_dump(mode="json"),
+                                    )
                                     provider_span.end()
+                                _provider_event(
+                                    provider_span,
+                                    "provider_response",
+                                    response=response.model_dump(mode="json"),
+                                )
                                 emitted = True
                                 yield response
                                 if complete_response and (

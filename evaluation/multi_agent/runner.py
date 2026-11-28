@@ -1,4 +1,4 @@
-"""Run authored conversations through real A2A HTTP endpoints and publish every result."""
+"""Run authored conversations through local LangGraph agents and publish every result."""
 
 from __future__ import annotations
 
@@ -6,8 +6,6 @@ import asyncio
 import hashlib
 import json
 import math
-import os
-import subprocess
 import time
 import uuid
 from collections import Counter
@@ -15,14 +13,11 @@ from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
-import httpx
-
 from evaluation.graders.judge import GeminiJudge
-from evaluation.reporting.phoenix import client_for
-from evaluation.reporting.phoenix_service import ensure_phoenix
+from evaluation.reporting.foundry import client_for, ensure_service
 from evaluation.settings import MAX_EVALUATION_COST_USD, EvaluationSettings, validate_run_budget
 from retail_insight.config import Settings
-from retail_insight.integrations.phoenix.tracing import configure_tracing
+from retail_insight.observability.tracing import configure_tracing
 
 from .grading import grade
 from .oracle import AS_OF, Snapshot, checksum, reference
@@ -46,28 +41,13 @@ def provenance():
         p
         for p in (
             Path("uv.lock"),
-            Path("infra/agents/catalog.json"),
-            Path("infra/agents/compose.yaml"),
-            Path("infra/agents/compose.evaluation.yaml"),
+            Path("infra/workflow/compose.yaml"),
+            Path("langgraph.json"),
         )
         if p.is_file()
     ]
     hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
-    images = {}
-    for role in ("analyst", "inventory", "distribution", "coordinator"):
-        tag = f"retail-{role}:{os.environ.get('RETAIL_STACK_REVISION', 'local')}"
-        try:
-            result = subprocess.run(
-                ["docker", "image", "inspect", tag, "--format", "{{.Id}}"],
-                capture_output=True,
-                text=True,
-                timeout=3,
-                check=False,
-            )
-            images[tag] = result.stdout.strip() if result.returncode == 0 else "unavailable"
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            images[tag] = "unavailable"
-    return {"files": hashes, "images": images}
+    return {"files": hashes, "execution": "local-langgraph"}
 
 
 def save(path, value):
@@ -128,57 +108,14 @@ def cost_of(raw):
     return None
 
 
-def validate_deployment(health, backend, fixture_hashes):
-    for role, value in health.items():
-        if (
-            value.get("role") != role
-            or value.get("backend") != backend
-            or value.get("status") != "ok"
-        ):
-            raise ValueError(f"{role} is not healthy on the requested {backend} backend")
-        if (
-            backend == "fixture"
-            and role in fixture_hashes
-            and value.get("fixture_sha256") != fixture_hashes[role]
-        ):
-            raise ValueError(
-                f"{role} source differs from the independent evaluation fixture; start the stack with --evaluation-fixtures"
-            )
-
-
-async def preflight(urls, backend, fixture, snapshot):
-    from .build_fixture import retail_sql
-
-    expected = {}
-    if backend == "fixture":
-        expected = {
-            "retail": hashlib.sha256(retail_sql(snapshot.raw).encode()).hexdigest(),
-            "inventory": hashlib.sha256(Path(fixture).read_bytes()).hexdigest(),
-            "distribution": hashlib.sha256(Path(fixture).read_bytes()).hexdigest(),
-        }
-    async with httpx.AsyncClient(timeout=5, trust_env=False, follow_redirects=False) as http:
-
-        async def get(role, url):
-            response = await http.get(url.rstrip("/") + "/health")
-            response.raise_for_status()
-            return role, response.json()
-
-        health = dict(await asyncio.gather(*(get(role, url) for role, url in urls.items())))
-    validate_deployment(health, backend, expected)
-    return health
-
-
 async def run(
     *,
     suite="all",
     only=None,
     max_cost_usd=MAX_EVALUATION_COST_USD,
-    deadline_seconds=7200,
+    deadline_seconds: float = 7200,
     backend="fixture",
     fixture=HERE / "fixture.json",
-    phoenix_url="http://127.0.0.1:6006",
-    urls=None,
-    token=None,
     concurrency=1,
     as_of=AS_OF,
     publish_only=False,
@@ -196,19 +133,13 @@ async def run(
     if not publish_only and not settings.gemini_api_key.get_secret_value():
         raise ValueError("GEMINI_API_KEY is required for independent evaluation judges")
     config = EvaluationSettings(
-        phoenix_url=phoenix_url,
         judge_model=settings.gemini_model,
         input_usd_per_million=settings.input_usd_per_million,
         output_usd_per_million=settings.output_usd_per_million,
     )
-    ensure_phoenix(config, deadline=deadline)
-    phoenix = client_for(config, deadline=deadline)
-    tracing = configure_tracing(
-        phoenix_url + "/v1/traces",
-        project="retail-multi-agent",
-        mode="synthetic",
-        service_name="multi-agent-evaluation",
-    )
+    ensure_service(config, deadline=deadline)
+    foundry = client_for(config, deadline=deadline)
+    tracing = configure_tracing(project="retail-evaluation", mode="synthetic", )
     suites = load_suites()
     if suite not in {*suites, "all", "smoke"}:
         raise ValueError(f"Unknown suite: {suite}")
@@ -236,13 +167,12 @@ async def run(
         )
     else:
         raise ValueError("Backend must be fixture or bigquery")
-    run_id = "a2a-" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+    run_id = (
+        "langgraph-" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+    )
     directory = Path(".artifacts/multi-agent") / run_id
     directory.mkdir(parents=True, exist_ok=False)
     save(directory / "snapshot.json", snapshot.raw)
-    deployment = Path(".artifacts/agents/images.json")
-    if deployment.is_file():
-        save(directory / "deployment.json", json.loads(deployment.read_text()))
     frozen = {role: suites[role] for role in chosen}
     save(directory / "scenarios.json", frozen)
     references = {
@@ -280,45 +210,37 @@ async def run(
     save(directory / "manifest.json", manifest)
     if publish_only:
         for role in chosen:
-            data = ensure_dataset(phoenix, role, suites[role], snapshot)
+            data = ensure_dataset(foundry, role, suites[role], snapshot)
             print(
-                f"{role}: {phoenix_url}/datasets/{data.id} — {len(data.examples)} conversations",
+                f"{role}: dataset {data.id} — {len(suites[role])} conversations",
                 flush=True,
             )
         manifest["status"] = "datasets_published_without_execution"
         save(directory / "manifest.json", manifest)
         tracing.close()
         return directory, 0
-    from retail_insight.a2a.client import AgentClient
+    from retail_insight.runtime.team import AgentTeam
 
-    urls = urls or {
-        "retail": "http://127.0.0.1:8001",
-        "inventory": "http://127.0.0.1:8002",
-        "distribution": "http://127.0.0.1:8003",
-        "coordinator": "http://127.0.0.1:8004",
-    }
-    key_path = Path(".artifacts/agents/secrets/a2a_signing_key")
-    signing_key = (
-        token
-        or os.environ.get("RETAIL_A2A_TOKEN")
-        or (key_path.read_text().strip() if key_path.is_file() else "")
+    from .build_fixture import retail_sql
+
+    (directory / "retail_fixture.sql").write_text(retail_sql(snapshot.raw))
+    local_settings = settings.model_copy(
+        update={
+            "backend": backend,
+            "data_dir": directory / "contexts",
+            "fixture_path": directory / "retail_fixture.sql",
+            "domain_fixture_path": directory / "snapshot.json",
+            "question_budget_usd": agent_budget_usd,
+            "turn_timeout_seconds": 180,
+        }
     )
-    if not signing_key:
-        raise ValueError("Start retail-stack first; its local A2A signing key is required")
-    client = AgentClient(urls=urls, token=signing_key)
-    try:
-        deployment_health = await preflight(urls, backend, fixture, snapshot)
-    except Exception:
-        manifest["status"] = "preflight_failed"
-        save(directory / "manifest.json", manifest)
-        tracing.close()
-        raise
-    save(directory / "deployment-health.json", deployment_health)
-    publishers = {role: Publisher(phoenix, role, suites[role], snapshot, run_id) for role in chosen}
+    client = AgentTeam(local_settings, observation_mode="synthetic")
+    publishers = {role: Publisher(foundry, role, suites[role], snapshot, run_id) for role in chosen}
     for role, publisher in publishers.items():
         print(f"{role} experiment: {publisher.url}", flush=True)
     print(
-        f"Traces: {phoenix_url}/projects — retail-multi-agent\nArtifacts: {directory}", flush=True
+        f"Traces: https://ai.azure.com — retail-evaluation\nArtifacts: {directory}",
+        flush=True,
     )
     manifest["planned_conversations"] = len(tasks)
     manifest["planned_turns"] = 2 * len(tasks)
@@ -356,7 +278,7 @@ async def run(
                         raw = await client.ask(
                             role,
                             prompt,
-                            identity=case["identity"],
+                            owner=case["identity"],
                             context_id=context,
                             max_cost_usd=grant,
                             deadline_seconds=min(180, deadline - time.monotonic()),
@@ -368,7 +290,7 @@ async def run(
                     except Exception as exc:
                         raw = {
                             "status": "ERROR",
-                            "error": f"A2A request failed ({type(exc).__name__}); usage unknown, full grant retained.",
+                            "error": f"Graph execution failed ({type(exc).__name__}); usage unknown, full grant retained.",
                         }
                     finally:
                         await budget.settle(grant, cost_of(raw))
@@ -479,7 +401,22 @@ async def run(
     try:
         await asyncio.gather(*(conversation(role, case) for role, case in tasks))
     finally:
+        client.close()
         tracing.close()
+    for role, publisher in publishers.items():
+        try:
+            state = await asyncio.to_thread(publisher.finalize)
+            save(directory / role / "foundry.json", state)
+            if state.get("status", "published") != "published":
+                for key, record in manifest["cases"].items():
+                    if key.startswith(role + "/"):
+                        record["publication"] = state["status"]
+            print(f"{role}: Foundry evaluation results: {state['url']}", flush=True)
+        except Exception as exc:
+            for key, record in manifest["cases"].items():
+                if key.startswith(role + "/"):
+                    record["publication"] = f"ERROR: {type(exc).__name__}"
+    foundry.close()
     counts = Counter(status for record in manifest["cases"].values() for status in record["turns"])
     manifest.update(
         status="completed",

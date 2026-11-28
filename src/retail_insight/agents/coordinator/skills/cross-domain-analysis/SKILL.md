@@ -3,43 +3,33 @@ name: cross-domain-analysis
 description: Delegate and reconcile sales, inventory and distribution evidence.
 metadata:
   audience: analyst
-  version: "1.5"
+  version: "2"
 ---
 
-Choose specialists according to needed capabilities and observed gaps. Preserve identity, scope, snapshot and business cutoff. Forward evidence only when relevant; narratives are not substitutes for underlying rows. Ask a focused follow-up if evidence definitions or grain differ.
+# Cross-domain analysis
 
-For sales/stock comparisons join product identifiers and compatible time definitions. Revenue is not demand units. Divide units by all calendar days in the stated demand window. Report zero-demand coverage as undefined and forecasts as conditional. Avoid summing distinct customer/product counts across overlapping groups.
+Choose specialists for the required evidence. Preserve scope, snapshot and business cutoff; forward relevant evidence and clarify incompatible definitions. Narratives and prior review approval are not substitutes for source observations.
 
-At category grain, compare independently aggregated sales and modeled stock using consistent category definitions, preserving categories present on only one side. State the sales window and inventory cutoff separately. Historical sales are a benchmark, not measured current demand; seasonality and changes since that period remain unmeasured unless investigated. A request for categories deserving attention normally calls for a short evidence-based shortlist with both sales and stock, rather than every category. Explain the observed criterion for the shortlist and identify follow-up checks as proposals, not established shortages or surplus.
+## Combine measurements
 
-Use a few selected categories and useful metrics once, normally in a compact table or short prose. An extended category catalogue plus repeated numerical bullets obscures prioritization. Ratios calculated across a historical sales period and a later inventory snapshot do not measure current inventory turnover. Prefer "highest modeled-stock-to-Q1-sales ratio; check recent sales and product mix" to "very low commercial velocity". Recorded inventory cost supports cost concentration, not a claim about actual cash, working capital tied up or physical holdings. Even "physical unit concentrations" incorrectly changes modeled stock into observed physical inventory. A correct caveat later in the answer does not repair that wording.
+Join sales and modeled stock by product or compatible category definitions after independent aggregation. Preserve categories present on only one side. Keep the historical sales period separate from the inventory cutoff. Revenue is not demand units.
 
-Without inventory observations, sales ranks cannot establish stockout exposure, excess inventory, holding-cost risk or which categories are at greatest operational risk. Low sales units are not inventory turnover or demand velocity. Conditional phrases such as "if stock is high" do not validate ranking a category's risk. If either side of a requested comparison is unavailable, return a concise partial result with the missing input and no unsupported diagnosis.
+Use one authoritative table at the required grain, or disjoint detail reconciled to an independent total. Never add a product total to its center details. Distinct customers/products across overlapping groups are not additive. Missing and unmatched center IDs must both enter Unknown with costs on the same population.
 
-Never UNION or sum a product total with that same product's center detail, missing-center detail or another overlapping subtotal. A total already includes its qualifying detail rows. Use one authoritative table at the required grain, or aggregate disjoint detail rows and reconcile to the independent total. A plausible query result is not sufficient evidence if the query duplicated its input population. Do not relabel modeled unsold inventory as stock physically available to promise.
+Qualifying sales are not necessarily fulfilled/completed demand. Hypothetical coverage divides modeled stock by qualifying units per calendar day over a specified period. Zero demand makes it undefined. State constant-demand and availability assumptions; historical sales are not measured current demand.
 
-A top-N list does not describe the full population or establish a cause. Reconcile parts to totals before explaining contributions. Missing capacity, prices, supplier lead times or Maps results are explicit limitations. Never claim to execute transfers or purchases. The final combined answer requires its own review even if every specialist was approved.
+A stock-to-historical-sales ratio does not establish current turnover, usable supply, shortage, surplus or lost sales. Subtracting past sales from stock cannot measure lost sales. Recorded inventory cost measures cost concentration, not actual cash tied up. For a shortlist, use measured criteria and propose the missing checks without diagnosing an operational problem. Missing either comparison input requires a concise partial result.
 
-Do not label qualifying sales as fulfilled, delivered or completed demand unless the actual status filter establishes that narrower population. An aggregate stock-to-sales ratio does not prove adequate supply, rule out product-level stockouts or measure lost sales. Modeled unsold units are not necessarily usable supply or future units available for sale. Hypothetical coverage assumes the stated demand rate and ignores unobserved reservations and operational constraints; preserve those qualifications beside the claim.
+## Preserve source meaning
 
-Reject a candidate's unsupported physical, historical or causal assertion even if a later footer adds a correct caveat. For example, "stock proves available supply" followed by "physical availability is unknown" remains contradictory. Prefer the short supported answer over speculative explanations or extra figures.
+- Stock membership uses created_at <= T and (sold_at IS NULL OR sold_at > T). Inventory can still expose sold/later-created records. Creation/sale timestamps are not verified receipt, ingestion, procurement or dispatch events.
+- Age is elapsed time from unit creation. "Older than N days" excludes equality; "at least" includes it. Complete-day age floors elapsed days and differs at sub-day boundaries. Preserve exact predicates when paraphrasing or omit repeated definitions.
+- Raw center IDs, recognized centers with stock and directory entries are different populations. Failed matches do not prove invalid IDs or nonexistent facilities. Current attribution is not historical assignment or movement.
+- No rows do not prove complete historical absence. Missing cost does not establish a positive omitted amount. A top-N subset cannot establish a whole-population driver or cause.
+- A specialist's chosen query window does not define source coverage. Check schema/capabilities before declaring a field or history unavailable.
 
-Check a delegated result's boundary against the user's words before reusing it. "Older than N days" excludes records exactly N days old; "at least N days" includes them. Retain timestamp precision and the chosen cutoff rather than silently substituting calendar-date comparisons. Recorded creation time does not establish a procurement, receipt or ingestion date.
+## Capabilities and conclusions
 
-Describe Maps availability using the configured tool and its actual response. An unavailable key or a live observation does not establish what every Google Maps product can or cannot provide historically. Current routing or weather cannot by itself explain an earlier sales or stock change.
+Facility directories provide IDs, names and coordinates, not operating status, hours or capacity. Maps may be advertised but unconfigured; retain known unavailability on follow-ups. Propose routing/weather work only if available or explicitly conditional on later setup. Live observations do not establish historical causes.
 
-Keep relation and join semantics precise. The inventory relation can expose sold or future-created rows even when stock at the chosen cutoff excludes them. A center ID with no directory match is an unmatched attribution, not proof of an erroneous key or a nonexistent or inactive facility. A current recorded center assignment does not reconstruct historical assignment or stock movement merely because a stock cutoff is historical.
-
-Runtime review is a fallible quality check. Its approval does not confirm that SQL, calculations or operational conclusions are correct. Describe actual checks and evidence, and acknowledge their limits; never cite approval as validation of the answer itself.
-
-Reject an unsupported inference without asserting its opposite. A stock-to-sales comparison establishes neither shortage nor surplus, and subtracting a past sales flow from a stock snapshot cannot measure lost sales. Headings and short labels such as "Surplus" are claims too. Say which conclusion is undetermined instead of replacing it with an alternative diagnosis or an unrequested coverage forecast.
-
-Do not confuse the scope of an investigation with source capability. A specialist's 30-day query does not establish that longer sales or order history is unavailable. Distinguish missing source fields from unqueried data and request schema/capability clarification when it matters to the conclusion.
-
-Preserve the complete requested population when delegating and reviewing SQL. Missing center IDs and non-null IDs without a directory match are different disjoint groups. If the question asks for unknown attribution, include both and reconcile them; filtering only IS NULL does not cover unmatched IDs. Keep unit counts and their known-cost subtotal on the same population.
-
-Preserve exact predicates when describing earlier results on a follow-up: created_at < boundary excludes equality and cannot become "on or before". Prefer omitting an unnecessary repeated definition over an inaccurate paraphrase. Explain stock age as elapsed time from recorded creation to the chosen cutoff; business explanations involving intake, replenishment or sales velocity need separate evidence and must not replace that measured definition.
-
-An advertised tool does not establish that its external provider is configured or that it returned usable data. Preserve known unavailable-service status on follow-ups. When proposing work using only currently available data, omit unavailable routing/weather inputs or explicitly make them conditional on later configuration and a successful call. Keep any inventory inputs labeled modeled units; do not shorten them to physical or on-hand stock.
-
-An age explicitly measured in complete days is the floored elapsed-day count. For integer N, complete_days > N is not equivalent to elapsed_time > N days: a unit aged N days and twelve hours has only N complete days. State and preserve the requested metric, including sub-day boundaries. Inventory aging uses unit creation, not a catalog-product timestamp. Facility directory fields do not include operating status, opening hours or capacity; verify capabilities before proposing them.
+Missing prices, lead times, reservations and transfer constraints limit operational conclusions. Modeled units are not physical holdings, and sales ranks alone cannot rank inventory risks. A conditional phrase or later caveat cannot repair an unsupported diagnosis, including in headings. Reject an inference without asserting its opposite. The final combined answer requires its own review; no agent here executes purchases or transfers.

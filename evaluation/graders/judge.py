@@ -10,16 +10,17 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Literal, TypeVar
 
-from google import genai
-from google.genai import errors, types
-from opentelemetry.trace import Status, StatusCode
+from google.genai import errors
 from pydantic import BaseModel, ValidationError
 
 from evaluation.models import TurnReference
 from evaluation.prompt_catalog import judge_prompt
 from evaluation.results import Judgment, Trial, TurnRecord
 from evaluation.settings import EvaluationSettings
-from retail_insight.integrations.phoenix.tracing import (
+from retail_insight.integrations.gcp.connector import GCPConnector
+from retail_insight.observability.tracing import (
+    Status,
+    StatusCode,
     prompt_attributes,
     record_observation,
     sanitize_capture,
@@ -60,7 +61,7 @@ def visible_response_record(
 
 
 def observed_context(turn: TurnRecord, prior_observations: list[dict]) -> dict:
-    # Each prompt uses a new ADK session. Earlier raw tool responses are not
+    # Each prompt uses a new LangGraph session. Earlier raw tool responses are not
     # retained implicitly: only the captured context and reread payloads count.
     return {
         "initial_context": turn.context,
@@ -246,14 +247,7 @@ class GeminiJudge:
         self.accounted_usd = 0.0
         self.calls: list[dict] = []
         self._redaction_secrets = (api_key,)
-        self.client = client or genai.Client(
-            api_key=api_key,
-            vertexai=False,
-            http_options=types.HttpOptions(
-                timeout=int(settings.judge_timeout_seconds * 1000),
-                retry_options=types.HttpRetryOptions(attempts=1),
-            ),
-        )
+        self.client = client or GCPConnector.model_client(api_key, timeout_seconds=settings.judge_timeout_seconds)
 
     @property
     def version(self) -> dict:
@@ -263,7 +257,6 @@ class GeminiJudge:
             "schema_sha256": hashlib.sha256(
                 json.dumps(Judgment.model_json_schema(), sort_keys=True).encode()
             ).hexdigest(),
-            "temperature": 0,
             "max_output_tokens": self.settings.judge_max_output_tokens,
             "thinking_level": "low",
             "source_excerpt_policy": EXCERPT_POLICY,

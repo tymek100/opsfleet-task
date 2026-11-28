@@ -1,4 +1,4 @@
-"""Explicitly select a running agent for an authenticated A2A conversation."""
+"""Run a coordinator or specialist LangGraph locally."""
 
 from __future__ import annotations
 
@@ -11,15 +11,15 @@ import typer
 from rich.console import Console
 from rich.markdown import Markdown
 
-from retail_insight.a2a.client import AgentClient
-from retail_insight.config import repository_root
+from retail_insight.config import Settings
 from retail_insight.interfaces.progress import ThinkingStatus
 from retail_insight.interfaces.terminal import COMMANDS, command_help, create_prompt_session
+from retail_insight.observability.tracing import configure_from_env
+from retail_insight.runtime.team import AgentTeam
 
-app = typer.Typer(help="Chat with a running coordinator or specialist agent.", no_args_is_help=True)
+app = typer.Typer(help="Run a coordinator or specialist LangGraph.", no_args_is_help=True)
 console = Console()
 CHAT_COMMANDS = tuple(c for c in COMMANDS if c.name in {"/help", "/new", "/exit", "/quit"})
-HOST_PORTS = {"retail": 8001, "inventory": 8002, "distribution": 8003, "coordinator": 8004}
 AGENT_LABELS = {
     "coordinator": "Coordinator",
     "retail": "Retail agent",
@@ -41,14 +41,15 @@ def run_chat(
     deadline_seconds: float = 180,
     context_id: str | None = None,
 ) -> None:
-    """Use the selected service, retaining its conversation across follow-ups."""
-    if agent not in HOST_PORTS:
+    """Use the selected local graph, retaining its conversation across follow-ups."""
+    if agent not in AGENT_LABELS:
         raise typer.BadParameter("Unknown agent.")
-    key_path = repository_root() / ".artifacts/agents/secrets/a2a_signing_key"
-    if not key_path.is_file():
-        raise typer.BadParameter("Start the stack first with retail-stack up.")
-    urls = {role: f"http://127.0.0.1:{port}" for role, port in HOST_PORTS.items()}
-    client = AgentClient(urls, key_path.read_text().strip(), signed=True)
+    settings = Settings.load().model_copy(
+        update={"question_budget_usd": max_cost_usd, "turn_timeout_seconds": deadline_seconds}
+    )
+    client = AgentTeam(settings)
+    tracing = configure_from_env()
+    loop = asyncio.new_event_loop()
     label = AGENT_LABELS[agent]
     console.print(f"{label} — full dataset access. Type / for commands.")
     session = (
@@ -82,7 +83,7 @@ def run_chat(
         console.print()
         try:
             with console.status(ThinkingStatus(), spinner="dots"):
-                result = asyncio.run(
+                result = loop.run_until_complete(
                     client.ask(
                         agent,
                         question,
@@ -98,10 +99,19 @@ def run_chat(
                 f"[dim]Context: {conversation} · Status: {result.get('status', 'unknown')}[/dim]"
             )
         except KeyboardInterrupt:
-            console.print("Request interrupted; inspect task status before retrying.")
+            pending = asyncio.all_tasks(loop)
+            for task in pending:
+                task.cancel()
+            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+            console.print("Stopped. No unfinished answer was published.")
         except Exception as exc:
             console.print(f"[red]Request failed:[/red] {type(exc).__name__}: {exc}")
         console.print()
+
+    client.close()
+    loop.close()
+    if tracing:
+        tracing.close()
 
 
 @app.command()
@@ -113,7 +123,7 @@ def chat(
     deadline_seconds: float = typer.Option(180, min=10, max=600),
     context_id: str | None = typer.Option(None, help="Resume a conversation with this agent."),
 ) -> None:
-    """Connect to a running agent. Start services with retail-stack up."""
+    """Run the selected LangGraph; no containers are required."""
     run_chat(agent.value, max_cost_usd, deadline_seconds, context_id)
 
 

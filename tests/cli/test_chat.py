@@ -1,4 +1,4 @@
-"""Human-visible CLI contracts with real rendering and a scripted ADK agent."""
+"""Human-visible CLI contracts with real rendering and a scripted LangGraph agent."""
 
 from io import StringIO
 

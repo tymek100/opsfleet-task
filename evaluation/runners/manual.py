@@ -17,7 +17,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from typing import Any
-from urllib.parse import quote
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -28,7 +27,7 @@ from evaluation.settings import MAX_EVALUATION_COST_USD, parse_run_budget, valid
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings, repository_root
 from retail_insight.contracts import WORKSPACE_IDENTITY
-from retail_insight.integrations.phoenix.tracing import sanitize_capture, trace_context
+from retail_insight.observability.tracing import sanitize_capture, trace_context
 
 
 class InitialReport(BaseModel):
@@ -126,8 +125,6 @@ async def run_manual(
     fixture_path: Path | None = None,
     clock_utc: datetime | None = None,
     data_note: str = "",
-    phoenix: bool = False,
-    phoenix_url: str = "http://127.0.0.1:6006",
     app_factory: Callable = Analyst,
     progress: Callable[[str], None] = lambda message: print(message, flush=True),
     on_started=None,
@@ -218,48 +215,6 @@ async def run_manual(
     try:
         if on_started is not None:
             await on_started(directory)
-        if phoenix:
-            from evaluation.reporting.conversations import (
-                PROJECT_NAME,
-                ensure_dataset,
-                ensure_project,
-            )
-            from evaluation.reporting.phoenix import client_for
-            from evaluation.reporting.phoenix_service import ensure_phoenix
-            from evaluation.settings import EvaluationSettings
-            from retail_insight.integrations.phoenix.prompts import sync_prompts
-            from retail_insight.integrations.phoenix.tracing import configure_tracing
-            from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
-
-            phoenix_settings = EvaluationSettings(phoenix_url=phoenix_url)
-            await asyncio.to_thread(
-                ensure_phoenix, phoenix_settings, deadline=deadline, progress=progress
-            )
-            prompts = await asyncio.to_thread(
-                sync_prompts,
-                [analyst_prompt(config), reviewer_prompt(config)],
-                phoenix_url,
-                deadline=deadline,
-            )
-            write_json(directory / "prompts.json", prompts)
-            client = client_for(phoenix_settings, deadline=deadline)
-            canonical = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json")
-            known = {case.id: case for case in canonical}
-            if backend != "bigquery" or any(known.get(case.id) != case for case in scenarios):
-                raise ValueError(
-                    "The main Phoenix workspace accepts only the canonical 20 BigQuery conversations"
-                )
-            await asyncio.to_thread(ensure_dataset, client, canonical)
-            project = await asyncio.to_thread(ensure_project, client)
-            url = phoenix_url + "/projects/" + quote(project["id"], safe="")
-            state["phoenix"] = {"project_id": project["id"], "url": url}
-            tracing = configure_tracing(
-                phoenix_url + "/v1/traces", project=PROJECT_NAME, mode="synthetic"
-            )
-            tracing.register_prompts(prompts)
-            progress(f"Prompt library: {phoenix_url}/prompts")
-            progress(f"Phoenix traces: {url}")
-            write_json(directory / "progress.json", state)
         for scenario in scenarios:
             case_dir = directory / "cases" / scenario.id
             case_dir.mkdir(parents=True)
@@ -386,20 +341,6 @@ async def run_manual(
         state["finished_at"] = datetime.now(UTC).isoformat()
         write_json(directory / "progress.json", state)
         progress(f"Captured results: {directory}; status: {state['status']}")
-    if phoenix and state["status"] == "captured":
-        from evaluation.reporting.conversations import prepare_phase, publish_phase
-
-        spec = {
-            "name": f"{phase.title()} - {now:%Y-%m-%d %H:%M} UTC ({len(scenarios)} of 20)",
-            "runs": [directory.name],
-            "reviews": [],
-        }
-        prepared = prepare_phase(spec, output_root, canonical)
-        publication = await asyncio.to_thread(
-            publish_phase, prepared, canonical, phoenix_settings, directory / "phoenix.json"
-        )
-        progress(f"Phoenix experiment: {publication['url']}")
-        progress("Independent answer review: PENDING. Runtime approval is not an evaluation pass.")
     return directory
 
 
@@ -415,8 +356,6 @@ def main() -> None:
     parser.add_argument("--fixture-path", type=Path)
     parser.add_argument("--clock-utc", type=datetime.fromisoformat)
     parser.add_argument("--data-note", default="")
-    parser.add_argument("--phoenix", action="store_true")
-    parser.add_argument("--phoenix-url", default="http://127.0.0.1:6006")
     parser.add_argument("--max-cost-usd", type=parse_run_budget, default=MAX_EVALUATION_COST_USD)
     parser.add_argument("--deadline-seconds", type=float, required=True)
     args = parser.parse_args()
@@ -436,8 +375,6 @@ def main() -> None:
             fixture_path=args.fixture_path,
             clock_utc=args.clock_utc,
             data_note=args.data_note,
-            phoenix=args.phoenix,
-            phoenix_url=args.phoenix_url,
         )
     )
     if read_json(directory / "progress.json")["status"] != "captured":

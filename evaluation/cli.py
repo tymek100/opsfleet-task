@@ -1,453 +1,228 @@
-"""Explicit, bounded execution and independent regrading commands."""
+"""Bounded LangGraph evaluations with independent grading and Foundry experiments."""
 
 import asyncio
 import json
-import time
 from pathlib import Path
-from typing import Annotated
-from urllib.parse import urlparse
 
 import typer
 
-from evaluation.settings import MAX_EVALUATION_COST_USD, EvaluationSettings, validate_run_budget
+from evaluation.settings import EvaluationSettings, validate_run_budget
+from retail_insight.config import Settings, repository_root
 
-app = typer.Typer(
-    pretty_exceptions_show_locals=False,
-    no_args_is_help=True,
-    help="Independent retail-agent evaluation with local Phoenix.",
-)
+app = typer.Typer(no_args_is_help=True)
 
 
-def cost_limit(value: float) -> float:
+def cost_limit(value: float):
     try:
         return validate_run_budget(value)
     except ValueError as exc:
         raise typer.BadParameter(str(exc)) from None
 
 
-def echo(value) -> None:
+def echo(value):
     typer.echo(json.dumps(value, indent=2, default=str))
 
 
-def fixture_endpoint(url: str) -> None:
-    """Reserve the primary Phoenix workspace for the authored conversation suite."""
-    if urlparse(url).port in {None, 6006}:
-        raise typer.BadParameter(
-            "The main Phoenix workspace is reserved for the 20 conversations. "
-            "Use run-conversations, or supply --phoenix-url http://127.0.0.1:6007 "
-            "for a separate fixture-test instance."
-        )
-
-
-@app.command()
-def validate() -> None:
-    """Validate all case references and fixture hashes without model calls."""
-    from evaluation.data import validate_dataset
-
-    result = validate_dataset()
-    echo(result)
-    if not result["valid"]:
-        raise typer.Exit(1)
-
-
-@app.command()
-def cases(suite: str = "pilot") -> None:
-    """List the exact cases selected by a suite or comma-separated IDs."""
-    from evaluation.data import load_cases
-
-    for case in load_cases(suite):
-        typer.echo(f"{case.id}\t{case.family}\t{len(case.steps)} steps\t{case.split}")
-
-
-@app.command()
-def sync(suite: str = "pilot", phoenix_url: str = "http://127.0.0.1:6006") -> None:
-    """Mirror canonical cases into a content-versioned local Phoenix dataset."""
-    from evaluation.data import load_cases
-    from evaluation.reporting.phoenix import sync_cases
-
-    fixture_endpoint(phoenix_url)
-    dataset = sync_cases(load_cases(suite), EvaluationSettings(phoenix_url=phoenix_url))
-    echo({"dataset_id": dataset.id, "version_id": dataset.version_id, "name": dataset.name})
-
-
-@app.command()
-def sync_prompts(
-    phoenix_url: str = "http://127.0.0.1:6006",
-    model: str | None = None,
-    judge_model: str | None = None,
-) -> None:
-    """Publish four repository prompt definitions to Phoenix without model calls."""
-    from evaluation.prompt_catalog import judge_prompt
-    from evaluation.reporting.phoenix_service import ensure_phoenix
-    from retail_insight.config import Settings
-    from retail_insight.integrations.phoenix.prompts import sync_prompts as publish_prompts
-    from retail_insight.runtime.prompts import analyst_prompt, reviewer_prompt
+def _judge(model, max_cost_usd, deadline_seconds):
+    from evaluation.graders.judge import GeminiJudge
 
     settings = Settings.load()
-    if model:
-        settings.gemini_model = model
-    config = EvaluationSettings(
-        phoenix_url=phoenix_url, judge_model=judge_model or settings.gemini_model
-    )
-    deadline = time.monotonic() + 60
-    try:
-        ensure_phoenix(config, deadline=deadline, progress=typer.echo)
-        references = publish_prompts(
-            [
-                analyst_prompt(settings),
-                reviewer_prompt(settings),
-                judge_prompt(config, "answer"),
-                judge_prompt(config, "trajectory"),
-            ],
-            config.phoenix_url,
-            deadline=deadline,
-        )
-    except Exception as exc:
-        typer.echo(f"Prompt synchronization failed ({type(exc).__name__}). Check local Phoenix.")
-        raise typer.Exit(2) from None
-    typer.echo(f"Phoenix prompts: {config.phoenix_url}/prompts")
-    echo(references)
-
-
-@app.command()
-def run(
-    suite: str = "smoke",
-    repetitions: int = typer.Option(1, min=1, max=20),
-    max_cost_usd: float = typer.Option(
-        MAX_EVALUATION_COST_USD,
-        min=0.01,
-        max=MAX_EVALUATION_COST_USD,
-        callback=cost_limit,
-        help="Shared run budget in USD, including agent work, references and judges.",
-    ),
-    deadline_seconds: float = typer.Option(..., min=1),
-    allow_unreviewed: bool = False,
-    phoenix: bool = typer.Option(True, hidden=True),
-    phoenix_url: str = "http://127.0.0.1:6006",
-    model: str | None = None,
-    judge_model: str | None = None,
-    candidates: bool = True,
-    artifact_root: Path = Path(".artifacts/evaluation"),
-) -> None:
-    """Run, grade, and publish an experiment in Phoenix under one shared limit."""
-    from pydantic import ValidationError
-
-    from evaluation.data import load_cases
-    from evaluation.graders.judge import GeminiJudge
-    from evaluation.reporting.phoenix_service import PhoenixUnavailable
-    from evaluation.runners.pipeline import run_pipeline
-    from retail_insight.config import Settings
-
-    if not phoenix:
-        raise typer.BadParameter(
-            "run now includes Phoenix and grading. Use pytest for offline checks; "
-            "grade can reassess saved runs without Phoenix."
-        )
-    try:
-        selected = load_cases(suite)
-        if any(not c.provenance.human_reviewed for c in selected) and not allow_unreviewed:
-            raise typer.BadParameter(
-                "Pilot references await human review; use --allow-unreviewed for diagnostic runs."
-            )
-        settings = Settings.load()
-        if model:
-            settings = settings.model_copy(update={"gemini_model": model})
-        if not settings.gemini_api_key.get_secret_value():
-            raise typer.BadParameter("GEMINI_API_KEY is required for a live agent run.")
-        config = EvaluationSettings(
-            artifact_root=artifact_root,
-            phoenix_url=phoenix_url,
-            judge_model=judge_model or settings.gemini_model,
-        )
-        fixture_endpoint(config.phoenix_url)
-        judge = GeminiJudge(
-            settings.gemini_api_key.get_secret_value(),
-            config,
-            max_cost_usd=max_cost_usd,
-            deadline_seconds=deadline_seconds,
-        )
-        result = asyncio.run(
-            run_pipeline(
-                selected,
-                settings,
-                config,
-                suite=suite,
-                repetitions=repetitions,
-                max_cost_usd=max_cost_usd,
-                deadline_seconds=deadline_seconds,
-                judge=judge,
-                grade_candidates=candidates,
-                progress=typer.echo,
-            )
-        )
-    except ValidationError:
-        typer.echo(
-            "Invalid evaluation configuration; check the settings and Phoenix URL.", err=True
-        )
-        raise typer.Exit(2) from None
-    except OSError:
-        typer.echo("Evaluation could not access a required file or local service.", err=True)
-        raise typer.Exit(2) from None
-    except (PhoenixUnavailable, ValueError) as exc:
-        typer.echo(f"Evaluation could not complete: {exc}", err=True)
-        raise typer.Exit(2) from None
-    if result.exit_code:
-        raise typer.Exit(result.exit_code)
-
-
-def _judge(model: str | None, max_cost_usd: float, deadline_seconds: float):
-    from evaluation.graders.judge import GeminiJudge
-    from retail_insight.config import Settings
-
-    settings = Settings.load()
-    if not settings.gemini_api_key.get_secret_value():
-        raise typer.BadParameter("GEMINI_API_KEY is required for LLM grading.")
-    config = EvaluationSettings(judge_model=model or settings.gemini_model)
     return GeminiJudge(
         settings.gemini_api_key.get_secret_value(),
-        config,
-        max_cost_usd=max_cost_usd,
+        EvaluationSettings(judge_model=model or settings.gemini_model),
+        max_cost_usd=validate_run_budget(max_cost_usd),
         deadline_seconds=deadline_seconds,
     )
 
 
 @app.command()
-def grade(
-    run_directory: Annotated[Path, typer.Option("--run", exists=True, file_okay=False)],
-    max_cost_usd: float = typer.Option(
-        MAX_EVALUATION_COST_USD,
-        min=0.01,
-        max=MAX_EVALUATION_COST_USD,
-        callback=cost_limit,
-        help="Shared run budget in USD, including agent work, references and judges.",
-    ),
-    deadline_seconds: float = typer.Option(..., min=1),
-    code_only: bool = False,
-    candidates: bool = True,
-    trajectory: bool = True,
-    judge_model: str | None = None,
-    phoenix: bool = False,
-    phoenix_url: str = "http://127.0.0.1:6006",
-) -> None:
-    """Grade saved outputs into a new version; the agent is never rerun."""
-    from evaluation.graders.runner import grade_run
+def validate():
+    """Verify independent fixtures and reference calculations; no API calls."""
+    from evaluation.data import validate_dataset
 
-    if phoenix:
-        fixture_endpoint(phoenix_url)
-
-    async def execute():
-        judge = None if code_only else _judge(judge_model, max_cost_usd, deadline_seconds)
-        try:
-            return await grade_run(
-                run_directory,
-                judge,
-                grade_candidates=candidates,
-                grade_trajectory=trajectory,
-                progress=typer.echo,
-            )
-        finally:
-            if judge:
-                await judge.close()
-
-    result = asyncio.run(execute())
-    typer.echo(str(result / "summary.md"))
-    if phoenix:
-        from evaluation.reporting.phoenix import publish
-
-        echo(publish(run_directory, EvaluationSettings(phoenix_url=phoenix_url), grade=result))
-
-
-@app.command()
-def publish(
-    run_directory: Annotated[Path, typer.Option("--run", exists=True, file_okay=False)],
-    grade_directory: Annotated[
-        Path | None, typer.Option("--grade", exists=True, file_okay=False)
-    ] = None,
-    phoenix_url: str = "http://127.0.0.1:6006",
-) -> None:
-    """Publish saved trials and optional scores, retaining files on outage."""
-    from evaluation.reporting.phoenix import publish as upload
-
-    fixture_endpoint(phoenix_url)
-    result = upload(
-        run_directory, EvaluationSettings(phoenix_url=phoenix_url), grade=grade_directory
-    )
+    result = validate_dataset()
     echo(result)
-    if result["status"] != "published":
+    if result.get("errors"):
         raise typer.Exit(1)
 
 
 @app.command()
-def publish_conversations(
-    history: Path = Path("evaluation/scenarios/manual_history.json"),
-    artifact_root: Path = Path(".artifacts/manual"),
-    phoenix_url: str = "http://127.0.0.1:6006",
-) -> None:
-    """Publish verified saved conversations and reviews; never rerun model calls."""
-    from evaluation.reporting.conversations import publish_history
-    from evaluation.reporting.phoenix_service import ensure_phoenix
+def cases(suite: str = "pilot"):
+    from evaluation.data import load_cases
 
-    config = EvaluationSettings(phoenix_url=phoenix_url)
-    ensure_phoenix(config, deadline=time.monotonic() + 60, progress=typer.echo)
-    result = publish_history(history, artifact_root, config, progress=typer.echo)
-    typer.echo(
-        f"Published {len(result['phases'])} experiments with {len(result['trace_ids'])} captured turns."
+    echo([{"id": c.id, "steps": len(c.steps)} for c in load_cases(suite)])
+
+
+@app.command()
+def run(
+    suite: str = "smoke",
+    repetitions: int = 1,
+    allow_unreviewed: bool = False,
+    max_cost_usd: float = typer.Option(5, callback=cost_limit),
+    deadline_seconds: float = 600,
+):
+    """Run diagnostic fixture cases, grade answers/trajectories, publish to Foundry."""
+    from evaluation.data import load_cases
+    from evaluation.runners.pipeline import run_pipeline
+
+    try:
+        selected = load_cases(suite)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from None
+    if not allow_unreviewed and any(not c.provenance.human_reviewed for c in selected):
+        raise typer.BadParameter(
+            "References await human review. Use --allow-unreviewed for diagnostic runs."
+        )
+    settings = Settings.load()
+    result = asyncio.run(
+        run_pipeline(
+            selected,
+            settings,
+            EvaluationSettings(),
+            suite=suite,
+            repetitions=repetitions,
+            max_cost_usd=max_cost_usd,
+            deadline_seconds=deadline_seconds,
+            judge=_judge(None, max_cost_usd, deadline_seconds),
+            grade_candidates=True,
+            progress=typer.echo,
+        )
     )
+    raise typer.Exit(result.exit_code)
 
 
 @app.command()
 def run_conversations(
-    max_cost_usd: float = typer.Option(
-        MAX_EVALUATION_COST_USD,
-        min=0.01,
-        max=MAX_EVALUATION_COST_USD,
-        callback=cost_limit,
-        help="Shared run budget in USD, including agent work, references and judges.",
-    ),
-    deadline_seconds: float = typer.Option(..., min=1),
-    phase: str = "recheck",
     only: str | None = None,
-    phoenix_url: str = "http://127.0.0.1:6006",
-    reference: Path | None = None,
-    judge_model: str | None = None,
-) -> None:
-    """Run and independently grade the 20 conversations against the same warehouse snapshot."""
+    max_cost_usd: float = typer.Option(5, callback=cost_limit),
+    deadline_seconds: float = 1800,
+    reference_directory: Path | None = None,
+):
+    """Run the 20 authored retail conversations against a pinned BigQuery snapshot."""
     from evaluation.runners.authored import run_authored
     from evaluation.runners.manual import load_scenarios
-    from retail_insight.config import Settings, repository_root
 
-    settings = Settings.load()
     scenarios = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json", only)
-    if not settings.gemini_api_key.get_secret_value():
-        raise typer.BadParameter("GEMINI_API_KEY is required for real-model conversations.")
-    _, summary = asyncio.run(
+    directory, summary = asyncio.run(
         run_authored(
             scenarios,
-            settings,
-            EvaluationSettings(
-                phoenix_url=phoenix_url, judge_model=judge_model or settings.gemini_model
-            ),
+            Settings.load(),
+            EvaluationSettings(),
             max_cost_usd=max_cost_usd,
             deadline_seconds=deadline_seconds,
-            phase=phase,
-            reference_directory=reference,
-            progress=typer.echo,
+            reference_directory=reference_directory,
         )
     )
+    typer.echo(str(directory))
     echo(summary)
-    if summary["exit_code"]:
-        raise typer.Exit(summary["exit_code"])
+    raise typer.Exit(summary["exit_code"])
 
 
 @app.command()
-def sync_conversations(
-    reference: Annotated[Path, typer.Option(exists=True, file_okay=False)],
-    phoenix_url: str = "http://127.0.0.1:6006",
-) -> None:
-    """Attach verified independent references to the 20 examples as a new dataset version."""
-    from evaluation.conversation_references import Snapshot, bundle
-    from evaluation.reporting.conversations import ensure_dataset
-    from evaluation.reporting.phoenix import client_for
-    from evaluation.reporting.phoenix_service import ensure_phoenix
-    from evaluation.runners.manual import load_scenarios
-    from retail_insight.config import repository_root
-
-    snapshot = Snapshot.load(reference)
-    scenarios = load_scenarios(repository_root() / "evaluation/scenarios/manual_20.json")
-    config = EvaluationSettings(phoenix_url=phoenix_url)
-    ensure_phoenix(config, deadline=time.monotonic() + 60, progress=typer.echo)
-    dataset = ensure_dataset(client_for(config), scenarios, bundle(scenarios, snapshot))
-    echo(
-        {
-            "dataset_id": dataset.id,
-            "version_id": dataset.version_id,
-            "examples": len(dataset.examples),
-            "url": f"{config.phoenix_url}/datasets/{dataset.id}",
-            "reference": snapshot.provenance(),
-        }
-    )
-
-
-@app.command()
-def calibrate(
-    max_cost_usd: float = typer.Option(
-        MAX_EVALUATION_COST_USD,
-        min=0.01,
-        max=MAX_EVALUATION_COST_USD,
-        callback=cost_limit,
-        help="Shared run budget in USD, including agent work, references and judges.",
-    ),
-    deadline_seconds: float = typer.Option(..., min=1),
-    split: str = "validation",
-    judge_model: str | None = None,
-    limit: int | None = typer.Option(None, min=1),
-    artifact_root: Path = Path(".artifacts/evaluation"),
-) -> None:
-    """Blind-grade synthetic controls; human calibration remains a separate approval."""
-    from evaluation.data import load_calibration
-    from evaluation.graders.calibration import calibrate as evaluate
-
-    controls = load_calibration(split)
-    if limit:
-        controls = controls[:limit]
-
-    async def execute():
-        judge = _judge(judge_model, max_cost_usd, deadline_seconds)
-        try:
-            return await evaluate(controls, judge, artifact_root)
-        finally:
-            await judge.close()
-
-    typer.echo(str(asyncio.run(execute())))
-
-
-@app.command()
-def compare(
-    baseline: Annotated[Path, typer.Option(exists=True, file_okay=False)],
-    candidate: Annotated[Path, typer.Option(exists=True, file_okay=False)],
-) -> None:
-    """Compare compatible grading directories, preserving unresolved outcomes."""
-    from evaluation.reporting.compare import compare as compare_grades
-
-    echo(compare_grades(baseline, candidate))
-
-
-@app.command("run-multi-agent")
 def run_multi_agent(
-    suite: str = "all",
+    suite: str = "smoke",
     only: str | None = None,
-    max_cost_usd: float = typer.Option(
-        MAX_EVALUATION_COST_USD,
-        min=0.01,
-        max=MAX_EVALUATION_COST_USD,
-        callback=cost_limit,
-        help="Shared run budget in USD, including agent work, references and judges.",
-    ),
-    deadline_seconds: int = typer.Option(7200, min=1),
+    max_cost_usd: float = typer.Option(5, callback=cost_limit),
+    deadline_seconds: float = 1800,
     backend: str = "fixture",
-    concurrency: int = typer.Option(1, min=1, max=3),
-    phoenix_url: str = "http://127.0.0.1:6006",
+    concurrency: int = 1,
     publish_only: bool = False,
-    agent_budget_usd: float = typer.Option(2, min=0.01, max=MAX_EVALUATION_COST_USD),
-) -> None:
-    """Run the inventory, distribution and coordinator conversations through A2A."""
-    from evaluation.multi_agent.runner import run
+    agent_budget_usd: float = 1,
+):
+    """Run the inventory, distribution and coordinator suites as local graphs."""
+    from evaluation.multi_agent.runner import run as execute
 
     directory, code = asyncio.run(
-        run(
+        execute(
             suite=suite,
             only=only,
             max_cost_usd=max_cost_usd,
             deadline_seconds=deadline_seconds,
             backend=backend,
             concurrency=concurrency,
-            phoenix_url=phoenix_url,
             publish_only=publish_only,
             agent_budget_usd=agent_budget_usd,
         )
     )
-    typer.echo(f"Evaluation artifacts: {directory}")
+    typer.echo(str(directory))
     raise typer.Exit(code)
+
+
+@app.command()
+def export_prompts():
+    """Save exact local prompt snapshots and hashes for evaluation provenance."""
+    from evaluation.prompt_catalog import judge_prompt
+    from retail_insight.observability.prompts import sync_prompts as upload
+    from retail_insight.runtime.prompts import agent_prompt, analyst_prompt, reviewer_prompt
+
+    settings = Settings.load()
+    root = repository_root() / "src/retail_insight"
+    specs = [
+        analyst_prompt(settings),
+        reviewer_prompt(settings),
+        judge_prompt(EvaluationSettings(), "answer"),
+        judge_prompt(EvaluationSettings(), "trajectory"),
+    ]
+    specs += [
+        agent_prompt(
+            settings,
+            name="retail-" + role,
+            path=root / f"agents/{role}/prompt.md",
+            model=settings.gemini_model,
+            common=root / "runtime/prompt.md",
+        )
+        for role in ("coordinator", "inventory", "distribution")
+    ]
+    echo(upload(specs))
+
+
+@app.command()
+def grade(
+    run_directory: Path = typer.Option(..., "--run"),  # noqa: B008
+    max_cost_usd: float = typer.Option(5, callback=cost_limit),
+    deadline_seconds: float = 600,
+    code_only: bool = False,
+    candidates: bool = True,
+    trajectory: bool = True,
+):
+    """Regrade saved diagnostic outputs without rerunning the agent."""
+    from evaluation.graders.runner import grade_run
+
+    async def execute():
+        judge = None if code_only else _judge(None, max_cost_usd, deadline_seconds)
+        try:
+            return await grade_run(
+                run_directory, judge, grade_candidates=candidates, grade_trajectory=trajectory
+            )
+        finally:
+            if judge:
+                await judge.close()
+
+    typer.echo(str(asyncio.run(execute())))
+
+
+@app.command()
+def calibrate(
+    max_cost_usd: float = typer.Option(5, callback=cost_limit), deadline_seconds: float = 600
+):
+    from evaluation.data import load_calibration
+    from evaluation.graders.calibration import calibrate as execute
+
+    async def run_controls():
+        judge = _judge(None, max_cost_usd, deadline_seconds)
+        try:
+            return await execute(load_calibration(), judge, Path(".artifacts/calibration"))
+        finally:
+            await judge.close()
+
+    typer.echo(str(asyncio.run(run_controls())))
+
+
+@app.command()
+def compare(baseline: Path, candidate: Path):
+    from evaluation.reporting.compare import compare as compare_saved
+
+    echo(compare_saved(baseline, candidate))
 
 
 if __name__ == "__main__":

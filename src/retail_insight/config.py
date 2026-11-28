@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     fixture_path: Path = Field(
         default_factory=lambda: Path(__file__).parent / "integrations/bigquery/retail_demo.sql"
     )
+    domain_fixture_path: Path | None = None
     turn_timeout_seconds: float = Field(default=120, ge=1, le=600)
     question_budget_usd: float = Field(default=1, gt=0, le=10)
     max_model_calls: int = Field(default=12, ge=2, le=30)

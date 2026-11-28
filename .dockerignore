@@ -1,0 +1,14 @@
+**/.env
+**/.env.*
+**/.git
+**/.venv
+**/__pycache__
+.artifacts
+.retail-agent*
+web/node_modules
+web/dist
+web/playwright-report
+web/test-results
+docs
+tests
+evaluation

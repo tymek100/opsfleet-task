@@ -3,29 +3,19 @@ name: revenue-driver-analysis
 description: Investigate why revenue differs or changes, including prices, quantities, customers, order patterns and revenue concentration. Use when an explanation needs more than ranking membership.
 metadata:
   audience: analyst
-  version: "3"
+  version: "4"
 ---
 
 # Revenue driver analysis
 
-Select the measurements needed for the question; a simple factual comparison does not require every possible metric. See [the measurement guide](references/measurement-guide.md) when deciding which quantities support an interpretation. Load it with load_skill_resource only when the additional detail is useful.
+Select measurements for the question rather than collecting every metric. Read [the measurement guide](references/measurement-guide.md) through load_skill_resource when useful.
 
-## Establish the measurements
+Use qualifying item sale_price, not catalog retail_price or inferred prices. Confirm row grain before counting units; count order/customer IDs distinctly after joins. Revenue per customer, revenue per order and realized unit price require their respective matching denominators. One customer or order can include multiple units.
 
-Use realized sale_price from qualifying item sales. Do not substitute catalogue retail_price or infer prices from product names. Units, orders and customers are separate measures. Confirm the source grain before counting units, and count order/customer IDs distinctly after item-level joins.
+Concentration and driver claims must match the measured population. Selected products need the same-period whole-population total to establish a share; category numerators need category denominators. Measurements for selected leaders do not establish the primary driver of the whole brand.
 
-Revenue per customer is revenue divided by distinct customers. Revenue per order is revenue divided by distinct orders. Average realized unit selling price needs a matching quantity denominator. Neither one customer nor one order proves that only one unit was sold.
+Separate arithmetic contribution, association and cause. A stated price/quantity decomposition describes arithmetic effects, while product mix can change aggregate average prices without changes to individual prices. Neither proves motivations or campaign effects.
 
-Concentration claims require a scoped, same-period total. Calculate the selected products' share of that total; do not call a top-N list most of the business without the denominator. Keep category-specific numerators paired with category-specific denominators.
+Revenue plus distinct customers supports revenue per customer and reach, not unit-price or volume claims. Obtain missing measurements or narrow the answer. Label useful hypotheses as unverified with their evidence gap; a hedge alone does not make a story supported.
 
-The same scope requirement applies to driver language, not just explicit percentages. Measuring prices, quantities and customers for selected products does not show what primarily generated the whole brand's revenue. Match the population of the claimed driver/contribution to the population actually measured, or narrow the conclusion to that subset.
-
-## Explain the evidence
-
-Distinguish a measured contribution, an association and a causal explanation. A price-times-quantity decomposition can describe arithmetic contributions under stated definitions, but transaction totals alone do not establish customer motivations or the effect of a campaign. Shifts in the mix of products can change an overall average price even when individual product prices are unchanged.
-
-If only revenue and distinct customers are available, discuss revenue per customer and reach. Higher/lower-priced and higher/lower-volume claims require actual price or quantity measurements. A customer can buy multiple units. An illustrative story introduced with can, suggests or likely still needs to be clearly identified as unverified if it is not established for these data.
-
-Possible explanations may be useful when labelled hypotheses, with the evidence gap and alternatives made clear. Choose whether further queries are warranted or whether a narrower supported answer meets the request. Preserve selected populations from earlier turns, and do not treat a prior answer's approval as new evidence.
-
-An increase in active customers is not a measurement of acquisition. New-to-brand status requires first qualifying purchases across all available authorized history; it cannot establish company-wide acquisition or prove why revenue changed. Similarly, absent sales do not establish absent demand, stockouts or seasonality. If those inputs are unavailable, state the limited finding and propose the missing checks without presenting a business story as fact.
+Active-customer growth is not acquisition. New-to-brand status requires first qualifying purchases across available scoped history and does not establish company-wide acquisition. Absent sales do not prove absent demand, stockouts or seasonality. Preserve follow-up populations and do not treat prior approval as evidence.

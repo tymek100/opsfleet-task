@@ -16,7 +16,7 @@ from evaluation.settings import validate_run_budget
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY
-from retail_insight.integrations.phoenix.tracing import span
+from retail_insight.observability.tracing import span
 from retail_insight.runtime.provider import make_gemini
 
 

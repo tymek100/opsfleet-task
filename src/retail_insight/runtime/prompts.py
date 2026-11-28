@@ -1,4 +1,4 @@
-"""Repository-owned prompt definitions shared by inference and Phoenix publication."""
+"""Repository-owned prompt definitions shared by inference and evaluation snapshots and Foundry trace correlation."""
 
 import hashlib
 import json
@@ -12,6 +12,8 @@ from retail_insight.contracts import Review
 from retail_insight.runtime.skills import SkillCatalog
 
 TRUST_POLICY = Path(__file__).with_name("trust_policy.md")
+RUNTIME_PROMPT = Path(__file__).with_name("prompt.md")
+ANSWER_STYLE = Path(__file__).with_name("answer_style.md")
 
 
 @dataclass(frozen=True)
@@ -45,21 +47,31 @@ class PromptSpec:
 def analyst_prompt(settings: Settings, *, model: str | None = None) -> PromptSpec:
     return PromptSpec(
         name="retail-analyst",
-        instruction=TRUST_POLICY.read_text()
-        + "\n\n"
-        + (Path(__file__).parents[1] / "agents/retail/prompt.md").read_text(),
+        instruction="\n\n".join(
+            path.read_text()
+            for path in (
+                TRUST_POLICY,
+                RUNTIME_PROMPT,
+                Path(__file__).parents[1] / "agents/retail/prompt.md",
+                ANSWER_STYLE,
+            )
+        ),
         model=model or settings.gemini_model,
         config=types.GenerateContentConfig(
-            temperature=0.2,
             max_output_tokens=settings.max_output_tokens,
             thinking_config=types.ThinkingConfig(
                 thinking_level=types.ThinkingLevel(settings.thinking_level)
             ),
         ),
-        sources=("src/retail_insight/agents/retail/prompt.md", str(TRUST_POLICY)),
+        sources=(
+            "src/retail_insight/agents/retail/prompt.md",
+            str(TRUST_POLICY),
+            str(RUNTIME_PROMPT),
+            str(ANSWER_STYLE),
+        ),
         description=(
             "Repository analyst instructions. context is the JSON initial context. "
-            "Playground tests the prompt only; ADK tools, loaded skills, conversation "
+            "Playground tests the prompt only; LangGraph tools, loaded skills, conversation "
             "state and dynamic budget instructions are supplied by the application."
         ),
     )
@@ -75,10 +87,11 @@ def reviewer_prompt(
         + "\n\n"
         + (Path(__file__).parents[1] / "review/prompt.md").read_text()
         + "\n\n"
-        + guidance["instructions"],
+        + guidance["instructions"]
+        + "\n\n"
+        + ANSWER_STYLE.read_text(),
         model=model or settings.gemini_model,
         config=types.GenerateContentConfig(
-            temperature=0,
             max_output_tokens=settings.review_output_tokens,
             response_mime_type="application/json",
             response_json_schema=Review.response_schema(),
@@ -90,6 +103,7 @@ def reviewer_prompt(
             "src/retail_insight/review/prompt.md",
             "src/retail_insight/review/skills/analytical-review/SKILL.md",
             str(TRUST_POLICY),
+            str(ANSWER_STYLE),
         ),
         description=(
             "Runtime completion reviewer, including the mandatory analytical-review skill. "
@@ -103,12 +117,12 @@ def agent_prompt(
 ) -> PromptSpec:
     """Build an agent prompt from explicit files without selecting a business role."""
     paths = (TRUST_POLICY, common, path) if common is not None else (TRUST_POLICY, path)
+    paths += (ANSWER_STYLE,)
     return PromptSpec(
         name=name,
         instruction="\n\n".join(item.read_text() for item in paths),
         model=model,
         config=types.GenerateContentConfig(
-            temperature=0.2,
             max_output_tokens=settings.max_output_tokens,
             thinking_config=types.ThinkingConfig(
                 thinking_level=types.ThinkingLevel(settings.thinking_level)

@@ -1,9 +1,8 @@
 """Reviewed completion with the Maps-derived report storage boundary."""
 
-from google.adk.tools import ToolContext
-
 from retail_insight.integrations.maps.privacy import contains_maps
 from retail_insight.review.completion import CompletionTools
+from retail_insight.runtime.graph import ToolContext
 
 
 class MapsCompletionTools(CompletionTools):

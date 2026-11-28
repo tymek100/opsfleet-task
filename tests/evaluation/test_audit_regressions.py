@@ -1,12 +1,10 @@
 """Adversarial controls for false passes, missing capture, and publication boundaries."""
 
 import asyncio
-import json
 import time
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
-import httpx
 import pytest
 from google.genai import types
 
@@ -14,9 +12,8 @@ from evaluation.data import fixture_path, load_cases
 from evaluation.graders.judge import GeminiJudge, JudgeUnavailable
 from evaluation.graders.runner import grade_run, grade_trial, grade_turn
 from evaluation.models import Criterion, Fault, TurnReference
-from evaluation.reporting.phoenix import publish, sync_cases
 from evaluation.results import Claim, Judgment, Trial, TurnRecord
-from evaluation.runners.artifacts import digest, prepare_run, read_json, write_json
+from evaluation.runners.artifacts import prepare_run
 from evaluation.runners.conversation import run_trial
 from evaluation.runners.faults import FaultModel, Schedule
 from evaluation.settings import EvaluationSettings
@@ -178,83 +175,6 @@ async def test_capture_errors_are_not_treated_as_complete_observed_evidence(sett
     assert "capture" in (trial.turns[0].error or "")
 
 
-def phoenix_client():
-    client = MagicMock()
-    client.datasets.get_dataset.side_effect = ValueError("Dataset not found: synthetic")
-
-    def create(**kwargs):
-        examples = [
-            {"id": f"example-{index}", "input": source, "output": output, "metadata": metadata}
-            for index, (source, output, metadata) in enumerate(
-                zip(kwargs["inputs"], kwargs["outputs"], kwargs["metadata"], strict=True)
-            )
-        ]
-        return SimpleNamespace(id="dataset", version_id="version", examples=examples)
-
-    client.datasets.create_dataset.side_effect = create
-    return client
-
-
-def test_phoenix_redacts_inputs_metadata_and_outputs_before_upload():
-    case = load_cases("totals-q1")[0].model_copy(deep=True)
-    case.steps[0].message += " /confirm INPUT_CANARY"
-    case.provenance.notes = "Bearer METADATA_CANARY"
-    case.references[case.steps[0].id].reference_answer += " /confirm OUTPUT_CANARY"
-    client = phoenix_client()
-    sync_cases([case], EvaluationSettings(), client=client)
-    payload = json.dumps(client.datasets.create_dataset.call_args.kwargs)
-    for canary in ("INPUT_CANARY", "METADATA_CANARY", "OUTPUT_CANARY"):
-        assert canary not in payload
-    assert "[REDACTED]" in payload
-
-
-def test_remote_dataset_edits_cannot_reuse_an_unchanged_checksum():
-    case = load_cases("totals-q1")[0]
-    client = phoenix_client()
-    dataset = sync_cases([case], EvaluationSettings(), client=client)
-    dataset.examples[0]["output"] = {"references": "Silently edited ground truth"}
-    client.datasets.get_dataset.side_effect = None
-    client.datasets.get_dataset.return_value = dataset
-    with pytest.raises(ValueError, match="differs"):
-        sync_cases([case], EvaluationSettings(), client=client)
-
-
-def test_phoenix_outage_records_failure_without_destroying_local_artifacts(settings, tmp_path):
-    run, _ = prepare_run(
-        tmp_path,
-        load_cases("totals-q1"),
-        settings,
-        suite="audit",
-        repetitions=1,
-        max_cost_usd=1,
-        deadline_seconds=30,
-    )
-    before = (run / "manifest.json").read_bytes()
-    client = phoenix_client()
-    client.datasets.get_dataset.side_effect = httpx.ConnectError("Synthetic Phoenix outage")
-    result = publish(run, EvaluationSettings(), client=client)
-    assert result["status"] == "publication_failed"
-    assert result["error"] == "ConnectError"
-    assert read_json(run / "phoenix.json") == result
-    assert (run / "manifest.json").read_bytes() == before
-
-
-def test_expired_publication_deadline_does_not_send_network_requests(settings, tmp_path):
-    run, _ = prepare_run(
-        tmp_path,
-        load_cases("totals-q1"),
-        settings,
-        suite="audit",
-        repetitions=1,
-        max_cost_usd=1,
-        deadline_seconds=30,
-    )
-    client = phoenix_client()
-    result = publish(run, EvaluationSettings(), client=client, deadline_seconds=0)
-    assert result["status"] == "publication_failed"
-    client.datasets.get_dataset.assert_not_called()
-
-
 async def test_regrade_rejects_unrecorded_or_modified_execution_output(settings, tmp_path):
     run, _ = prepare_run(
         tmp_path,
@@ -359,63 +279,10 @@ async def test_candidate_format_defect_counts_in_reviewer_diagnostics():
     assert not any(s.name == "acceptable_outcome" for s in grade.scores)
 
 
-def test_phoenix_run_error_and_full_output_are_sanitized(settings, tmp_path):
-    case = load_cases("totals-q1")[0]
-    run, manifest = prepare_run(
-        tmp_path,
-        [case],
-        settings,
-        suite="audit",
-        repetitions=1,
-        max_cost_usd=1,
-        deadline_seconds=30,
-    )
-    trial = Trial(
-        id=f"{case.id}-r1",
-        case_id=case.id,
-        repetition=1,
-        status="ERROR",
-        started_at="2026-11-22T00:00:00+00:00",
-        ended_at="2026-11-22T00:00:01+00:00",
-        error="Bearer ERROR_CANARY",
-        turns=[TurnRecord(step_id="turn-1", status="ERROR", prompt="/confirm PROMPT_CANARY")],
-    )
-    path = run / "trials" / f"{trial.id}.json"
-    write_json(path, trial)
-    manifest.trials_sha256[path.name] = digest(path)
-    write_json(run / "manifest.json", manifest)
-    client = phoenix_client()
-    client.experiments.create.return_value = {"id": "experiment"}
-    client.experiments.log_run.return_value = {"id": "remote-run"}
-    client.experiments.get_experiment_url.return_value = "http://127.0.0.1:6006/experiment"
-    assert publish(run, EvaluationSettings(), client=client)["status"] == "published"
-    sent = json.dumps(client.experiments.log_run.call_args.kwargs, default=str)
-    assert "ERROR_CANARY" not in sent and "PROMPT_CANARY" not in sent
-    assert read_json(path)["error"] == "Bearer ERROR_CANARY"
-
-
-def test_phoenix_rejects_grading_from_another_execution_before_upload(settings, tmp_path):
-    run, _ = prepare_run(
-        tmp_path,
-        load_cases("totals-q1"),
-        settings,
-        suite="audit",
-        repetitions=1,
-        max_cost_usd=1,
-        deadline_seconds=30,
-    )
-    grade = run / "grades" / "wrong-run"
-    write_json(grade / "manifest.json", {"run_id": "another-execution"})
-    client = phoenix_client()
-    result = publish(run, EvaluationSettings(), grade=grade, client=client)
-    assert result["status"] == "publication_failed"
-    client.datasets.get_dataset.assert_not_called()
-
-
 async def test_injected_provider_timeout_exercises_real_retry_and_keeps_unknown_cost(
     settings, monkeypatch
 ):
-    from google.adk.models.llm_request import LlmRequest
+    from retail_insight.runtime.model import LlmRequest
 
     async def immediate(_seconds):
         return None

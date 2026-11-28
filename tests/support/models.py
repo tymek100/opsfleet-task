@@ -1,4 +1,4 @@
-"""Scripted provider boundary; the real ADK runner and tools remain under test."""
+"""Scripted provider boundary; the real LangGraph runner and tools remain under test."""
 
 from __future__ import annotations
 
@@ -7,14 +7,11 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from google.adk.models import BaseLlm
-from google.adk.models._capabilities import LlmCapabilities
-from google.adk.models.llm_request import LlmRequest
-from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from pydantic import Field, PrivateAttr
 
 from retail_insight.contracts import REVIEW_CATEGORIES
+from retail_insight.runtime.model import BaseLlm, LlmCapabilities, LlmRequest, LlmResponse
 
 
 def text(value: str) -> types.Content:

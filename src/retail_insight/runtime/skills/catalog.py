@@ -1,4 +1,4 @@
-"""Read-only skill snapshots parsed by ADK and disclosed through bounded tools.
+"""Read-only skill snapshots parsed from validated YAML and disclosed through bounded tools.
 
 The bundled directory is application configuration, never a model-supplied path.
 Only Markdown instructions and reference files are accepted. The tool adapters
@@ -12,11 +12,36 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from types import SimpleNamespace
 from typing import Literal
 
-from google.adk.skills import load_skill_from_dir
+import yaml
 
 from retail_insight.runtime.privacy import screen
+
+
+def load_skill_from_dir(directory):
+    text = (directory / "SKILL.md").read_text()
+    if not text.startswith("---\n"):
+        raise ValueError("Missing skill frontmatter")
+    _, front, body = text.split("---", 2)
+    data = yaml.safe_load(front)
+    if not isinstance(data, dict) or not all(
+        isinstance(data.get(k), str) for k in ("name", "description")
+    ):
+        raise ValueError("Invalid skill metadata")
+    extras = set(data) - {"name", "description", "metadata"}
+    return SimpleNamespace(
+        instructions=body.strip(),
+        frontmatter=SimpleNamespace(
+            name=data["name"],
+            description=data["description"],
+            metadata=data.get("metadata", {}),
+            allowed_tools=data.get("allowed-tools"),
+            model_extra=extras,
+        ),
+    )
+
 
 Role = Literal["analyst", "reviewer"]
 MAX_SKILL_BYTES = 16_000
@@ -53,7 +78,7 @@ class _Skill:
 
 
 def _files(directory: Path) -> dict[str, str]:
-    """Validate before ADK's loader recursively reads the trusted directory."""
+    """Validate paths and sizes before reading the trusted skill directory."""
     content = {}
     for path in sorted(directory.rglob("*")):
         if path.is_symlink():
@@ -128,7 +153,7 @@ class SkillCatalog:
             try:
                 parsed = load_skill_from_dir(directory)
             except (ValueError, OSError) as exc:
-                raise SkillError("A runtime skill has invalid ADK frontmatter.") from exc
+                raise SkillError("A runtime skill has invalid frontmatter.") from exc
             if _files(directory) != content:
                 raise SkillError("A runtime skill changed while loading. Retry with stable files.")
             frontmatter = parsed.frontmatter

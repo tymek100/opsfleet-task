@@ -1,4 +1,4 @@
-"""ADK tools for scoped queries and stored result analysis."""
+"""LangGraph tools for scoped queries and stored result analysis."""
 
 from __future__ import annotations
 

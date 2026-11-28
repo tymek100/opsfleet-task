@@ -1,11 +1,10 @@
-"""Provider timeouts must not remain armed while ADK executes a reviewer tool."""
+"""Provider timeouts must not remain armed while LangGraph executes a reviewer tool."""
 
 import asyncio
 
-from google.adk.models.llm_response import LlmResponse
-
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.contracts import WORKSPACE_IDENTITY
+from retail_insight.runtime.model import LlmResponse
 from tests.support.models import ScriptedModel, finish, usage, verdict
 
 

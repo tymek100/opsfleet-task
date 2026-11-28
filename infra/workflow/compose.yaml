@@ -1,0 +1,32 @@
+name: retail-workflow
+services:
+  app:
+    image: retail-insight-langgraph:local
+    build:
+      context: ../..
+      dockerfile: infra/workflow/Dockerfile
+      args:
+        LOCAL_UID: ${LOCAL_UID:-10001}
+        LOCAL_GID: ${LOCAL_GID:-10001}
+    ports: ["127.0.0.1:8080:8080"]
+    environment:
+      BACKEND: ${RETAIL_STACK_BACKEND:-fixture}
+      DATA_DIR: /data/${RETAIL_DATA_PROFILE:-default}
+      RETAIL_DATA_PROFILE: ${RETAIL_DATA_PROFILE:-default}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/warehouse_adc
+    secrets: [runtime_env, warehouse_adc]
+    volumes: ["workflow-data:/data"]
+    restart: unless-stopped
+    stop_grace_period: 210s
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:size=128m,mode=1777"]
+volumes:
+  workflow-data:
+secrets:
+  runtime_env:
+    file: ../../.artifacts/workflow/secrets/runtime.env
+  warehouse_adc:
+    file: ${WAREHOUSE_ADC_FILE}

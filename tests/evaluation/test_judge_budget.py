@@ -126,12 +126,3 @@ async def test_invalid_schema_is_error_even_with_successful_provider_usage():
     with pytest.raises(JudgeUnavailable):
         await judge.evaluate(turn, reference, [])
     assert judge.calls[0]["status"] == "ERROR"
-
-
-@pytest.mark.parametrize(
-    "endpoint",
-    ["https://example.org", "http://secret@localhost:6006", "http://127.0.0.1:6006?token=x"],
-)
-def test_publication_is_local_and_credential_free(endpoint):
-    with pytest.raises(ValueError):
-        EvaluationSettings(phoenix_url=endpoint)

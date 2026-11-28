@@ -1,4 +1,4 @@
-"""Coordinator capabilities: evidence handling and bounded A2A delegation."""
+"""Coordinator capabilities: evidence handling and bounded local subgraph delegation."""
 
 import asyncio
 import json
@@ -29,7 +29,8 @@ class DelegationTools:
                     seconds = min(120, budget.work_remaining())
                 except LimitReached:
                     return self._limit(agent, "deadline")
-                allowance = min(0.75, budget.work_available_usd)
+                slots = max(1, getattr(self.turn, "delegation_batch_size", 1) - self._inflight)
+                allowance = min(0.75, budget.work_available_usd / slots)
                 # A child needs its own review reserve as well as room to investigate.
                 if allowance >= budget.review_reserve + 0.15:
                     reservation = budget.reserve(allowance)

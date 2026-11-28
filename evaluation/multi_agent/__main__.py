@@ -8,7 +8,7 @@ from .runner import run
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run independent two-turn A2A agent evaluations and publish to Phoenix"
+        description="Run independent two-turn LangGraph agent evaluations and publish to Foundry"
     )
     parser.add_argument(
         "--suite",
@@ -20,7 +20,6 @@ def main():
     parser.add_argument("--deadline-seconds", type=float, default=7200)
     parser.add_argument("--backend", choices=["fixture", "bigquery"], default="fixture")
     parser.add_argument("--concurrency", type=int, default=1)
-    parser.add_argument("--phoenix-url", default="http://127.0.0.1:6006")
     parser.add_argument("--publish-only", action="store_true")
     parser.add_argument("--agent-budget-usd", type=float, default=2.0)
     args = parser.parse_args()

@@ -1,7 +1,6 @@
 """Isolated settings and real local services; no environment or credentials lookup."""
 
 import os
-from urllib.parse import urlparse
 
 import pytest
 from pydantic import SecretStr
@@ -9,6 +8,7 @@ from pydantic import SecretStr
 from retail_insight.agents.retail.agent import RetailAnalyst as Analyst
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY
+from retail_insight.integrations.azure.connector import AzureSettings
 from retail_insight.integrations.bigquery.retail import QueryGateway
 from retail_insight.integrations.reports import ReportStore
 from tests.support.models import ScriptedModel
@@ -16,36 +16,20 @@ from tests.support.warehouse import SQL
 
 
 @pytest.fixture(autouse=True)
-def isolated_phoenix_tests(request):
-    """Integration checks must never write into the user's evaluation workspace."""
-    if not request.node.get_closest_marker("phoenix"):
-        return
-    endpoint = os.environ.get("PHOENIX_TEST_ENDPOINT", "")
-    if not endpoint:
-        pytest.skip(
-            "Set PHOENIX_TEST_ENDPOINT to a disposable Phoenix instance (for example port 6007)"
-        )
-    if urlparse(endpoint).port in {None, 6006}:
-        pytest.fail("Phoenix integration tests require a disposable instance outside port 6006")
-
-
-@pytest.fixture
-def phoenix_url():
-    return os.environ["PHOENIX_TEST_ENDPOINT"].rstrip("/")
-
-
-@pytest.fixture(autouse=True)
 def offline_configuration_boundary(request, monkeypatch):
     """Fail on ambient dotenv/ADC discovery; explicit live tests opt in separately."""
-    if request.node.get_closest_marker("live") or request.node.get_closest_marker("phoenix"):
+    if request.node.get_closest_marker("live"):
         return
 
     def forbidden(*_args, **_kwargs):
         raise AssertionError("Offline tests must inject settings and external service boundaries")
 
     names = {field.casefold() for field in Settings.model_fields}
+    names.update(field.casefold() for field in AzureSettings.model_fields)
     names.update(
         {
+            "langsmith_api_key",
+            "langsmith_tracing",
             "google_api_key",
             "google_application_credentials",
             "gcloud_project",

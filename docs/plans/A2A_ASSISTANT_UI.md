@@ -1,3 +1,5 @@
+> Historical plan or validation record. The current implementation is documented in [architecture.md](../architecture.md); ADK, A2A and Phoenix instructions below are superseded.
+
 # A2A 1.0 and assistant-ui implementation
 
 Status: implemented and verified. Research verified on 2026-11-25. Work proceeds in the order below; checkboxes record completed verification, not intentions.

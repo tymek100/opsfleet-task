@@ -8,11 +8,7 @@ import {
   type ThreadHistoryAdapter,
 } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
-import {
-  useA2ARuntime,
-  useA2AAgentCard,
-  type A2AArtifact,
-} from "@assistant-ui/react-a2a";
+import { useLocalRuntime, type ChatModelAdapter } from "@assistant-ui/react";
 import {
   ArrowUp,
   Boxes,
@@ -38,7 +34,7 @@ import {
   type Conversation,
 } from "./api";
 import { Markdown } from "./Markdown";
-import { RecoveringA2AClient, saveHistoryEntry } from "./recovery";
+import { saveHistoryEntry } from "./recovery";
 
 const icons = {
   coordinator: GitBranch,
@@ -275,8 +271,8 @@ export default function App() {
                 : "Fixture data · all brands"}
             </small>
           </div>
-          <a href="http://localhost:6006" target="_blank" rel="noreferrer">
-            Phoenix ↗
+          <a href="https://ai.azure.com" target="_blank" rel="noreferrer">
+            Foundry ↗
           </a>
         </div>
       </aside>
@@ -397,14 +393,46 @@ function Chat({
 }) {
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const client = useMemo(
-    () =>
-      new RecoveringA2AClient({
-        baseUrl: `${window.location.origin}${agent.url}`,
-        headers: { "x-retail-conversation": conversation.id },
-      }),
-    [agent.url, conversation.id],
-  );
+  const adapter = useMemo<ChatModelAdapter>(() => ({
+    async *run({ messages, abortSignal }) {
+      setError("");
+      const question = messages.filter(m => m.role === "user").at(-1)?.content
+        .filter(p => p.type === "text").map(p => p.text).join("\n") || "";
+      const response = await fetch(`${agent.url}/chat`, {
+        method: "POST", signal: abortSignal,
+        headers: { "Content-Type": "application/json", "x-retail-conversation": conversation.id },
+        body: JSON.stringify({ question }),
+      });
+      if (!response.ok || !response.body) throw new Error("The agent could not accept this request.");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finished = false;
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let newline;
+          while ((newline = buffer.indexOf("\n")) >= 0) {
+            const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1);
+            if (!line.trim()) continue;
+            const event = JSON.parse(line);
+            if (event.type === "error") throw new Error(event.message);
+            if (event.type === "result") {
+              finished = true;
+              yield { content: [{ type: "text", text: event.result.markdown }],
+                metadata: { custom: { result: event.result } } };
+            }
+          }
+        }
+        if (!finished) throw new Error("The connection ended before a reviewed result arrived. The request was not resent.");
+      } catch (failure) {
+        if (!abortSignal.aborted) setError(failure instanceof Error ? failure.message : "The investigation could not complete.");
+        throw failure;
+      } finally { reader.releaseLock(); }
+    },
+  }), [agent.url, conversation.id]);
   const history = useMemo<ThreadHistoryAdapter>(() => {
     const path = `/api/conversations/${conversation.id}`;
     const save: ThreadHistoryAdapter["append"] = async (entry) => {
@@ -437,18 +465,12 @@ function Chat({
       update: save,
     };
   }, [conversation.id, onSaved]);
-  const runtime = useA2ARuntime({
-    client,
-    contextId: conversation.id,
-    adapters: { history },
-    onError: (e) => setError(e.message),
-  });
+  const runtime = useLocalRuntime(adapter, { adapters: { history } });
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <ChatThread
         agent={agent}
         error={saveError || error}
-        clearError={() => setError("")}
         onRunning={onRunning}
       />
     </AssistantRuntimeProvider>
@@ -458,21 +480,19 @@ function Chat({
 function ChatThread({
   agent,
   error,
-  clearError,
   onRunning,
 }: {
   agent: Agent;
   error: string;
-  clearError: () => void;
   onRunning: (running: boolean) => void;
 }) {
   const running = useAuiState((s) => s.thread.isRunning);
   const loading = useAuiState((s) => s.thread.isLoading);
   const [details, setDetails] = useState(false);
-  const card = useA2AAgentCard();
+  const [card, setCard] = useState<{name:string;description:string;skills:{id:string;name:string;description:string}[]} | null>(null);
+  useEffect(() => { api<typeof card>(`${agent.url}/agent-card.json`).then(setCard).catch(() => setCard(null)); }, [agent.url]);
   useEffect(() => {
     onRunning(running);
-    if (running) clearError();
   }, [running]);
   useEffect(() => () => onRunning(false), [onRunning]);
   const Icon = icons[agent.id as keyof typeof icons];
@@ -511,8 +531,7 @@ function ChatThread({
           </div>
           <p>{card?.description || agent.description}</p>
           <p>
-            A2A {card?.supportedInterfaces?.[0]?.protocolVersion || "1.0"} ·{" "}
-            {card?.capabilities.streaming ? "Streaming tasks" : "Connecting"}
+            LangGraph · Reviewed answers · Streaming progress
           </p>
           {card?.skills.map((skill) => (
             <p key={skill.id}>
@@ -520,7 +539,7 @@ function ChatThread({
             </p>
           ))}
           <a
-            href={`${agent.url}/.well-known/agent-card.json`}
+            href={`${agent.url}/agent-card.json`}
             target="_blank"
             rel="noreferrer"
           >
@@ -633,33 +652,12 @@ function UserMessage() {
 function AssistantMessage() {
   const message = useAuiState((s) => s.message);
   const [copied, setCopied] = useState(false);
-  const a2a = message.metadata.custom.a2a as
-    { artifacts?: A2AArtifact[] } | undefined;
-  const artifacts = a2a?.artifacts || [];
-  const result = artifacts
-    .flatMap((a) => a.parts)
-    .map((p) => p.data)
-    .find(
-      (data) => data && typeof data === "object" && "schema_version" in data,
-    ) as
-    | {
-        status?: string;
-        contains_ephemeral_evidence?: boolean;
-        usage?: { accounted_usd?: number };
-        trace_id?: string;
-        evidence?: unknown[];
-      }
-    | undefined;
-  const answer = artifacts
-    .filter((a) => a.name === "Reviewed answer")
-    .flatMap((a) => a.parts)
-    .map((p) => p.text || "")
-    .join("\n");
+  const result = message.metadata.custom.result as { status?: string; contains_ephemeral_evidence?: boolean; usage?: {accounted_usd?: number}; trace_id?: string; evidence?: unknown[] } | undefined;
   const fallback = message.content
     .filter((p) => p.type === "text")
     .map((p) => p.text)
     .join("\n");
-  const text = answer || (message.status?.type === "running" ? "" : fallback);
+  const text = message.status?.type === "running" ? "" : fallback;
   if (!text && message.status?.type === "running") return null;
   return (
     <MessagePrimitive.Root className="message assistant-message">
@@ -713,11 +711,11 @@ function AssistantMessage() {
               <p>
                 Trace: <code>{result.trace_id}</code> ·{" "}
                 <a
-                  href="http://localhost:6006"
+                  href="https://ai.azure.com"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Open Phoenix ↗
+                  Open Foundry ↗
                 </a>
               </p>
             )}

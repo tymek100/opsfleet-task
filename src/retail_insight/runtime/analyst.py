@@ -1,41 +1,35 @@
-"""One ADK analyst conversation, composable tools and reviewed completion."""
+"""One LangGraph analyst conversation, composable tools and reviewed completion."""
 
 import asyncio
 import json
-import logging
 import time
 import uuid
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 
-from google.adk.agents import LlmAgent
-from google.adk.agents.run_config import RunConfig
-from google.adk.models import BaseLlm
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
-
 from retail_insight.config import Settings
 from retail_insight.contracts import WORKSPACE_IDENTITY, Answer, Identity, TurnResult
-from retail_insight.integrations.phoenix.tracing import (
+from retail_insight.integrations.reports import ReportStore
+from retail_insight.observability.tracing import (
     CaptureMode,
     Observer,
     observation,
     record_observation,
     span,
 )
-from retail_insight.integrations.reports import ReportStore
 from retail_insight.runtime.budget import Budget, LimitReached
 from retail_insight.runtime.context import DelegationContext
+from retail_insight.runtime.graph import CustomAgentLoop
+from retail_insight.runtime.model import BaseLlm
 from retail_insight.runtime.privacy import screen
 from retail_insight.runtime.prompts import reviewer_prompt
-from retail_insight.runtime.provider import AccountedModel, ProviderUnavailable, make_gemini
+from retail_insight.runtime.provider import ProviderUnavailable, make_gemini
 from retail_insight.runtime.turn import Turn
 from retail_insight.tools.context import ContextTools
 
 
-class Analyst:
+class Analyst(CustomAgentLoop):
     agent_name = "analyst"
     prompt_span_name = "agent.prompt"
 
@@ -93,7 +87,6 @@ class Analyst:
         self.turn_id = ""
         self._trace_ids: dict[str, str] = {}
         # Framework exception logs can contain generated arguments. Emit our metadata instead.
-        logging.getLogger("google_adk").setLevel(logging.CRITICAL)
         self.model = model
         self.reviewer_model = reviewer_model
         self.skills = self.build_skills()
@@ -188,7 +181,7 @@ class Analyst:
                 self.screen(delegation.model_dump_json())
         except ValueError as exc:
             return TurnResult(None, "input_rejected", str(exc), [], {}, [], 0)
-        # Approved context is bounded and ephemeral. No raw ADK reasoning is persisted.
+        # Approved context is bounded and ephemeral. No unreviewed model text is persisted.
         cutoff = self.now().timestamp() - 90 * 86400
         self.history = [h for h in self.history if h["timestamp"] >= cutoff][-6:]
         begin_turn = getattr(self.gateway, "begin_turn", None)
@@ -196,7 +189,6 @@ class Analyst:
             begin_turn()
         turn = Turn(self, question, delegation)
         status, message = "incomplete", "The analyst could not complete a reviewed answer."
-        runner = None
         try:
             if delegation:
                 for source in delegation.evidence:
@@ -213,22 +205,6 @@ class Analyst:
                 self.model = make_gemini(self.settings)
             async with asyncio.timeout(self.settings.turn_timeout_seconds):
                 prompt_spec = self.prompt_spec()
-                agent = LlmAgent(
-                    name=self.agent_name,
-                    model=AccountedModel(model=self.model.model, delegate=self.model).bind(
-                        turn.budget, turn.emit, prompt=prompt_spec, screener=self.screen
-                    ),
-                    instruction=prompt_spec.instruction,
-                    tools=[ContextTools(turn).read_context, *self.build_tools(turn)],
-                    before_model_callback=turn.observe_request,
-                    after_model_callback=turn.observe_model,
-                    generate_content_config=prompt_spec.config,
-                )
-                sessions = InMemorySessionService()
-                session = await sessions.create_session(
-                    app_name="retail", user_id=self.identity.user_id
-                )
-                runner = Runner(app_name="retail", agent=agent, session_service=sessions)
                 now = self.now()
                 context = {
                     "trusted_scope": self.identity.scope,
@@ -248,19 +224,12 @@ class Analyst:
                 }
                 self.observe("initial_context", context=context)
                 prompt = json.dumps(context, ensure_ascii=False)
-                # Only a bounded protocol correction; business actions loop inside ADK.
-                for attempt in range(2):
-                    async for _ in runner.run_async(
-                        user_id=self.identity.user_id,
-                        session_id=session.id,
-                        new_message=types.Content(role="user", parts=[types.Part(text=prompt)]),
-                        run_config=RunConfig(max_llm_calls=self.settings.max_model_calls),
-                    ):
-                        pass
-                    if turn.answer or turn.stopped:
-                        break
-                    turn.emit("completion_protocol_repair", attempt=attempt + 1)
-                    prompt = "Your draft was not published. Submit the complete answer through finish_answer with its evidence IDs."
+                await self.run_loop(
+                    turn,
+                    prompt_spec,
+                    [ContextTools(turn).read_context, *self.build_tools(turn)],
+                    prompt,
+                )
                 if turn.answer:
                     status, message = "approved", ""
                 elif turn.stopped:
@@ -290,13 +259,6 @@ class Analyst:
             status = "failed"
             message = "The investigation encountered an error. No unreviewed answer was published."
             turn.emit("failure", code=type(exc).__name__)
-        finally:
-            if runner is not None:
-                try:
-                    async with asyncio.timeout(2):
-                        await runner.close()
-                except Exception:
-                    turn.emit("cleanup_incomplete")
         if turn.answer:
             self.answers[turn.answer.id] = turn.answer
             self.history.append(

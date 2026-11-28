@@ -1,13 +1,13 @@
-"""Real ADK loop, scoped tools, reviewer handoff, and persisted effects."""
+"""Real LangGraph loop, scoped tools, reviewer handoff, and persisted effects."""
 
 import asyncio
 import json
 from decimal import Decimal
 
 import pytest
-from google.adk.models.llm_response import LlmResponse
 
 from retail_insight.integrations.bigquery.retail import QueryGateway
+from retail_insight.runtime.model import LlmResponse
 from retail_insight.runtime.turn import Turn
 from tests.support.models import calls, finish, text, verdict
 from tests.support.warehouse import Q1

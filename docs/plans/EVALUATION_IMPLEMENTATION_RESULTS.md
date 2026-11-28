@@ -1,3 +1,5 @@
+> Historical plan or validation record. The current implementation is documented in [architecture.md](../architecture.md); ADK, A2A and Phoenix instructions below are superseded.
+
 # Evaluation rebuild: implementation and observed results
 
 **Date:** 2026-11-22. **Scope:** synthetic fixtures, actual Gemini calls, independent offline grading, and local Phoenix. This is a diagnostic implementation baseline, not a production-quality estimate.
